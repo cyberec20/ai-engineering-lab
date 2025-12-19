@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ollama CLI Cheatsheet - Franklin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05060a;
+      --panel: #111320;
+      --panel-soft: #171a2a;
+      --accent: #7c5cff;
+      --accent-soft: #7c5cff22;
+      --accent-strong: #b892ff;
+      --text: #f5f5f7;
+      --muted: #a0a4b8;
+      --border: #26293b;
+      --radius-lg: 16px;
+      --shadow-soft: 0 18px 45px rgba(0,0,0,0.48);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #171b30 0, #05060a 55%, #020308 100%);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin: 0 0 4px;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 span.badge {
+      font-size: 0.8rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #7c5cff, #00e0ff);
+      color: #05060a;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+    }
+
+    a {
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, #101321 0%, #070813 52%, #05060f 100%);
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 18px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 0.98rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #e2e5ff;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .pill {
+      font-size: 0.76rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid #2b3045;
+      background: rgba(9, 11, 24, 0.95);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .search-row input[type="text"] {
+      flex: 1;
+      min-width: 220px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(4, 6, 16, 0.95);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    .search-row input[type="text"]::placeholder {
+      color: #747899;
+    }
+
+    .search-row button {
+      border-radius: 999px;
+      border: 1px solid #2a3050;
+      background: rgba(7, 10, 25, 0.95);
+      color: var(--muted);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .search-row button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(260px, 1.7fr);
+      gap: 18px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    details.section {
+      border-radius: 14px;
+      background: rgba(9, 12, 26, 0.92);
+      border: 1px solid #23263b;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    details.section[open] {
+      border-color: var(--accent-soft);
+      background: radial-gradient(circle at top left, #191d34 0, #080916 55%);
+    }
+
+    summary.section-header {
+      list-style: none;
+      cursor: pointer;
+      padding: 9px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    summary.section-header::-webkit-details-marker {
+      display: none;
+    }
+
+    .section-title {
+      font-weight: 500;
+    }
+
+    .section-tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #2c3050;
+      color: #a3b4ff;
+      background: rgba(7, 11, 30, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .chevron {
+      margin-left: auto;
+      font-size: 0.9rem;
+      transform: rotate(0deg);
+      transition: transform 0.16s ease;
+      color: var(--muted);
+    }
+
+    details[open] .chevron {
+      transform: rotate(90deg);
+      color: var(--accent-strong);
+    }
+
+    .table-wrapper {
+      padding: 4px 10px 10px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      color: var(--text);
+    }
+
+    th,
+    td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #23263b;
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #cfd2ff;
+      background: rgba(10, 13, 30, 0.8);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .cmd {
+      font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      background: #050814;
+      border-radius: 6px;
+      padding: 2px 6px;
+      border: 1px solid #262c46;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cmd span {
+      white-space: nowrap;
+    }
+
+    .btn-copy {
+      border: none;
+      background: transparent;
+      color: #9ba0d6;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0;
+    }
+
+    .btn-copy:hover {
+      color: var(--accent-strong);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .badge-small {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #313552;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #a3a8d8;
+      background: rgba(8, 10, 24, 0.9);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .right-section {
+      margin-bottom: 14px;
+    }
+
+    .right-section h2 {
+      font-size: 0.9rem;
+      margin: 0 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #e2e5ff;
+    }
+
+    .right-section p,
+    .right-section li {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.35rem;
+    }
+
+    ul {
+      padding-left: 18px;
+      margin: 4px 0;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .pill-row span {
+      font-size: 0.72rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>
+      Ollama CLI Cheatsheet
+      <span class="badge">Windows</span>
+    </h1>
+    <div class="subtitle">
+      Guía rápida de comandos de <strong>Ollama</strong> para usar en CMD o PowerShell.
+      Pensado para tu flujo de trabajo con modelos locales (Qwen, DeepSeek, Llama, etc.).
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Buscar / filtrar comandos</div>
+          <div class="panel-subtitle">
+            Escribe parte de un comando o palabra clave (ej. <code>pull</code>, <code>modelos</code>, <code>memoria</code>).
+          </div>
+        </div>
+        <div class="pill">CMD · PowerShell · Windows 10/11</div>
+      </div>
+
+      <div class="search-row">
+        <input id="searchInput" type="text" placeholder="Filtrar por comando, descripción o uso práctico..." />
+        <button type="button" id="btnClear">Limpiar</button>
+      </div>
+    </section>
+
+    <div class="layout">
+      <!-- LEFT: MAIN TABLES -->
+      <section>
+        <!-- Sección: Básicos -->
+        <details class="section" open>
+          <summary class="section-header">
+            <span class="section-title">Comandos básicos (día a día)</span>
+            <span class="section-tag">Uso frecuente</span>
+            <span class="chevron">▶</span>
+          </summary>
+          <div class="table-wrapper">
+            <table data-section="basicos">
+              <thead>
+                <tr>
+                  <th style="width: 26%;">Comando</th>
+                  <th style="width: 32%;">Descripción</th>
+                  <th style="width: 42%;">Ejemplo práctico (tú)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-keywords="pull descargar modelo bajar qwen llama deepseek instalar">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama pull &lt;modelo&gt;</span>
+                      <button class="btn-copy" data-copy="ollama pull qwen2.5:7b">copiar</button>
+                    </div>
+                  </td>
+                  <td>Descarga un modelo desde el repositorio oficial de Ollama y lo deja listo para usar.</td>
+                  <td>Ej: <code>ollama pull qwen2.5:7b</code> para usarlo en tus benchmarks o scripts de Python.</td>
+                </tr>
+                <tr data-keywords="run ejecutar modelo chatear interactivo consola prompt">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama run &lt;modelo&gt;</span>
+                      <button class="btn-copy" data-copy="ollama run deepseek-r1:8b">copiar</button>
+                    </div>
+                  </td>
+                  <td>Inicia una sesión interactiva con el modelo en la terminal (estilo chat).</td>
+                  <td>Ej: <code>ollama run deepseek-r1:8b</code> para probar razonamiento “tipo R1” sin scripts.</td>
+                </tr>
+                <tr data-keywords="list modelos instalados ver tamaño local">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama list</span>
+                      <button class="btn-copy" data-copy="ollama list">copiar</button>
+                    </div>
+                  </td>
+                  <td>Muestra todos los modelos que tienes descargados, con ID, tamaño y fecha.</td>
+                  <td>Útil para revisar qué tienes instalado antes de planear nuevos benchmarks.</td>
+                </tr>
+                <tr data-keywords="show detalles info licencia parametros mostrar">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama show &lt;modelo&gt;</span>
+                      <button class="btn-copy" data-copy="ollama show llama3.1:8b">copiar</button>
+                    </div>
+                  </td>
+                  <td>Muestra información interna del modelo (licencia, parámetros, etc.).</td>
+                  <td>Ej: <code>ollama show llama3.1:8b</code> si quieres ver detalles antes de usarlo como juez.</td>
+                </tr>
+                <tr data-keywords="run prompt directo pregunta una sola vez script rápido">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama run &lt;modelo&gt; --prompt &quot;texto&quot;</span>
+                      <button class="btn-copy" data-copy="ollama run qwen2.5:7b --prompt &quot;Dime un resumen de qué es un modelo de lenguaje&quot;">copiar</button>
+                    </div>
+                  </td>
+                  <td>Ejecuta un único prompt sin entrar en modo chat interactivo.</td>
+                  <td>Útil para pruebas rápidas o desde scripts por lotes (por ejemplo, comprobar que el modelo responde).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <!-- Sección: Gestión de modelos y servidor -->
+        <details class="section">
+          <summary class="section-header">
+            <span class="section-title">Gestión de modelos y servidor</span>
+            <span class="section-tag">Memoria · limpieza</span>
+            <span class="chevron">▶</span>
+          </summary>
+          <div class="table-wrapper">
+            <table data-section="gestion">
+              <thead>
+                <tr>
+                  <th style="width: 26%;">Comando</th>
+                  <th style="width: 32%;">Descripción</th>
+                  <th style="width: 42%;">Ejemplo práctico (tú)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-keywords="serve servidor api http localhost 11434 python">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama serve</span>
+                      <button class="btn-copy" data-copy="ollama serve">copiar</button>
+                    </div>
+                  </td>
+                  <td>Arranca el servidor HTTP local de Ollama (API en <code>http://localhost:11434</code>).</td>
+                  <td>Solo necesario si la app no lo levanta sola y vas a probar scripts como tus benchmarks en Python.</td>
+                </tr>
+                <tr data-keywords="ps procesos modelos activos memoria ram vram">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama ps</span>
+                      <button class="btn-copy" data-copy="ollama ps">copiar</button>
+                    </div>
+                  </td>
+                  <td>Muestra qué modelos están activos/cargados en memoria actualmente.</td>
+                  <td>Útil para ver si un modelo quedó “pegado” consumiendo RAM/VRAM tras un test largo.</td>
+                </tr>
+                <tr data-keywords="stop detener modelo liberar memoria cerrar proceso">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama stop &lt;modelo&gt;</span>
+                      <button class="btn-copy" data-copy="ollama stop deepseek-r1:8b">copiar</button>
+                    </div>
+                  </td>
+                  <td>Detiene un modelo que está corriendo y libera memoria asociada.</td>
+                  <td>Ej: <code>ollama stop deepseek-r1:8b</code> si lo usaste para reasoning y ya no lo necesitas.</td>
+                </tr>
+                <tr data-keywords="delete borrar desinstalar quitar modelo espacio disco">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama delete &lt;modelo&gt;</span>
+                      <button class="btn-copy" data-copy="ollama delete deepseek-r1:8b">copiar</button>
+                    </div>
+                  </td>
+                  <td>Elimina un modelo descargado y libera espacio en disco.</td>
+                  <td>Útil cuando decides que un modelo no te aporta tanto y quieres quedarte con menos (ej. limpiar DeepSeek si Qwen gana).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+
+        <!-- Sección: Creación y uso avanzado -->
+        <details class="section">
+          <summary class="section-header">
+            <span class="section-title">Creación y uso avanzado</span>
+            <span class="section-tag">Más adelante</span>
+            <span class="chevron">▶</span>
+          </summary>
+          <div class="table-wrapper">
+            <table data-section="avanzado">
+              <thead>
+                <tr>
+                  <th style="width: 26%;">Comando</th>
+                  <th style="width: 32%;">Descripción</th>
+                  <th style="width: 42%;">Ejemplo práctico (tú)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-keywords="create modelo personalizado modelfile afinado instrucciones">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama create &lt;nombre&gt; -f Modelfile</span>
+                      <button class="btn-copy" data-copy="ollama create franklin-qwen -f Modelfile">copiar</button>
+                    </div>
+                  </td>
+                  <td>Crea un modelo propio a partir de un archivo <code>Modelfile</code> (basado en otro modelo base).</td>
+                  <td>Más adelante, podrías crear <code>franklin-qwen</code> con tu system prompt personalizado y ajustes para tu estilo.</td>
+                </tr>
+                <tr data-keywords="run archivo file prompt largo texto markdown txt">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama run &lt;modelo&gt; -f archivo.txt</span>
+                      <button class="btn-copy" data-copy="ollama run qwen2.5:7b -f prompt_largo.txt">copiar</button>
+                    </div>
+                  </td>
+                  <td>Usa el contenido de un archivo como prompt (útil para prompts largos o plantillas complejas).</td>
+                  <td>Por ejemplo, para pasar un prompt maestro de benchmarking o un caso de negocio largo sin pegarlo en consola.</td>
+                </tr>
+                <tr data-keywords="opciones temperature creatividad topk topp">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama run &lt;modelo&gt; --temperature 0.2</span>
+                      <button class="btn-copy" data-copy="ollama run qwen2.5:7b --temperature 0.2">copiar</button>
+                    </div>
+                  </td>
+                  <td>Ajusta la temperatura del modelo (0 = más determinista, &gt;0 = más creativo).</td>
+                  <td>En tus benchmarks, lo normal es usar <code>0.2–0.3</code> para respuestas más estables y menos aleatorias.</td>
+                </tr>
+                <tr data-keywords="keepalive memoria modelo descargar liberar tiempo">
+                  <td>
+                    <div class="cmd">
+                      <span>ollama run &lt;modelo&gt; --keepalive 0</span>
+                      <button class="btn-copy" data-copy="ollama run qwen2.5:7b --keepalive 0 --prompt &quot;Hola&quot;">copiar</button>
+                    </div>
+                  </td>
+                  <td>Evita que el modelo quede cargado en memoria una vez termina la ejecución.</td>
+                  <td>Útil si quieres hacer pruebas puntuales sin que el modelo se quede ocupando VRAM/RAM después.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <!-- RIGHT: CONTEXTO Y LINKS -->
+      <aside>
+        <section class="panel">
+          <div class="right-section">
+            <h2>Contexto para tu uso</h2>
+            <p>
+              Este cheatsheet está pensado para:
+            </p>
+            <ul>
+              <li>Correr <strong>benchmarks</strong> entre modelos (Qwen, DeepSeek, Llama).</li>
+              <li>Integrar Ollama con <strong>scripts Python</strong> y tus proyectos de IA local.</li>
+              <li>Manejar <strong>memoria y modelos</strong> sin volverte loco con cien comandos.</li>
+            </ul>
+            <div class="pill-row">
+              <span class="badge-small">RTX 16 GB</span>
+              <span class="badge-small">Python + Ollama</span>
+              <span class="badge-small">Benchmarks locales</span>
+            </div>
+          </div>
+
+          <div class="right-section">
+            <h2>Documentación oficial</h2>
+            <p class="muted">
+              Para ver todos los comandos y flags avanzados:
+            </p>
+            <ul>
+              <li>
+                <a href="https://github.com/ollama/ollama/blob/main/docs/cli.md" target="_blank" rel="noreferrer">
+                  Lista completa de comandos CLI (GitHub)
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank" rel="noreferrer">
+                  Documentación de la API HTTP
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com/ollama/ollama" target="_blank" rel="noreferrer">
+                  Repositorio oficial de Ollama
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="right-section">
+            <h2>Tips rápidos</h2>
+            <ul>
+              <li>Para tus <strong>scripts de benchmark</strong>, céntrate en <code>pull</code>, <code>run</code>, <code>list</code>, <code>ps</code> y <code>stop</code>.</li>
+              <li>Si algo no responde desde Python, comprueba que el servidor esté activo con <code>ollama serve</code> o que la app esté abierta.</li>
+              <li>Cuando el disco o la VRAM se llenen, revisa <code>ollama list</code> y borra lo que no usas con <code>ollama delete &lt;modelo&gt;</code>.</li>
+            </ul>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Copiar comando al portapapeles
+    document.querySelectorAll(".btn-copy").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const text = btn.getAttribute("data-copy");
+        try {
+          await navigator.clipboard.writeText(text);
+          const original = btn.textContent;
+          btn.textContent = "copiado";
+          setTimeout(() => (btn.textContent = original), 900);
+        } catch (err) {
+          console.error("No se pudo copiar:", err);
+        }
+      });
+    });
+
+    // Filtro por texto (comando, descripción, uso)
+    const searchInput = document.getElementById("searchInput");
+    const btnClear = document.getElementById("btnClear");
+
+    function applyFilter() {
+      const query = searchInput.value.toLowerCase().trim();
+      const rows = document.querySelectorAll("tbody tr");
+
+      rows.forEach((row) => {
+        const text = row.innerText.toLowerCase();
+        const keywords = (row.getAttribute("data-keywords") || "").toLowerCase();
+        if (!query) {
+          row.classList.remove("hidden");
+          return;
+        }
+        if (text.includes(query) || keywords.includes(query)) {
+          row.classList.remove("hidden");
+        } else {
+          row.classList.add("hidden");
+        }
+      });
+    }
+
+    searchInput.addEventListener("input", applyFilter);
+    btnClear.addEventListener("click", () => {
+      searchInput.value = "";
+      applyFilter();
+      searchInput.focus();
+    });
+  </script>
+</body>
+</html>

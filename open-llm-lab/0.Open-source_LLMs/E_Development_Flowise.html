@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sesión 4 – Flowise + Agentes locales (Edición Docker)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050814;
+      --panel: #0f172a;
+      --panel-soft: #111827;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.14);
+      --accent-strong: #0ea5e9;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+      --success: #4ade80;
+      --warning: #facc15;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; font-family: system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #020617 30%, #000 100%);
+      color: var(--text); line-height: 1.5; padding: 1.5rem;
+    }
+    main { max-width: 1100px; margin: 0 auto 4rem; }
+    h1 { font-size: 1.9rem; margin: 0 0 0.5rem; letter-spacing: 0.02em; }
+    h2 { font-size: 1.45rem; margin: 0 0 0.75rem; }
+    h3 { font-size: 1.1rem; margin: 0.25rem 0 0.4rem; }
+    p { margin: 0.2rem 0 0.5rem; }
+    a { color: var(--accent); text-decoration: none; }
+    ul { padding-left: 1.2rem; }
+    code { font-family: monospace; font-size: 0.86rem; background: #020617; padding: 0.08rem 0.3rem; border-radius: 4px; border: 1px solid #1f2937; color: #4ade80; }
+    pre { background: #020617; border-radius: 8px; padding: 0.7rem 0.8rem; border: 1px solid #1f2937; font-size: 0.86rem; overflow-x: auto; }
+    
+    .card {
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.07), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(139,92,246,0.07), transparent 55%),
+                  var(--panel);
+      border-radius: var(--radius-lg); border: 1px solid rgba(148,163,184,0.25);
+      padding: 1rem 1.2rem; margin-bottom: 1rem;
+      box-shadow: 0 22px 45px rgba(15,23,42,0.75), 0 0 0 1px rgba(15,23,42,0.8);
+    }
+    .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .tagline { margin: 0.2rem 0 0.4rem; color: var(--muted); font-size: 0.9rem; }
+    .pill { display: inline-flex; align-items: center; gap: .35rem; padding: 0.12rem 0.55rem; border-radius: 999px; font-size: 0.72rem; text-transform: uppercase; border: 1px solid rgba(148,163,184,0.5); color: var(--muted); background: rgba(15,23,42,0.9); }
+    .pill--accent { border-color: rgba(56,189,248,0.7); color: var(--accent-strong); background: var(--accent-soft); }
+    .pill-dot { width: 7px; height: 7px; border-radius: 999px; background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,0.28); }
+    .progress { margin-top: 0.7rem; font-size: 0.82rem; color: var(--muted); }
+    .progress-bar { position: relative; margin-top: 0.35rem; width: 220px; max-width: 100%; height: 7px; border-radius: 999px; background: #020617; border: 1px solid #1f2937; overflow: hidden; }
+    .progress-fill { position: absolute; inset: 0; width: 0%; background: linear-gradient(90deg, #22c55e, #0ea5e9); transition: width 0.22s ease-out; }
+    .layout { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); gap: 1rem; margin-top: 1rem; }
+    @media (max-width: 880px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+    .module { margin-bottom: 0.9rem; padding: 0.9rem; border-radius: 12px; background: radial-gradient(circle at top left, rgba(15,118,255,0.12), transparent 55%), radial-gradient(circle at bottom right, rgba(236, 72, 153,0.1), transparent 55%), var(--panel-soft); border: 1px solid #1e293b; }
+    .module-title-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 0.35rem; border-radius: 999px; border: 1px solid rgba(148,163,184,0.6); padding: 0.12rem 0.6rem; font-size: 0.7rem; text-transform: uppercase; color: var(--muted); background: rgba(15,23,42,0.95); }
+    .badge-dot { width: 7px; height: 7px; border-radius: 999px; background: #22c55e; }
+    .badge-dot--warning { background: var(--warning); box-shadow: 0 0 0 4px rgba(250,204,21,0.25); }
+    .badge-dot--info { background: var(--accent-strong); box-shadow: 0 0 0 4px rgba(56,189,248,0.28); }
+    .module-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+    .checklist { list-style: none; margin: 0.2rem 0 0; padding: 0; }
+    .check-item { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.86rem; margin-bottom: 0.35rem; cursor: pointer; }
+    .check-item input[type="checkbox"] { margin-top: 0.16rem; accent-color: #22c55e; transform: scale(1.02); }
+    .check-label .desc { display: block; font-size: 0.76rem; color: var(--muted); margin-top: 0.08rem; }
+    .notes-card { position: sticky; top: 1rem; }
+    .notes { width: 100%; min-height: 90px; border-radius: 10px; background: #020617; border: 1px solid #1f2937; color: var(--text); padding: 0.55rem 0.6rem; font-size: 0.88rem; resize: vertical; }
+    .notes-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.35rem; }
+  </style>
+</head>
+<body>
+<main>
+  <header class="card">
+    <div class="card-header">
+      <div>
+        <h1>Sesión 4 · Flowise + agentes locales (Vía Docker)</h1>
+        <p class="tagline">Objetivo: Levantar Flowise en contenedor y conectarlo a Ollama usando la red interna.</p>
+      </div>
+      <div>
+        <span class="pill pill--accent"><span class="pill-dot"></span> Roadmap IA Local · S4</span>
+      </div>
+    </div>
+    <div class="progress">
+      <div>Progreso general de la sesión:</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div id="progress-text">0 / 0 · 0%</div>
+    </div>
+  </header>
+
+  <section class="layout" aria-label="Contenido de la sesión 4">
+    <section aria-label="Módulos de trabajo">
+      
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>A. Visión general · Docker como base</h2>
+          <span class="badge"><span class="badge-dot badge-dot--info"></span> Teoría</span>
+        </div>
+        <p class="module-meta">Entender por qué usamos Docker en lugar de instalación directa en Windows.</p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-a1" />
+              <span class="check-label">Comprender el aislamiento.<span class="desc">Docker encapsula Flowise con sus propias dependencias (Linux), evitando errores de Node/Windows.</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-a2" />
+              <span class="check-label">Identificar el rol de WSL.<span class="desc">"Windows Subsystem for Linux" es el motor que permite a Docker correr de forma eficiente.</span></span>
+            </label>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>B. Prerrequisitos · Docker Desktop y WSL</h2>
+          <span class="badge"><span class="badge-dot badge-dot--warning"></span> Setup Crítico</span>
+        </div>
+        <p class="module-meta">Preparar el motor de contenedores.</p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-b1" />
+              <span class="check-label">Instalar Docker Desktop.<span class="desc">Asegurarse de marcar la casilla "Use WSL 2 based engine" durante la instalación.</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-b2" />
+              <span class="check-label">Actualizar núcleo WSL (Si da error).<span class="desc">Si Docker dice "WSL needs update", ejecutar en PowerShell Admin: <code>wsl --update</code></span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-b3" />
+              <span class="check-label">Verificar semáforo verde.<span class="desc">Docker debe mostrar "Engine running" (verde) en la esquina inferior izquierda.</span></span>
+            </label>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>C. Desplegar Flowise (Comando Docker)</h2>
+          <span class="badge"><span class="badge-dot"></span> Ejecución</span>
+        </div>
+        <p class="module-meta">Ejecutar el contenedor con persistencia de datos.</p>
+        
+        <p><strong>Comando PowerShell:</strong></p>
+        <pre><code>docker run -d --name flowise -p 3000:3000 -v flowise_data:/root/.flowise flowiseai/flowise</code></pre>
+
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-c1" />
+              <span class="check-label">Ejecutar comando y descargar imagen.<span class="desc">Esperar a que descargue las capas (layers) y muestre el ID del contenedor.</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-c2" />
+              <span class="check-label">Acceder al panel.<span class="desc">Abrir <code>http://localhost:3000</code>. Si sale blanco, usar Incógnito (Ctrl+Shift+N).</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-c3" />
+              <span class="check-label">Configurar cuenta Admin local.<span class="desc">Crear usuario y contraseña (se guardan localmente en tu PC).</span></span>
+            </label>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>D. Primer chatflow · Conexión Ollama (Network)</h2>
+          <span class="badge"><span class="badge-dot badge-dot--info"></span> Diseño de Agente</span>
+        </div>
+        <p class="module-meta">Crear el primer flujo. Aquí está la clave: la dirección de red es diferente en Docker.</p>
+
+        <p><strong>Idea de flujo mínimo:</strong></p>
+        <ul>
+          <li>Nodo: <strong>Chat Input</strong></li>
+          <li>Nodo: <strong>ChatOllama</strong> (Model: <code>llama3.2</code>, Base URL: <code>http://host.docker.internal:11434</code>)</li>
+          <li>Nodo: <strong>Buffer Memory</strong></li>
+          <li>Nodo: <strong>LLM Chain</strong> (Conectando todo)</li>
+        </ul>
+
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-d1" />
+              <span class="check-label">Crear nuevo Chatflow.<span class="desc">Botón "Add New" en la esquina superior derecha.</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-d2" />
+              <span class="check-label">Configurar URL de Ollama (CRÍTICO).<span class="desc">En el nodo ChatOllama, campo Base URL, poner: <code>http://host.docker.internal:11434</code>. NO usar localhost.</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-d3" />
+              <span class="check-label">Probar conversación.<span class="desc">Guardar chatflow y usar el icono de chat flotante para decir "Hola".</span></span>
+            </label>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>E. De chat a agente · Siguientes pasos</h2>
+          <span class="badge"><span class="badge-dot badge-dot--warning"></span> Avanzado</span>
+        </div>
+        <p class="module-meta">Preparar el agente para leer documentos (RAG).</p>
+
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-e1" />
+              <span class="check-label">Definir documento objetivo.<span class="desc">¿Qué quieres que lea tu agente? (Ej: Normas eléctricas, PDF técnico).</span></span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s4-e2" />
+              <span class="check-label">Explorar nodos de carga.<span class="desc">Buscar en la sección "Document Loaders" el nodo "PDF File" o "Text File".</span></span>
+            </label>
+          </li>
+        </ul>
+      </article>
+
+    </section>
+
+    <aside class="notes-card" aria-label="Notas personales">
+      <article class="card">
+        <h2>Notas de la sesión</h2>
+        <div style="margin-bottom:0.7rem;">
+          <div class="notes-label">1) Estado de Docker</div>
+          <textarea class="notes" data-note-id="s4-docker" placeholder="¿Arrancó en verde? ¿Hubo que actualizar WSL?"></textarea>
+        </div>
+        <div style="margin-bottom:0.7rem;">
+          <div class="notes-label">2) Modelos probados</div>
+          <textarea class="notes" data-note-id="s4-models" placeholder="Ej: llama3.2 funcionó rápido, qwen2.5 más lento..."></textarea>
+        </div>
+      </article>
+    </aside>
+  </section>
+</main>
+
+<script>
+  (function () {
+    const PREFIX = "ia_local_s4_docker_"; // Prefix actualizado para no mezclar con versión anterior
+
+    function updateProgress() {
+      const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"][data-id]'));
+      const total = checkboxes.length;
+      const done = checkboxes.filter(cb => cb.checked).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      const fill = document.getElementById("progress-fill");
+      const text = document.getElementById("progress-text");
+      if (fill) fill.style.width = pct + "%";
+      if (text) text.textContent = `${done} / ${total} · ${pct}%`;
+    }
+
+    function loadState() {
+      document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+        const key = PREFIX + cb.getAttribute("data-id");
+        const stored = localStorage.getItem(key);
+        if (stored === "1") cb.checked = true;
+        cb.addEventListener("change", () => {
+          localStorage.setItem(key, cb.checked ? "1" : "0");
+          updateProgress();
+        });
+      });
+      document.querySelectorAll("textarea.notes[data-note-id]").forEach(area => {
+        const key = PREFIX + "note_" + area.getAttribute("data-note-id");
+        const stored = localStorage.getItem(key);
+        if (stored !== null) area.value = stored;
+        area.addEventListener("input", () => {
+          localStorage.setItem(key, area.value);
+        });
+      });
+      updateProgress();
+    }
+    document.addEventListener("DOMContentLoaded", loadState);
+  })();
+</script>
+</body>
+</html>

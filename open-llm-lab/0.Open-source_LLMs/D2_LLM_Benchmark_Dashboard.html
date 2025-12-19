@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Benchmark LLM – Franklin</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; background:#f5f5f5;}
+    h1 { margin-bottom: 0; }
+    h2 { margin-top: 2rem; }
+    table { border-collapse: collapse; width: 100%; background:white; }
+    th, td { border: 1px solid #ddd; padding: 6px 8px; font-size: 14px; }
+    th { background: #e3e3ff; }
+    .model-col { width: 110px; }
+    .score-col { width: 110px; }
+    input[type="number"] { width: 80px; }
+    textarea { width: 100%; min-height: 60px; }
+    .controls { margin: 10px 0; }
+    button { padding: 6px 12px; margin-right: 8px; cursor:pointer;}
+    .small { font-size: 12px; color:#555;}
+  </style>
+</head>
+<body>
+  <h1>Benchmark LLM – Franklin</h1>
+  <p class="small">
+    Esta página guarda tus puntuaciones en <strong>localStorage</strong> del navegador. 
+    Puedes cerrar y volver a abrir sin perder datos (en el mismo navegador y equipo).
+  </p>
+
+  <div class="controls">
+    <button onclick="resetScores()">Reiniciar puntuaciones</button>
+    <button onclick="exportJSON()">Exportar resultados (JSON)</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Test</th>
+        <th class="model-col">Modelo</th>
+        <th class="score-col">Score (0–10)</th>
+        <th>Notas</th>
+      </tr>
+    </thead>
+    <tbody id="tests-body">
+    </tbody>
+  </table>
+
+  <h2>Promedios por modelo</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Modelo</th>
+        <th>Promedio</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Qwen</td>
+        <td id="avg-qwen">–</td>
+      </tr>
+      <tr>
+        <td>DeepSeek</td>
+        <td id="avg-deepseek">–</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    const TESTS = [
+      {id: 1, name: "Razonamiento Lógico (tren)"},
+      {id: 2, name: "Programación (números primos)"},
+      {id: 3, name: "Ingeniería eléctrica (I0, I1, I2)"},
+      {id: 4, name: "Factualidad (Thevenin)"},
+      {id: 5, name: "Memoria / reglas de estilo"},
+      {id: 6, name: "Instrucciones complejas"},
+      {id: 7, name: "Español natural y estilo"},
+      {id: 8, name: "Creatividad controlada"},
+      {id: 9, name: "Seguridad / límites"},
+      {id: 10, name: "Mentoría técnica / conversación"}
+    ];
+
+    const STORAGE_KEY = "franklin_llm_benchmark_v1";
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function render() {
+      const data = loadData();
+      const tbody = document.getElementById("tests-body");
+      tbody.innerHTML = "";
+      TESTS.forEach(test => {
+        const row = document.createElement("tr");
+
+        const tdId = document.createElement("td");
+        tdId.textContent = test.id;
+        row.appendChild(tdId);
+
+        const tdName = document.createElement("td");
+        tdName.textContent = test.name;
+        row.appendChild(tdName);
+
+        const tdModel = document.createElement("td");
+        const select = document.createElement("select");
+        ["", "Qwen", "DeepSeek"].forEach(m => {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m || "—";
+          select.appendChild(opt);
+        });
+        select.value = data[test.id]?.model || "";
+        select.onchange = () => {
+          const d = loadData();
+          d[test.id] = d[test.id] || {};
+          d[test.id].model = select.value;
+          saveData(d);
+          updateAverages();
+        };
+        tdModel.appendChild(select);
+        row.appendChild(tdModel);
+
+        const tdScore = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "10";
+        input.step = "0.5";
+        input.value = data[test.id]?.score ?? "";
+        input.onchange = () => {
+          const d = loadData();
+          d[test.id] = d[test.id] || {};
+          d[test.id].score = parseFloat(input.value);
+          saveData(d);
+          updateAverages();
+        };
+        tdScore.appendChild(input);
+        row.appendChild(tdScore);
+
+        const tdNotes = document.createElement("td");
+        const ta = document.createElement("textarea");
+        ta.value = data[test.id]?.notes || "";
+        ta.onchange = () => {
+          const d = loadData();
+          d[test.id] = d[test.id] || {};
+          d[test.id].notes = ta.value;
+          saveData(d);
+        };
+        tdNotes.appendChild(ta);
+        row.appendChild(tdNotes);
+
+        tbody.appendChild(row);
+      });
+      updateAverages();
+    }
+
+    function updateAverages() {
+      const data = loadData();
+      const sums = {Qwen: 0, DeepSeek: 0};
+      const counts = {Qwen: 0, DeepSeek: 0};
+
+      Object.values(data).forEach(item => {
+        if (item.model && typeof item.score === "number" && !isNaN(item.score)) {
+          sums[item.model] += item.score;
+          counts[item.model] += 1;
+        }
+      });
+
+      const avgQ = counts.Qwen ? (sums.Qwen / counts.Qwen).toFixed(2) : "–";
+      const avgD = counts.DeepSeek ? (sums.DeepSeek / counts.DeepSeek).toFixed(2) : "–";
+
+      document.getElementById("avg-qwen").textContent = avgQ;
+      document.getElementById("avg-deepseek").textContent = avgD;
+    }
+
+    function resetScores() {
+      if (!confirm("¿Seguro que quieres borrar todas las puntuaciones?")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    }
+
+    function exportJSON() {
+      const data = loadData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "llm_benchmark_resultados.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    render();
+  </script>
+</body>
+</html>

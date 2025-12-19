@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva de Aprendizaje: FlowiseAI (Docker Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* --- Estilos Base y Scrollbar --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+        /* --- Utilidades Gráficas --- */
+        .chart-container { position: relative; margin: auto; height: 300px; width: 100%; max-width: 600px; }
+        
+        /* --- Simulación de Nodos (Diagrama Interactivo) --- */
+        .flow-node { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; z-index: 10; }
+        .flow-node:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3); border-color: #6366f1; }
+        .flow-node.active { border-color: #6366f1; background-color: #eef2ff; transform: scale(1.05); }
+        .flow-node.active::after { content: ''; position: absolute; inset: -4px; border-radius: 12px; border: 2px solid #6366f1; opacity: 0.5; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 70% { transform: scale(1.1); opacity: 0; } 100% { transform: scale(1); opacity: 0; } }
+
+        /* --- Líneas Conectoras --- */
+        .connector-line { height: 2px; background-color: #cbd5e1; flex-grow: 1; margin: 0 15px; position: relative; top: 10px; transition: background-color 0.3s; }
+        .connector-line::after { content: '►'; position: absolute; right: -6px; top: -7px; color: #cbd5e1; font-size: 12px; transition: color 0.3s; }
+        .flow-container:hover .connector-line { background-color: #94a3b8; }
+        .flow-container:hover .connector-line::after { color: #94a3b8; }
+
+        /* --- Animaciones de Entrada --- */
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 h-screen flex overflow-hidden selection:bg-indigo-100 selection:text-indigo-900">
+
+    <aside class="w-72 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col transition-all duration-300 hidden md:flex shadow-2xl z-20" id="sidebar">
+        <div class="p-6 border-b border-slate-700 bg-slate-950">
+            <h1 class="text-2xl font-bold text-white tracking-wider flex items-center gap-2">
+                <span class="text-indigo-500 text-3xl">❖</span> Flowise<span class="text-indigo-400 font-light">Hub</span>
+            </h1>
+            <p class="text-xs mt-2 text-slate-400 font-mono pl-8">Entorno Docker v2.0</p>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-4 px-4">Fundamentos</div>
+            
+            <button onclick="loadSection('intro')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all active-nav bg-slate-800 text-white border-l-4 border-indigo-500" data-target="intro">
+                <span class="flex items-center gap-3"><span class="text-lg">✦</span> Introducción</span>
+            </button>
+            <button onclick="loadSection('architecture')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all border-l-4 border-transparent" data-target="architecture">
+                <span class="flex items-center gap-3"><span class="text-lg">☍</span> Arquitectura</span>
+            </button>
+
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-4">Implementación</div>
+            
+            <button onclick="loadSection('installation')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all border-l-4 border-transparent" data-target="installation">
+                <span class="flex items-center gap-3"><span class="text-lg">🐳</span> Instalación Docker</span>
+            </button>
+            <button onclick="loadSection('local-llm')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all border-l-4 border-transparent" data-target="local-llm">
+                <span class="flex items-center gap-3"><span class="text-lg">🔌</span> Conexión Ollama</span>
+            </button>
+
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-4">Avanzado</div>
+            
+            <button onclick="loadSection('cloud')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all border-l-4 border-transparent" data-target="cloud">
+                <span class="flex items-center gap-3"><span class="text-lg">☁</span> Despliegue</span>
+            </button>
+            <button onclick="loadSection('resources')" class="nav-btn w-full text-left px-4 py-3 rounded-lg hover:bg-slate-800 transition-all border-l-4 border-transparent" data-target="resources">
+                <span class="flex items-center gap-3"><span class="text-lg">📚</span> Recursos</span>
+            </button>
+        </nav>
+        
+        <div class="p-4 border-t border-slate-800 bg-slate-950 text-xs text-center text-slate-500">
+            <p>Actualizado: Diciembre 2025</p>
+            <p>Modo: <span class="text-green-500">● Docker Stable</span></p>
+        </div>
+    </aside>
+
+    <div class="md:hidden fixed top-0 w-full bg-slate-900 text-white z-50 flex justify-between items-center p-4 shadow-md">
+        <h1 class="font-bold text-lg flex items-center gap-2"><span class="text-indigo-400">❖</span> FlowiseHub</h1>
+        <button onclick="toggleSidebar()" class="text-white focus:outline-none p-2 rounded hover:bg-slate-800">☰</button>
+    </div>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative pt-16 md:pt-0 w-full bg-slate-50">
+        <div id="content-display" class="flex-1 overflow-y-auto p-6 md:p-10 lg:p-16 scroll-smooth">
+            </div>
+    </main>
+
+    <script>
+        // --- BASE DE DATOS DE CONTENIDO ---
+        const contentData = {
+            'intro': {
+                title: "¿Qué es Flowise?",
+                subtitle: "Orquestación Visual para LLMs",
+                introText: "Flowise es una herramienta 'low-code' que te permite construir aplicaciones de IA complejas (Chatbots, Agentes, RAG) simplemente arrastrando y conectando cajas. Al usar la edición Docker, garantizamos un entorno profesional, aislado de los errores comunes de Windows y Node.js.",
+                keyPoints: [
+                    { title: "Agnóstico", icon: "🔌", desc: "No te casa con nadie. Úsalo con OpenAI, Anthropic, o tu propio modelo local (Ollama/LM Studio)." },
+                    { title: "Visual & Lógico", icon: "🧠", desc: "Reemplaza cientos de líneas de código Python/LangChain con un diagrama visual comprensible." },
+                    { title: "Dockerizado", icon: "🐳", desc: "Corre en un contenedor Linux seguro. Si rompes algo, borras el contenedor y creas otro en segundos." }
+                ],
+                chartData: [45, 4] 
+            },
+            'architecture': {
+                title: "Arquitectura de Nodos",
+                subtitle: "Cómo piensa Flowise",
+                introText: "Un flujo (ChatFlow) es una cadena de procesamiento. La información entra, se procesa y sale. En el entorno Docker, estos nodos viven dentro del contenedor, por lo que la gestión de redes es crucial.",
+                nodes: [
+                    { id: 'input', label: 'Chat Input', type: 'Trigger', color: 'border-green-400', desc: "El punto de entrada. Escucha en el puerto 3000 y recibe el texto del usuario." },
+                    { id: 'prompt', label: 'Prompt Template', type: 'Structure', color: 'border-yellow-400', desc: "Define las reglas del juego. 'Eres un ingeniero eléctrico experto en normativas...'." },
+                    { id: 'llm', label: 'ChatOllama', type: 'Brain', color: 'border-indigo-400', desc: "CRÍTICO: Este nodo intenta conectar con tu IA. En Docker, NO puede usar 'localhost'. Debe usar la puerta de enlace interna." },
+                    { id: 'memory', label: 'Buffer Memory', type: 'Context', color: 'border-purple-400', desc: "Almacena temporalmente la conversación en la RAM del contenedor para mantener el hilo." },
+                    { id: 'output', label: 'Output Parser', type: 'Filter', color: 'border-red-400', desc: "Limpia la respuesta de la IA (quita alucinaciones o formatos rotos) antes de mostrarla." }
+                ]
+            },
+            'installation': {
+                title: "Instalación Definitiva",
+                subtitle: "Método Docker + WSL (Recomendado)",
+                introText: "Este método evita el 99% de los errores de compatibilidad de Node.js. Usaremos Docker para descargar una imagen oficial 'lista para usar'.",
+                steps: [
+                    { 
+                        title: "1. Preparar el Terreno (Docker & WSL)", 
+                        content: "Instala <strong>Docker Desktop</strong>. Asegúrate de marcar 'Use WSL 2'.<br><br><span class='text-red-500 font-bold'>¿Error 'WSL needs update'?</span><br>No te asustes. Abre PowerShell como Administrador y ejecuta:<br><code class='block mt-2 bg-black text-green-400 p-2 rounded font-mono text-sm'>wsl --update</code><br>Luego reinicia Docker." 
+                    },
+                    { 
+                        title: "2. Desplegar el Contenedor", 
+                        content: "Con Docker en verde (Running), abre PowerShell y pega este comando maestro. Esto descarga Flowise y crea un espacio seguro para tus datos:<br><code class='block mt-2 bg-slate-800 text-white p-3 rounded font-mono text-xs md:text-sm select-all'>docker run -d --name flowise -p 3000:3000 -v flowise_data:/root/.flowise flowiseai/flowise</code>" 
+                    },
+                    { 
+                        title: "3. Verificar Acceso", 
+                        content: "Espera unos 30-60 segundos. Abre tu navegador y ve a:<br><a href='http://localhost:3000' target='_blank' class='text-blue-600 underline font-bold text-lg'>http://localhost:3000</a>" 
+                    }
+                ],
+                alert: "<strong>Tip Pro:</strong> Si al entrar ves una pantalla blanca vacía (/undefined), significa que el navegador guardó caché vieja. Abre una ventana de <strong>Incógnito</strong> y funcionará."
+            },
+            'local-llm': {
+                title: "Conexión con Ollama",
+                subtitle: "El reto de la Red Docker",
+                introText: "Aquí es donde falla la mayoría. Docker es como una 'computadora dentro de tu computadora'. Por eso, 'localhost' para Docker significa 'yo mismo', no tu PC real.",
+                steps: [
+                    { 
+                        title: "1. Estado de Ollama", 
+                        content: "Asegúrate de que Ollama está corriendo en Windows (el icono debe aparecer en la barra de tareas)." 
+                    },
+                    { 
+                        title: "2. El Nodo Correcto", 
+                        content: "En Flowise, ve a la sección <strong>Chat Models</strong> y arrastra el nodo <strong>ChatOllama</strong>." 
+                    },
+                    { 
+                        title: "3. La Dirección Mágica (Host)", 
+                        content: "En el campo 'Base URL', borra <code>http://localhost:11434</code> y escribe:<br><div class='mt-2 p-3 bg-amber-50 border border-amber-200 text-amber-900 font-mono font-bold rounded'>http://host.docker.internal:11434</div><br><span class='text-xs text-slate-500'>Esto le dice al contenedor: 'Sal y busca el puerto 11434 en la máquina anfitriona (Windows)'.</span>" 
+                    },
+                    { 
+                        title: "4. Definir Modelo", 
+                        content: "En 'Model Name', escribe el nombre exacto del modelo que descargaste en la terminal (ej: <code>llama3.2</code>, <code>qwen2.5</code>, <code>mistral</code>)." 
+                    }
+                ]
+            },
+            'cloud': {
+                title: "Llevarlo a la Nube",
+                subtitle: "De Local a Producción",
+                introText: "Cuando tu agente funcione perfecto en local, querrás que otros lo usen. Estas son las opciones para subir tu contenedor Docker.",
+                providers: [
+                    { name: "Render", type: "Fácil", desc: "Conecta tu GitHub. Render detecta el Dockerfile y lo despliega. Tiene capa gratuita limitada." },
+                    { name: "Railway", type: "Intermedio", desc: "Muy robusto para Docker. Cobra por uso (minutos de CPU). Ideal para demos profesionales." },
+                    { name: "HuggingFace Spaces", type: "Gratis", desc: "Puedes crear un 'Space' tipo Docker y usar la plantilla de Flowise. Perfecto para portafolio." }
+                ],
+                security: "IMPORTANTE: En la nube, debes proteger tu Flowise. Configura las variables de entorno <code>FLOWISE_USERNAME</code> y <code>FLOWISE_PASSWORD</code> en el panel de control de tu proveedor."
+            },
+            'resources': {
+                title: "Recursos Adicionales",
+                subtitle: "Para seguir aprendiendo",
+                introText: "La documentación y la comunidad son tus mejores aliados.",
+                links: [
+                    { title: "Documentación Oficial", url: "https://docs.flowiseai.com/", tag: "Manual" },
+                    { title: "Flowise GitHub", url: "https://github.com/FlowiseAI/Flowise", tag: "Código" },
+                    { title: "Docker Hub Image", url: "https://hub.docker.com/r/flowiseai/flowise", tag: "Imagen" },
+                    { title: "Canal de Leon van Zyl", url: "https://www.youtube.com/@LeonvanZyl", tag: "Tutoriales" }
+                ]
+            }
+        };
+
+        // --- FUNCIONES DEL SISTEMA ---
+
+        function init() {
+            loadSection('intro');
+            setupMobileMenu();
+        }
+
+        function loadSection(sectionKey) {
+            // 1. Actualizar estado visual de los botones
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                // Resetear estilos
+                btn.classList.remove('bg-slate-800', 'text-white', 'border-indigo-500');
+                btn.classList.add('border-transparent');
+                
+                // Activar el seleccionado
+                if(btn.dataset.target === sectionKey) {
+                    btn.classList.add('bg-slate-800', 'text-white', 'border-indigo-500');
+                    btn.classList.remove('border-transparent');
+                }
+            });
+
+            // 2. Obtener datos y contenedor
+            const data = contentData[sectionKey];
+            const display = document.getElementById('content-display');
+            
+            // 3. Limpiar contenedor con efecto fade
+            display.innerHTML = '';
+            display.classList.remove('animate-fade-in');
+            void display.offsetWidth; // Trigger reflow
+            display.classList.add('animate-fade-in');
+
+            // 4. Renderizar contenido específico
+            if (!data) {
+                display.innerHTML = `<h2 class="text-red-500">Error: Sección no encontrada (${sectionKey})</h2>`;
+                return;
+            }
+
+            switch(sectionKey) {
+                case 'intro': renderIntro(display, data); break;
+                case 'architecture': renderArchitecture(display, data); break;
+                case 'installation': renderInstallation(display, data); break;
+                case 'local-llm': renderLocalLLM(display, data); break;
+                case 'cloud': renderCloud(display, data); break;
+                case 'resources': renderResources(display, data); break;
+            }
+        }
+
+        // --- RENDERIZADORES DE VISTAS (Restaurados Completos) ---
+
+        function renderIntro(container, data) {
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-8 border-b border-slate-200 pb-6">
+                        <h2 class="text-4xl font-bold text-slate-900 mb-2">${data.title}</h2>
+                        <p class="text-xl text-indigo-600 font-light">${data.subtitle}</p>
+                    </div>
+                    <p class="text-lg text-slate-600 mb-10 leading-relaxed">${data.introText}</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        ${data.keyPoints.map(p => `
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-300 transition-all group">
+                                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">${p.icon}</div>
+                                <h3 class="font-bold text-slate-800 mb-2">${p.title}</h3>
+                                <p class="text-sm text-slate-500 leading-snug">${p.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-bold text-slate-700">Eficiencia de Desarrollo (Horas)</h3>
+                            <span class="text-xs font-mono bg-slate-100 px-2 py-1 rounded text-slate-500">Estimado</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="introChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+            // Iniciar gráfico
+            setTimeout(() => {
+                const ctx = document.getElementById('introChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Programación Manual (Python/JS)', 'Flowise (Visual)'],
+                        datasets: [{
+                            label: 'Tiempo promedio para prototipo funcional',
+                            data: data.chartData,
+                            backgroundColor: ['#cbd5e1', '#6366f1'],
+                            borderRadius: 8,
+                            barThickness: 60
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
+                });
+            }, 50);
+        }
+
+        function renderArchitecture(container, data) {
+            container.innerHTML = `
+                <div class="max-w-6xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-1">${data.title}</h2>
+                        <p class="text-indigo-600">${data.subtitle}</p>
+                    </div>
+                    
+                    <p class="text-slate-600 mb-10 max-w-3xl">${data.introText}</p>
+                    
+                    <div class="bg-slate-100 p-10 rounded-2xl border border-slate-200 mb-10 overflow-x-auto flow-container">
+                        <div class="flex items-center justify-between min-w-[800px]">
+                            ${data.nodes.map((node, index) => `
+                                <div onclick="selectNode('${node.id}')" id="node-${node.id}" class="flow-node w-40 bg-white p-5 rounded-xl border-2 ${node.color || 'border-slate-300'} shadow-sm flex flex-col items-center justify-center text-center relative z-10 group">
+                                    <span class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">${node.type}</span>
+                                    <span class="text-sm font-bold text-slate-800 leading-tight">${node.label}</span>
+                                    <div class="mt-3 w-6 h-1 rounded-full bg-slate-200 group-hover:bg-indigo-400 transition-colors"></div>
+                                </div>
+                                ${index < data.nodes.length - 1 ? '<div class="connector-line"></div>' : ''}
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div id="node-details" class="bg-white p-8 rounded-2xl border border-slate-200 shadow-lg transition-all opacity-0 transform translate-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="bg-indigo-50 p-3 rounded-lg text-indigo-600 text-2xl">ℹ</div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800 mb-2" id="detail-title">Selecciona un nodo</h3>
+                                <p class="text-slate-600 leading-relaxed" id="detail-desc">Haz clic en los bloques de arriba para entender su función específica dentro de Docker.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInstallation(container, data) {
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-1">${data.title}</h2>
+                        <p class="text-indigo-600 font-medium">${data.subtitle}</p>
+                    </div>
+                    
+                    <p class="text-slate-600 mb-8">${data.introText}</p>
+                    
+                    <div class="space-y-8">
+                        ${data.steps.map((step, idx) => `
+                            <div class="flex gap-6 relative">
+                                ${idx < data.steps.length - 1 ? '<div class="absolute left-5 top-12 bottom-0 w-0.5 bg-slate-200 -z-10"></div>' : ''}
+                                
+                                <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-200 flex-shrink-0 border-4 border-slate-50 relative z-10">${idx + 1}</div>
+                                
+                                <div class="flex-1 bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                                    <h3 class="font-bold text-lg text-slate-800 mb-3">${step.title}</h3>
+                                    <div class="text-slate-600 text-sm leading-relaxed">${step.content}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="mt-10 p-6 bg-amber-50 border-l-4 border-amber-400 rounded-r-xl flex gap-4 items-start">
+                        <span class="text-2xl">⚠️</span>
+                        <div class="text-amber-800 text-sm">${data.alert}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderLocalLLM(container, data) {
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-1">${data.title}</h2>
+                        <p class="text-indigo-600 font-medium">${data.subtitle}</p>
+                    </div>
+
+                    <div class="bg-indigo-900 text-indigo-100 p-6 rounded-xl mb-8 font-mono text-sm shadow-inner">
+                        <p class="mb-2 opacity-70">// El Problema:</p>
+                        <p><span class="text-pink-400">localhost</span> (en Docker) ≠ <span class="text-green-400">localhost</span> (en Windows)</p>
+                        <p class="mt-4 mb-2 opacity-70">// La Solución:</p>
+                        <p>Usar el puente de red: <span class="text-yellow-400 font-bold">host.docker.internal</span></p>
+                    </div>
+                    
+                    <p class="text-slate-600 mb-8">${data.introText}</p>
+                    
+                    <div class="grid gap-4">
+                        ${data.steps.map((step, idx) => `
+                            <div class="bg-white border-l-4 border-indigo-500 p-5 rounded-r-lg shadow-sm hover:translate-x-1 transition-transform">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded">PASO ${idx + 1}</span>
+                                    <h3 class="font-bold text-slate-800">${step.title}</h3>
+                                </div>
+                                <div class="text-slate-600 text-sm pl-1">${step.content}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCloud(container, data) {
+            container.innerHTML = `
+                <div class="max-w-5xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-1">${data.title}</h2>
+                        <p class="text-indigo-600 font-medium">${data.subtitle}</p>
+                    </div>
+                    
+                    <p class="text-slate-600 mb-8">${data.introText}</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        ${data.providers.map(prov => `
+                            <div class="bg-white p-6 rounded-xl border border-slate-200 hover:border-indigo-500 hover:shadow-lg transition-all cursor-default group">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-bold text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">${prov.name}</h3>
+                                    <span class="text-[10px] font-bold uppercase bg-slate-100 text-slate-500 px-2 py-1 rounded">${prov.type}</span>
+                                </div>
+                                <p class="text-sm text-slate-600 leading-relaxed">${prov.desc}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="bg-red-50 border border-red-100 p-6 rounded-xl">
+                        <h3 class="text-red-800 font-bold mb-2 flex items-center gap-2">
+                            <span class="text-xl">🛡️</span> Nota de Seguridad
+                        </h3>
+                        <p class="text-red-700 text-sm opacity-90">${data.security}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResources(container, data) {
+            container.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-1">${data.title}</h2>
+                        <p class="text-indigo-600 font-medium">${data.subtitle}</p>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        ${data.links.map(link => `
+                            <a href="${link.url}" target="_blank" class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all group no-underline">
+                                <div class="flex items-center gap-4">
+                                    <div class="bg-indigo-50 text-indigo-600 w-10 h-10 rounded-lg flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">↗</div>
+                                    <span class="font-bold text-slate-700 group-hover:text-indigo-700 transition-colors">${link.title}</span>
+                                </div>
+                                <span class="text-xs font-mono bg-slate-100 text-slate-500 px-3 py-1 rounded-full">${link.tag}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- LÓGICA DE INTERACCIÓN ---
+        window.selectNode = function(nodeId) {
+            // Desactivar todos
+            document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('active'));
+            // Activar clickeado
+            const activeNode = document.getElementById(`node-${nodeId}`);
+            if(activeNode) activeNode.classList.add('active');
+            
+            // Actualizar panel detalles
+            const nodeData = contentData['architecture'].nodes.find(n => n.id === nodeId);
+            const panel = document.getElementById('node-details');
+            
+            if (nodeData && panel) {
+                document.getElementById('detail-title').innerText = `${nodeData.label} (${nodeData.type})`;
+                document.getElementById('detail-desc').innerText = nodeData.desc;
+                panel.classList.remove('opacity-0', 'translate-y-4');
+                panel.classList.add('opacity-100', 'translate-y-0');
+            }
+        };
+
+        function setupMobileMenu() {
+            window.addEventListener('resize', () => {
+                const sb = document.getElementById('sidebar');
+                if (window.innerWidth >= 768) {
+                    sb.classList.remove('hidden');
+                    sb.classList.add('flex');
+                } else {
+                    sb.classList.add('hidden');
+                    sb.classList.remove('flex');
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('hidden');
+            sb.classList.toggle('flex');
+            sb.classList.toggle('absolute');
+            sb.classList.toggle('h-full');
+        }
+
+        // INICIAR APLICACIÓN
+        window.onload = init;
+    </script>
+</body>
+</html>

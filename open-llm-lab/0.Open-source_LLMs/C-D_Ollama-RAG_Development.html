@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sesión 2 - IA Local</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #05060a;
+      --panel: #10131a;
+      --panel-soft: #151924;
+      --accent: #7c5cff;
+      --accent-soft: #7c5cff22;
+      --accent-strong: #b892ff;
+      --text: #f5f5f7;
+      --muted: #a0a4b8;
+      --border: #25293a;
+      --danger: #ff4d6a;
+      --success: #4ade80;
+      --shadow-soft: 0 16px 40px rgba(0,0,0,0.45);
+      --radius-lg: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #151a2c 0, #05060a 55%, #020308 100%);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin: 0 0 4px;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 span.badge {
+      font-size: 0.78rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #7c5cff, #00e0ff);
+      color: #05060a;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(8, 10, 20, 0.85);
+      border: 1px solid #23263b;
+    }
+
+    .meta-pill strong {
+      color: #d1d5ff;
+      font-weight: 500;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #7c5cff;
+    }
+
+    .pill-dot.green {
+      background: var(--success);
+    }
+
+    .pill-dot.red {
+      background: var(--danger);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(260px, 1.8fr);
+      gap: 22px;
+    }
+
+    @media (max-width: 880px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      background: linear-gradient(145deg, #0b0e18 0%, #05060a 52%, #090b14 100%);
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel.secondary {
+      background: radial-gradient(circle at top left, #15192a 0, #05060a 60%);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.96rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #d1d5ff;
+    }
+
+    .panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .badge-soft {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #2b3046;
+      background: rgba(10, 13, 26, 0.95);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .sections {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    details.section {
+      border-radius: 14px;
+      background: rgba(7, 10, 22, 0.9);
+      border: 1px solid #22263a;
+      overflow: hidden;
+    }
+
+    details.section[open] {
+      border-color: var(--accent-soft);
+      background: radial-gradient(circle at top left, #14182a 0, #05060a 55%);
+    }
+
+    summary.section-header {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    summary.section-header::-webkit-details-marker {
+      display: none;
+    }
+
+    .section-title {
+      font-weight: 500;
+    }
+
+    .section-tag {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid #2c3050;
+      color: #a3b4ff;
+      background: rgba(7, 11, 30, 0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .chevron {
+      margin-left: auto;
+      font-size: 0.9rem;
+      transform: rotate(0deg);
+      transition: transform 0.16s ease;
+      color: var(--muted);
+    }
+
+    details[open] .chevron {
+      transform: rotate(90deg);
+      color: var(--accent-strong);
+    }
+
+    .tasks {
+      padding: 8px 12px 10px;
+      border-top: 1px solid #23273a;
+    }
+
+    .task {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px 10px;
+      padding: 6px 4px;
+      align-items: flex-start;
+      border-radius: 10px;
+    }
+
+    .task:hover {
+      background: rgba(18, 22, 40, 0.85);
+    }
+
+    .task input[type="checkbox"] {
+      margin-top: 2px;
+      cursor: pointer;
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+    }
+
+    .task-label {
+      font-size: 0.86rem;
+      line-height: 1.3rem;
+    }
+
+    .task-label strong {
+      color: #e5e7ff;
+    }
+
+    .task-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .task-hint code {
+      font-size: 0.75rem;
+      padding: 1px 4px;
+      border-radius: 5px;
+      background: #050814;
+      border: 1px solid #252942;
+      color: #e5defd;
+    }
+
+    a {
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .notes-block {
+      margin-top: 10px;
+    }
+
+    .notes-block label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .notes-block textarea {
+      width: 100%;
+      min-height: 90px;
+      resize: vertical;
+      padding: 8px 9px;
+      border-radius: 10px;
+      border: 1px solid #22263a;
+      background: rgba(4, 6, 14, 0.95);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: inherit;
+    }
+
+    .notes-block textarea:focus {
+      outline: 1px solid var(--accent);
+      border-color: var(--accent);
+    }
+
+    .right-panel-section {
+      margin-bottom: 14px;
+    }
+
+    .right-panel-section h3 {
+      font-size: 0.9rem;
+      margin: 0 0 4px;
+      color: #e1e4ff;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .right-panel-section p,
+    .right-panel-section li {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.35rem;
+    }
+
+    ul.link-list {
+      padding-left: 16px;
+      margin: 4px 0 0;
+    }
+
+    .progress-bar {
+      margin-top: 6px;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #111321;
+      overflow: hidden;
+      border: 1px solid #252942;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #7c5cff, #00e0ff);
+      transition: width 0.18s ease-out;
+    }
+
+    .progress-text {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 2px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>
+      Sesión 2 · IA Local
+      <span class="badge">Guía dinámica</span>
+    </h1>
+    <div class="subtitle">
+      Checklist vivo para seguir tu ruta: LM Studio + Ollama + prompts + mini-proyecto.
+      Los checks se guardan en tu navegador (localStorage).
+    </div>
+
+    <div class="meta-bar">
+      <div class="meta-pill">
+        <span class="pill-dot green"></span>
+        <span><strong>Objetivo:</strong> Pasar de pruebas básicas a uso práctico diario.</span>
+      </div>
+      <div class="meta-pill">
+        <span class="pill-dot"></span>
+        <span><strong>Stack:</strong> LM Studio · Ollama · Python</span>
+      </div>
+      <div class="meta-pill">
+        <span class="pill-dot"></span>
+        <span><strong>Perfil:</strong> multifacético (founder · dev · ingeniería · contenido)</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- LEFT: CHECKLIST -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title">Checklist Sesión 2</div>
+            <div class="panel-subtitle">
+              Abre cada sección, marca los pasos y escribe notas si lo necesitas.
+            </div>
+          </div>
+          <button id="btn-clear" class="badge-soft" type="button">
+            Limpiar checks
+          </button>
+        </div>
+
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div id="progress-text" class="progress-text">0% completado</div>
+
+        <div id="sections" class="sections"></div>
+
+        <div class="notes-block">
+          <label for="notes-global">Notas generales de la semana</label>
+          <textarea id="notes-global" placeholder="Ej: sensaciones de los modelos, ideas de proyectos, cosas a revisar más adelante..."></textarea>
+        </div>
+      </section>
+
+      <!-- RIGHT: RESUMEN / LINKS -->
+      <aside class="panel secondary">
+        <div class="panel-header">
+          <div class="panel-title">Mapa rápido</div>
+        </div>
+
+        <div class="right-panel-section">
+          <h3>Días y foco</h3>
+          <ul>
+            <li><strong>Lección 1:</strong> Cerrar instalación de Ollama + script sencillo.</li>
+            <li><strong>Lección 2:</strong> Mini-benchmark Qwen vs DeepSeek (Ollama).</li>
+            <li><strong>Lección 3–4:</strong> Prompt engineering aplicado (tus casos reales).</li>
+            <li><strong>Lección 5:</strong> Mini-proyecto: copiloto local en consola.</li>
+          </ul>
+        </div>
+
+        <div class="right-panel-section">
+          <h3>Enlaces útiles</h3>
+          <ul class="link-list">
+            <li><a href="https://ollama.com/download" target="_blank" rel="noreferrer">Descargar Ollama</a></li>
+            <li><a href="https://ollama.com/library" target="_blank" rel="noreferrer">Modelos en Ollama (library)</a></li>
+            <li><a href="https://lmstudio.ai" target="_blank" rel="noreferrer">LM Studio (descarga)</a></li>
+            <li><a href="https://platform.openai.com/docs/guides/prompt-engineering" target="_blank" rel="noreferrer">Guía de prompt engineering (referencia)</a></li>
+          </ul>
+        </div>
+
+        <div class="right-panel-section">
+          <h3>Convención de modelos (Sesión 2)</h3>
+          <p>
+            · <strong>Qwen 2.5 7B</strong> → asistente general / análisis.<br />
+            · <strong>DeepSeek R1</strong> → razonamiento paso a paso.<br />
+            · <strong>Llama 3.1 8B</strong> → redacción en ES/EN.<br />
+            · <strong>Qwen2.5-Coder 7B</strong> → código (MQL5, Flutter, Python, etc.).
+          </p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // --- Definición de secciones y tareas (Sesión 2) ---
+    const semanaId = "semana2";
+    const sectionsData = [
+      {
+        id: "d1_ollama",
+        title: "Lección 1 · Cerrar entorno Ollama",
+        tag: "C1 / C2",
+        tasks: [
+          {
+            id: "d1_ollama_install",
+            label: "<strong>Verificar instalación</strong> de Ollama en PowerShell.",
+            hint: "Comando: <code>ollama --version</code>. Si falla, reinstalar desde la web."
+          },
+          {
+            id: "d1_ollama_run_llama",
+            label: "Probar un modelo rápido con <strong>llama3.1</strong> o similar.",
+            hint: "Ejemplo: <code>ollama run llama3.1:8b</code> y hacer una pregunta simple."
+          },
+          {
+            id: "d1_pull_qwen",
+            label: "Descargar modelo general <strong>qwen2.5:7b</strong>.",
+            hint: "Comando sugerido: <code>ollama pull qwen2.5:7b</code>."
+          },
+          {
+            id: "d1_pull_deepseek",
+            label: "Descargar modelo de razonamiento <strong>deepseek-r1:7b</strong> (o similar).",
+            hint: "Comando sugerido: <code>ollama pull deepseek-r1:7b</code>."
+          },
+          {
+            id: "d1_pull_llama_coder",
+            label: "Opcional: descargar <strong>llama3.1:8b</strong> y <strong>qwen2.5-coder:7b</strong> para escritura y código.",
+            hint: "Útiles para pruebas de texto y refactor de código."
+          },
+          {
+            id: "d1_script_chat",
+            label: "Crear un script <strong>script_chat_ollama.py</strong> mínimo.",
+            hint: "Lee un prompt desde consola y llama a <code>http://localhost:11434/api/generate</code> con qwen2.5:7b."
+          },
+          {
+            id: "d1_script_test",
+            label: "Probar el script con 1–2 preguntas reales tuyas.",
+            hint: "Comprobar que responde bien y medir mentalmente velocidad/fluidez."
+          }
+        ]
+      },
+      {
+        id: "d2_benchmark",
+        title: "Lección 2 · Mini-benchmark Qwen vs DeepSeek (Ollama)",
+        tag: "C2 / Mód.1",
+        tasks: [
+          {
+            id: "d2_define_prompts",
+            label: "Definir una lista de <strong>5–6 prompts</strong> de prueba.",
+            hint: "Vida diaria, explicación técnica, pequeño problema lógico, mini refactor, etc."
+          },
+          {
+            id: "d2_run_qwen",
+            label: "Correr todos los prompts con <strong>qwen2.5:7b</strong> usando tu script.",
+            hint: "Guardar respuestas en un archivo <code>benchmark_sem2_qwen.md</code> o similar."
+          },
+          {
+            id: "d2_run_deepseek",
+            label: "Repetir las mismas pruebas con <strong>deepseek-r1:7b</strong>.",
+            hint: "Mismo script, solo cambias el modelo en el body de la petición."
+          },
+          {
+            id: "d2_score_manual",
+            label: "Hacer una <strong>calificación manual</strong> rápida (1–5) para cada respuesta.",
+            hint: "Criterios: claridad, profundidad, utilidad práctica y tiempo de respuesta aparente."
+          },
+          {
+            id: "d2_resumen",
+            label: "Escribir un <strong>mini-resumen</strong> de conclusiones del benchmark.",
+            hint: "¿En qué tipo de tareas prefieres Qwen? ¿En cuáles DeepSeek? Escríbelo en tu cuaderno .md."
+          }
+        ]
+      },
+      {
+        id: "d3_prompts1",
+        title: "Lección 3 · Prompt Engineering aplicado (Parte 1)",
+        tag: "Mód.3",
+        tasks: [
+          {
+            id: "d3_prompt_reasoning",
+            label: "Diseñar un prompt maestro de <strong>razonamiento paso a paso</strong>.",
+            hint: "Orientado a decisiones complejas (trading, estrategias, diagnósticos técnicos)."
+          },
+          {
+            id: "d3_prompt_code",
+            label: "Diseñar un prompt maestro para <strong>revisión / explicación de código</strong>.",
+            hint: "Casos: fragmentos de MQL5, Flutter, Python, etc."
+          },
+          {
+            id: "d3_prompt_docs",
+            label: "Opcional: diseñar un prompt para <strong>análisis y resumen de documentos</strong>.",
+            hint: "Pensando en el futuro módulo de RAG con tus PDFs y docs."
+          },
+          {
+            id: "d3_test_prompts_lmstudio",
+            label: "Probar estos prompts en LM Studio con Qwen o Llama.",
+            hint: "Ajustar redacción hasta que el modelo responda como esperas."
+          },
+          {
+            id: "d3_test_prompts_ollama",
+            label: "Probar los mismos prompts en Ollama.",
+            hint: "Comparar comportamiento LM Studio vs Ollama para el mismo modelo."
+          }
+        ]
+      },
+      {
+        id: "d4_prompts2",
+        title: "Lección 4 · Refinar prompts + Cuaderno oficial",
+        tag: "Mód.3",
+        tasks: [
+          {
+            id: "d4_add_system_role",
+            label: "Aplicar estructura <strong>System · Role · Ejemplos</strong> a tus prompts maestros.",
+            hint: "Convertir cada prompt en “plantilla reutilizable”, no en una frase suelta."
+          },
+          {
+            id: "d4_cuaderno_md",
+            label: "Crear o actualizar tu <strong>cuaderno de prompts</strong> en un archivo <code>prompts_user.md</code>.",
+            hint: "Secciones: razonamiento, código, contenido, docs, otros."
+          },
+          {
+            id: "d4_model_notes",
+            label: "Anotar qué modelo se siente mejor para cada prompt.",
+            hint: "Ej: ‘razonamiento → DeepSeek’, ‘explicación código → QwenCoder’, ‘redacción → Llama3.1’."
+          },
+          {
+            id: "d4_add_tags",
+            label: "Etiquetar cada prompt con <strong>tags</strong> (razonamiento, código, story, ingeniería, etc.).",
+            hint: "Te ayudará luego a construir agentes y scripts basados en estos roles."
+          }
+        ]
+      },
+      {
+        id: "d5_project",
+        title: "Lección 5 · Mini-proyecto · Copiloto Local",
+        tag: "Proyecto",
+        tasks: [
+          {
+            id: "d5_modes",
+            label: "Extender tu script a un <strong>copiloto local</strong> con varios modos.",
+            hint: "Ejemplos: 1) Explicar código, 2) Idear app/EA, 3) Resumir texto/decisión."
+          },
+          {
+            id: "d5_connect_prompts",
+            label: "Conectar cada modo con uno de tus <strong>prompts maestros</strong>.",
+            hint: "Puedes guardar los prompts dentro del script o cargarlos desde un archivo .json/.md sencillo."
+          },
+          {
+            id: "d5_real_tests",
+            label: "Probar el copiloto con casos reales tuyos.",
+            hint: "Un fragmento del EA, una idea para WattsWise, una decisión personal/financiera, etc."
+          },
+          {
+            id: "d5_lessons",
+            label: "Escribir un resumen de <strong>lecciones de la Sesión 2</strong>.",
+            hint: "Qué modelos te sirven más, qué prompts te funcionaron, qué quieres explorar en la Semana 3."
+          }
+        ]
+      }
+    ];
+
+    // --- Render dinámico del checklist ---
+    const sectionsContainer = document.getElementById("sections");
+
+    function createTaskElement(sectionId, task) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "task";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      const cid = `${semanaId}_${sectionId}_${task.id}`;
+      checkbox.id = cid;
+
+      // Cargar estado
+      const saved = localStorage.getItem(cid);
+      if (saved === "1") checkbox.checked = true;
+
+      checkbox.addEventListener("change", () => {
+        localStorage.setItem(cid, checkbox.checked ? "1" : "0");
+        updateProgress();
+      });
+
+      const labelDiv = document.createElement("div");
+      const label = document.createElement("label");
+      label.className = "task-label";
+      label.htmlFor = cid;
+      label.innerHTML = task.label;
+      labelDiv.appendChild(label);
+
+      if (task.hint) {
+        const hint = document.createElement("div");
+        hint.className = "task-hint";
+        hint.innerHTML = task.hint;
+        labelDiv.appendChild(hint);
+      }
+
+      wrapper.appendChild(checkbox);
+      wrapper.appendChild(labelDiv);
+      return wrapper;
+    }
+
+    function renderSections() {
+      sectionsData.forEach((section) => {
+        const details = document.createElement("details");
+        details.className = "section";
+        details.id = `${semanaId}_${section.id}`;
+        details.open = true;
+
+        const summary = document.createElement("summary");
+        summary.className = "section-header";
+
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "section-title";
+        titleSpan.textContent = section.title;
+
+        const tagSpan = document.createElement("span");
+        tagSpan.className = "section-tag";
+        tagSpan.textContent = section.tag;
+
+        const chevron = document.createElement("span");
+        chevron.className = "chevron";
+        chevron.textContent = "▶";
+
+        summary.appendChild(titleSpan);
+        summary.appendChild(tagSpan);
+        summary.appendChild(chevron);
+
+        const tasksDiv = document.createElement("div");
+        tasksDiv.className = "tasks";
+
+        section.tasks.forEach((task) => {
+          tasksDiv.appendChild(createTaskElement(section.id, task));
+        });
+
+        details.appendChild(summary);
+        details.appendChild(tasksDiv);
+        sectionsContainer.appendChild(details);
+      });
+    }
+
+    // --- Progreso global ---
+    const progressFill = document.getElementById("progress-fill");
+    const progressText = document.getElementById("progress-text");
+
+    function updateProgress() {
+      const checkboxes = sectionsContainer.querySelectorAll(
+        'input[type="checkbox"]'
+      );
+      const total = checkboxes.length;
+      if (!total) return;
+
+      let checked = 0;
+      checkboxes.forEach((cb) => {
+        if (cb.checked) checked++;
+      });
+
+      const pct = Math.round((checked / total) * 100);
+      progressFill.style.width = pct + "%";
+      progressText.textContent = `${pct}% completado (${checked}/${total} tareas)`;
+    }
+
+    // --- Notas globales ---
+    const notesGlobal = document.getElementById("notes-global");
+    const notesKey = `${semanaId}_notes_global`;
+
+    function loadNotes() {
+      const saved = localStorage.getItem(notesKey);
+      if (saved !== null) notesGlobal.value = saved;
+    }
+
+    notesGlobal.addEventListener("input", () => {
+      localStorage.setItem(notesKey, notesGlobal.value);
+    });
+
+    // --- Limpiar checks ---
+    document.getElementById("btn-clear").addEventListener("click", () => {
+      if (!confirm("¿Borrar todos los checks de la Sesión 2?")) return;
+
+      sectionsData.forEach((section) => {
+        section.tasks.forEach((task) => {
+          const id = `${semanaId}_${section.id}_${task.id}`;
+          localStorage.removeItem(id);
+        });
+      });
+
+      const checkboxes = sectionsContainer.querySelectorAll(
+        'input[type="checkbox"]'
+      );
+      checkboxes.forEach((cb) => (cb.checked = false));
+      updateProgress();
+    });
+
+    // --- Init ---
+    renderSections();
+    loadNotes();
+    updateProgress();
+  </script>
+</body>
+</html>

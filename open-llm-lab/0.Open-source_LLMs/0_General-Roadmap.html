@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roadmap IA Local - Checklist</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      margin: 0;
+      padding: 1.5rem;
+    }
+    h1, h2, h3, h4 {
+      color: #f9fafb;
+      margin-bottom: 0.4rem;
+    }
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.4rem; margin-top: 1.2rem; }
+    h3 { font-size: 1.1rem; margin-top: 0.9rem; }
+    h4 { font-size: 1rem; margin-top: 0.7rem; }
+    .section {
+      border: 1px solid #1f2937;
+      border-radius: 0.75rem;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      background: #020617;
+    }
+    .subsection {
+      margin-top: 0.5rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.5rem;
+      background: #020617;
+      border: 1px solid #111827;
+    }
+    label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      cursor: pointer;
+      margin: 0.2rem 0;
+      font-size: 0.95rem;
+    }
+    input[type="checkbox"] {
+      margin-top: 0.15rem;
+      width: 1rem;
+      height: 1rem;
+      cursor: pointer;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 0.3rem;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #e5e7eb;
+      margin-left: 0.4rem;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: #111827;
+      color: #9ca3af;
+      border: 1px solid #1f2937;
+      margin-left: 0.4rem;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    button {
+      background: #1d4ed8;
+      color: #f9fafb;
+      border: none;
+      border-radius: 999px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    .small {
+      font-size: 0.8rem;
+    }
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    code {
+      background: #020617;
+      padding: 0.05rem 0.25rem;
+      border-radius: 0.25rem;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Roadmap IA Local – Checklist (v2)</h1>
+<p class="hint">
+  Marca lo que vayas completando. Los checks se guardan en este navegador (localStorage).
+</p>
+
+<div class="toolbar">
+  <button id="resetAll">Resetear todos los checks</button>
+  <span class="small">Versión checklist: <strong>v2.0</strong></span>
+</div>
+
+<!-- A. Infraestructura Base -->
+<div class="section">
+  <h2>A. Infraestructura base <span class="badge">Sesión 1</span></h2>
+  <p class="hint">Deja tu máquina lista para trabajar con IA local.</p>
+
+  <div class="subsection">
+    <h3>A1. Sistema y herramientas generales</h3>
+    <label>
+      <input type="checkbox" data-id="a1_nvidia_drivers" />
+      <span>
+        Actualizar drivers <strong>NVIDIA</strong> desde la página oficial
+        (<a href="https://www.nvidia.com/en-us/drivers/" target="_blank">descargar aquí</a>).
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a1_python311" />
+      <span>
+        Instalar <strong>Python 3.11.x</strong> desde la página oficial de descargas
+        (<a href="https://www.python.org/downloads/" target="_blank">descargar aquí</a>) y marcar “Add Python to PATH”.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a1_git" />
+      <span>
+        Instalar <strong>Git for Windows</strong> 
+        (<a href="https://git-scm.com/download/win" target="_blank">descargar aquí</a> o 
+        <a href="https://gitforwindows.org/" target="_blank">sitio Git for Windows</a>).
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>A2. Estructura de carpetas <span class="pill">C:\IA_Local\</span></h3>
+    <label>
+      <input type="checkbox" data-id="a2_root_folder" />
+      <span>Crear carpeta raíz <code>C:\IA_Local\</code>.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a2_models_llm" />
+      <span>Crear subcarpeta <code>models_llm</code> y sus hijas: <code>qwen</code>, <code>deepseek</code>, <code>llama</code>, <code>otros</code>.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a2_models_img" />
+      <span>Crear subcarpeta <code>models_img</code> y sus hijas: <code>sdxl</code>, <code>controlnet</code>, <code>loras</code>.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a2_models_video" />
+      <span>Crear subcarpeta <code>models_video</code> y sus hijas: <code>wan</code>, <code>wanGP</code>.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a2_other_folders" />
+      <span>Crear subcarpetas de trabajo: <code>comfyui</code>, <code>ollama</code>, <code>scripts</code>, <code>docs</code>.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="a2_run_bat" />
+      <span>Probar el archivo <code>.bat</code> que genera esta estructura (y corregir si algo falla).</span>
+    </label>
+  </div>
+</div>
+
+<!-- B. LM Studio -->
+<div class="section">
+  <h2>B. LM Studio <span class="badge">Sesión 1</span></h2>
+  <p class="hint">
+    LM Studio será tu laboratorio gráfico de modelos locales.
+    Más info en la página oficial:
+    <a href="https://lmstudio.ai/" target="_blank">LM Studio</a>.
+  </p>
+
+  <div class="subsection">
+    <h3>B1. Instalación y configuración básica</h3>
+    <label>
+      <input type="checkbox" data-id="b1_download_lmstudio" />
+      <span>
+        Descargar e instalar <strong>LM Studio</strong> (Windows) desde
+        <a href="https://lmstudio.ai/download" target="_blank">lmstudio.ai/download</a>.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="b1_gpu_settings" />
+      <span>Configurar LM Studio para usar la GPU NVIDIA (CUDA) y limitar VRAM a ~90%.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="b1_test_any_model" />
+      <span>
+        Abrir LM Studio, usar la pestaña de “Discover / Download Model”
+        (<a href="https://lmstudio.ai/docs/app/basics/download-model" target="_blank">doc de descarga de modelos</a>)
+        y probar un prompt de prueba.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>B2. Modelos base recomendados (LM Studio)</h3>
+    <p class="hint">Descarga recomendada en este orden. Todos se buscan desde el propio LM Studio (Discover).</p>
+
+    <h4>Modelo general</h4>
+    <label>
+      <input type="checkbox" data-id="b2_qwen_general" />
+      <span>
+        Descargar <strong>Qwen 2.5 – 7B Instruct</strong> (GGUF, p.ej. <code>q4_k_m</code>) y probar prompts de vida diaria.
+      </span>
+    </label>
+
+    <h4>Redacción / Español</h4>
+    <label>
+      <input type="checkbox" data-id="b2_llama_es" />
+      <span>
+        Descargar <strong>Llama 3.1 – 8B Instruct</strong> para redacción en español e inglés.
+      </span>
+    </label>
+
+    <h4>Razonamiento</h4>
+    <label>
+      <input type="checkbox" data-id="b2_deepseek_r1" />
+      <span>
+        Descargar <strong>DeepSeek R1 distill – 7B</strong> y probar razonamiento paso a paso (explicar patrones, decisiones, etc.).
+      </span>
+    </label>
+
+    <h4>Código</h4>
+    <label>
+      <input type="checkbox" data-id="b2_qwen_coder" />
+      <span>
+        Descargar <strong>Qwen 2.5 – Coder 7B</strong> y probar con fragmentos de código (MQL5, Flutter, Python).
+      </span>
+    </label>
+
+    <h4>Modelos más grandes (opcional)</h4>
+    <label>
+      <input type="checkbox" data-id="b2_qwen_14b" />
+      <span>
+        (Opcional) Probar <strong>Qwen 2.5 – 14B Instruct</strong> en GGUF 4-bit para ver diferencia de calidad vs velocidad.
+      </span>
+    </label>
+  </div>
+</div>
+
+<!-- C. Ollama -->
+<div class="section">
+  <h2>C. Ollama <span class="badge">Sesión 1</span></h2>
+  <p class="hint">
+    Ollama será tu motor local con API para scripts y apps.
+    Página oficial: <a href="https://ollama.com/" target="_blank">ollama.com</a>.
+  </p>
+
+  <div class="subsection">
+    <h3>C1. Instalación y prueba rápida</h3>
+    <label>
+      <input type="checkbox" data-id="c1_install_ollama" />
+      <span>
+        Instalar <strong>Ollama</strong> para Windows desde
+        <a href="https://ollama.com/download/windows" target="_blank">ollama.com/download/windows</a>.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c1_check_version" />
+      <span>Abrir PowerShell y comprobar <code>ollama --version</code> sin errores.</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c1_run_hello" />
+      <span>
+        Ejecutar <code>ollama run llama3.1:8b</code> (o similar) y probar un prompt de prueba.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>C2. Modelos recomendados (Ollama)</h3>
+    <p class="hint">Pull de modelos con buen equilibrio para tu GPU (ejecutar en PowerShell / terminal).</p>
+
+    <label>
+      <input type="checkbox" data-id="c2_pull_qwen7b" />
+      <span>
+        <code>ollama pull qwen2.5:7b</code> y probar una conversación general.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c2_pull_deepseek_r1" />
+      <span>
+        <code>ollama pull deepseek-r1:7b</code> y probar razonamiento técnico (trading, decisiones complejas, etc.).
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c2_pull_llama8b" />
+      <span>
+        <code>ollama pull llama3.1:8b</code> y probar redacción en español e inglés.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c2_pull_qwen_coder7b" />
+      <span>
+        <code>ollama pull qwen2.5-coder:7b</code> y probar explicación / refactor de un código tuyo.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>C3. Script básico con API local</h3>
+    <label>
+      <input type="checkbox" data-id="c3_create_scripts_folder" />
+      <span>Crear carpeta <code>C:\IA_Local\scripts\</code> (si no existe).</span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c3_create_python_script" />
+      <span>
+        Crear un <code>script_chat.py</code> que llame a 
+        <code>http://localhost:11434/api/generate</code> con el modelo <code>qwen2.5:7b</code>.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="c3_run_python_script" />
+      <span>Ejecutar el script y verificar que imprime una respuesta del modelo local en consola.</span>
+    </label>
+  </div>
+</div>
+
+<!-- D. Pensum / Módulos de aprendizaje -->
+<div class="section">
+  <h2>D. Pensum de aprendizaje (resumen módulo por módulo)</h2>
+  <p class="hint">
+    No son instalaciones, sino hitos de comprensión y práctica. Algunos tienen referencias externas para profundizar.
+  </p>
+
+  <div class="subsection">
+    <h3>D1. Módulo 0 – Contexto y stack personal</h3>
+    <label>
+      <input type="checkbox" data-id="d1_understand_landscape" />
+      <span>
+        Entender la diferencia práctica entre: ChatGPT/Gemini web vs LLMs locales
+        (rendimiento, privacidad, costo, control).
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="d1_first_prompts_local" />
+      <span>
+        Hacer al menos 3 prompts de vida diaria en LM Studio (organizar día, resumir un texto, tomar una decisión personal).
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>D2. Módulo 1 – LLM Zoo & evaluación</h3>
+    <p class="hint">
+      Para ver el panorama de modelos open source y benchmarks, puedes revisar:
+      <a href="https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard" target="_blank">
+        Hugging Face Open LLM Leaderboard
+      </a> (o su versión actualizada).
+    </p>
+    <label>
+      <input type="checkbox" data-id="d2_test_3_models" />
+      <span>
+        Probar al menos 3 modelos distintos (Qwen, DeepSeek, Llama) con el mismo set de prompts y comparar sensaciones.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="d2_notes_quality" />
+      <span>
+        Escribir notas rápidas sobre: cuál modelo usarías para (1) razonamiento, (2) redacción, (3) código.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>D3. Módulo 2 – Prompt engineering aplicado</h3>
+    <p class="hint">
+      Para contexto teórico sobre RAG y LLMs en producción, puedes revisar:
+      <a href="https://www.ibm.com/think/topics/retrieval-augmented-generation" target="_blank">IBM – What is RAG</a>
+      y
+      <a href="https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/" target="_blank">NVIDIA – What is RAG</a>.
+    </p>
+    <label>
+      <input type="checkbox" data-id="d3_system_prompt" />
+      <span>
+        Definir un <strong>system prompt</strong> maestro para: “Asistente técnico personal” y guardarlo en <code>docs\</code>.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="d3_prompts_templates" />
+      <span>
+        Crear al menos 3 plantillas de prompt: (1) revisión de código, (2) análisis de PDF, (3) diseño de ideas de producto.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>D4. Módulo 3 – Primer RAG sencillo</h3>
+    <label>
+      <input type="checkbox" data-id="d4_collect_docs" />
+      <span>
+        Elegir 5–10 documentos tuyos (CV, notas, fragmentos de EA, planes) para usarlos como corpus inicial de RAG.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="d4_plan_rag" />
+      <span>
+        Diseñar, aunque sea en texto, cómo quieres que funcione tu primer RAG personal
+        (tipo de preguntas, fuente de documentos, salida esperada).
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>D5. Seguridad y buenas prácticas</h3>
+    <p class="hint">
+      Ejemplo de referencia sobre ataques de prompt injection y exfiltración de datos:
+      <a href="https://embracethered.com/blog/posts/2023/google-bard-data-exfiltration/" target="_blank">
+        Hacking Google Bard – Data Exfiltration
+      </a>
+      y recopilación de vulnerabilidades:
+      <a href="https://embracethered.com/blog/tags/prompt-injection/" target="_blank">
+        Prompt Injection (EmbraceTheRed)
+      </a>.
+    </p>
+    <label>
+      <input type="checkbox" data-id="d5_read_security" />
+      <span>
+        Leer al menos 1 artículo sobre ataques de prompt injection / exfiltración y anotar 3 riesgos que no quieres cometer.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="d5_define_rules" />
+      <span>
+        Escribir tus reglas personales de seguridad: qué nunca enviarás a un servicio web, qué sí puede ir a un LLM local, etc.
+      </span>
+    </label>
+  </div>
+</div>
+
+<!-- E. Flowise -->
+<div class="section">
+  <h2>E. Flowise <span class="badge">Session 5</span></h2>
+  <p class="hint">
+    Introduccion simple a Flowise y su uso con LLMs locales. Los detalles, ejemplos y pasos
+    viven en los archivos de la carpeta (E).
+  </p>
+
+  <div class="subsection">
+    <h3>E1. Objetivo del modulo</h3>
+    <label>
+      <input type="checkbox" data-id="e1_understand_flowise" />
+      <span>
+        Entender que Flowise permite crear flujos visuales (RAG, agentes, tools) sin escribir toda la orquestacion a mano.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="e1_review_assets" />
+      <span>
+        Revisar los materiales de Flowise del repo:
+        <code>E_Development_Flowise.html</code>, <code>E_FlowiseHub.html</code>,
+        <code>E_Flowise_Exercises.html</code>.
+      </span>
+    </label>
+  </div>
+
+  <div class="subsection">
+    <h3>E2. Uso practico (ligero)</h3>
+    <label>
+      <input type="checkbox" data-id="e2_try_flowise" />
+      <span>
+        Probar un flujo simple (chat o RAG) siguiendo la guia del modulo E y tomar notas de resultados.
+      </span>
+    </label>
+    <label>
+      <input type="checkbox" data-id="e2_document_notes" />
+      <span>
+        Registrar 2-3 aprendizajes clave (limites, ventajas, integracion con local LLMs).
+      </span>
+    </label>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const STORAGE_KEY = 'ia_local_checklist_v2';
+    let saved = {};
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) saved = JSON.parse(raw) || {};
+    } catch (e) {
+      saved = {};
+    }
+
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][data-id]');
+    checkboxes.forEach(cb => {
+      const id = cb.dataset.id;
+      if (saved[id]) {
+        cb.checked = true;
+      }
+      cb.addEventListener('change', () => {
+        saved[id] = cb.checked;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      });
+    });
+
+    const resetBtn = document.getElementById('resetAll');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        const ok = confirm('¿Seguro que quieres resetear todos los checkboxes?');
+        if (!ok) return;
+        checkboxes.forEach(cb => cb.checked = false);
+        localStorage.removeItem(STORAGE_KEY);
+        saved = {};
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

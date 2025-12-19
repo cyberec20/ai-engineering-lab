@@ -1,0 +1,2149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Flowise — Plan práctico (RAG + Agentes + Plantillas) — v2.1</title>
+<style>
+:root{
+  --bg:#0b0f17; --panel:#0f1626; --card:#121c31; --muted:#9bb0d0;
+  --text:#e8eefc; --line:#223253; --ok:#20c997; --warn:#ffb020; --bad:#ff5c7a;
+  --accent:#6ea8fe; --accent2:#9d7bff;
+  --shadow: 0 14px 40px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:linear-gradient(180deg,#070a11 0%,#0b0f17 60%,#070a11 100%);color:var(--text);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code,kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace}
+
+.app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+.side{
+  position:sticky; top:0; height:100vh;
+  background:rgba(15,22,38,.78);
+  backdrop-filter: blur(10px);
+  border-right:1px solid var(--line);
+  padding:18px 16px;
+  overflow-y:auto; /* FIX: permite llegar al final del menú */
+}
+.main{padding:22px 22px 70px}
+.brand{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.logo{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 10px 30px rgba(110,168,254,.25)}
+h1{font-size:15px;margin:0}
+.sub{color:var(--muted);margin:2px 0 0 0;font-size:12px}
+
+.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--muted);cursor:pointer;user-select:none;background:rgba(10,16,32,.65)}
+.pill.active{border-color:rgba(110,168,254,.65);color:var(--text);background:rgba(110,168,254,.12)}
+
+.search{margin:12px 0 10px}
+.search input{width:100%;background:#0a1020;border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--text);outline:none}
+.search input:focus{border-color:rgba(110,168,254,.75);box-shadow:0 0 0 4px rgba(110,168,254,.12)}
+
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
+.kpi .box{background:rgba(18,28,49,.7);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:var(--shadow)}
+.kpi .num{font-size:18px;font-weight:700}
+.kpi .lbl{color:var(--muted);font-size:12px;margin-top:2px}
+
+.nav{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.nav a{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:12px;border:1px solid transparent;
+  color:var(--text); background:transparent;
+}
+.nav a:hover{background:rgba(110,168,254,.08);border-color:rgba(110,168,254,.2)}
+.nav a.active{background:rgba(110,168,254,.12);border-color:rgba(110,168,254,.45)}
+.nav small{color:var(--muted)}
+.badge{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+button{background:rgba(110,168,254,.12);border:1px solid rgba(110,168,254,.45);color:var(--text);padding:8px 10px;border-radius:12px;cursor:pointer}
+button:hover{background:rgba(110,168,254,.18)}
+button.secondary{background:rgba(18,28,49,.7);border-color:var(--line)}
+button.danger{background:rgba(255,92,122,.12);border-color:rgba(255,92,122,.55)}
+
+.card{background:rgba(18,28,49,.72);border:1px solid var(--line);border-radius:18px;padding:14px 14px;margin:12px 0;box-shadow:var(--shadow)}
+.card h2{font-size:16px;margin:0 0 6px 0}
+.card .meta{color:var(--muted);font-size:12px;margin-bottom:10px}
+.outcomes{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
+.outcomes span{border:1px solid var(--line);border-radius:999px;padding:6px 10px;color:var(--muted);background:rgba(10,16,32,.55)}
+
+.step{padding:12px 12px;border:1px solid var(--line);border-radius:16px;background:rgba(10,16,32,.55);margin:10px 0}
+.stephead{display:flex;gap:10px;align-items:flex-start}
+.chk{margin-top:3px}
+.step h3{font-size:14px;margin:0}
+.small{color:var(--muted);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted)}
+.chip.ok{border-color:rgba(32,201,151,.55);color:#bff3e4}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--accent)}
+ul{margin:8px 0 0 20px}
+li{margin:4px 0}
+.hr{height:1px;background:var(--line);margin:14px 0}
+
+table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px}
+th,td{text-align:left;padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;background:rgba(10,16,32,.55);position:sticky;top:0}
+tbody tr:hover{background:rgba(110,168,254,.05)}
+tfoot td{color:var(--muted)}
+
+.footer{margin-top:18px;color:var(--muted);font-size:12px}
+.toplink{float:right;color:var(--muted)}
+
+@media (max-width: 980px){
+  .app{grid-template-columns:1fr}
+  .side{position:relative;height:auto;overflow:visible}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1 id="title"></h1>
+        <div class="sub" id="subtitle"></div>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="box">
+        <div class="num" id="kpiDone">0</div>
+        <div class="lbl">Pasos completados</div>
+      </div>
+      <div class="box">
+        <div class="num" id="kpiTotal">0</div>
+        <div class="lbl">Pasos totales</div>
+      </div>
+    </div>
+
+    <div class="search">
+      <input id="q" type="text" placeholder="Buscar pasos, tags, palabras... (ej: pgvector, cheerio, agentes)"/>
+    </div>
+
+    <div class="pillrow" id="tagPills"></div>
+
+    <div class="toolbar">
+      <button id="btnExport" title="Exporta tus checks + notas a un JSON">Exportar progreso</button>
+      <button class="secondary" id="btnImport" title="Importa un JSON de progreso">Importar</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none"/>
+      <button class="danger" id="btnReset" title="Borra progreso guardado en este navegador">Reset</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="nav" id="nav"></div>
+
+    <div class="footer">
+      <div><b>Notas:</b> Progreso se guarda en tu navegador (localStorage). No se sube nada a internet.</div>
+      <div style="margin-top:6px">Generado: <span id="genDate"></span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="content"></div>
+  </main>
+</div>
+
+<script id="DATA" type="application/json">{
+  "meta": {
+    "title": "Flowise — Plan práctico (RAG + Agentes + Plantillas) — v2.1",
+    "generated": "2025-12-08",
+    "notes": "Este HTML está diseñado para funcionar 100% offline (sin dependencias externas)."
+  },
+  "tags": [
+    {
+      "id": "mapa",
+      "label": "Mapa"
+    },
+    {
+      "id": "setup",
+      "label": "Setup"
+    },
+    {
+      "id": "llm",
+      "label": "LLM local"
+    },
+    {
+      "id": "rag",
+      "label": "RAG"
+    },
+    {
+      "id": "web",
+      "label": "Web RAG"
+    },
+    {
+      "id": "agentes",
+      "label": "Agentes"
+    },
+    {
+      "id": "plantillas",
+      "label": "Plantillas"
+    },
+    {
+      "id": "producción",
+      "label": "Producción"
+    },
+    {
+      "id": "recursos",
+      "label": "Recursos"
+    },
+    {
+      "id": "disectar",
+      "label": "Disectar"
+    }
+  ],
+  "sections": [
+    {
+      "id": "mapa",
+      "title": "0) Mapa rápido (qué vas a construir)",
+      "subtitle": "En 60–90 min deberías tener: Flowise OK + 1 RAG local + 1 RAG web + 1 agente con tool + 1 plantilla JSON importable.",
+      "outcomes": [
+        "Flowise funcionando localmente",
+        "Un Chatflow RAG con persistencia (pgvector o equivalente)",
+        "Un Chatflow para RAG web (Cheerio/Apify/Playwright)",
+        "Un Agent con 2 tools y reglas claras",
+        "Un JSON de plantilla propio (export/import) listo para reusar"
+      ],
+      "steps": [
+        {
+          "id": "mapa-1",
+          "title": "Checklist de éxito (lo mínimo)",
+          "tags": [
+            "mapa",
+            "rápido"
+          ],
+          "minutes": 6,
+          "why": "",
+          "what": [
+            "Abre Flowise (UI) y confirma que puedes crear un Chatflow y guardarlo.",
+            "Prueba un LLM local (Ollama/LocalAI) con un prompt simple.",
+            "Crea un Document Store y confirma que indexa un PDF pequeño.",
+            "Crea un flujo web (Cheerio) con 1 URL y confirma que trae texto.",
+            "Importa 1 JSON de la comunidad y lo ejecutas sin errores."
+          ],
+          "deliverables": [
+            "Captura o nota: versión de Flowise + método de instalación + modelo usado"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Repo oficial Flowise (GitHub)",
+              "url": "https://github.com/FlowiseAI/Flowise",
+              "type": "usada (informe)"
+            },
+            {
+              "label": "Flowise Docs: Integrations",
+              "url": "https://docs.flowiseai.com/integrations",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": []
+    },
+    {
+      "id": "setup",
+      "title": "1) Setup mínimo (sin perder tiempo en teoría)",
+      "subtitle": "Objetivo: levantar Flowise rápido, con LLM local, y con configuración que no se rompe al reiniciar.",
+      "outcomes": [
+        "Flowise operativo (NPM o Docker) con variables claras",
+        "Ollama/LocalAI respondiendo",
+        "Un Chatflow de prueba guardado y exportable"
+      ],
+      "steps": [
+        {
+          "id": "setup-1",
+          "title": "Instalación rápida (elige 1 ruta) y prueba de salud",
+          "tags": [
+            "setup",
+            "infra"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Ruta A (NPM): instala dependencias y arranca el server.",
+            "Ruta B (Docker): levanta un contenedor y expone el puerto.",
+            "Valida: UI carga, puedes crear un nodo, y guardas el chatflow."
+          ],
+          "deliverables": [
+            "Flowise arriba + nota del puerto + carpeta de trabajo definida"
+          ],
+          "dissect": [
+            "Disecta: package.json del repo Flowise (scripts) para entender cómo arranca.",
+            "Disecta: logs de arranque y ubica dónde configura 'API' y 'UI'."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Repo oficial Flowise (GitHub)",
+              "url": "https://github.com/FlowiseAI/Flowise",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "setup-2",
+          "title": "Conecta tu LLM local (Ollama) y evita el 80% de errores",
+          "tags": [
+            "setup",
+            "llm"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Arranca Ollama y descarga 1 modelo (ej: qwen, llama, mistral).",
+            "Desde Flowise, configura el nodo del LLM local (endpoint/base URL).",
+            "Prueba con un prompt y valida latencia + tokens."
+          ],
+          "deliverables": [
+            "Un chatflow 'LLM Smoke Test' (exportable)"
+          ],
+          "dissect": [
+            "Disecta: configuración del nodo LLM (baseURL, model, temperature) y qué cambia cuando falla."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Integrations",
+              "url": "https://docs.flowiseai.com/integrations",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "setup-3",
+          "title": "Persistencia mínima: dónde se guarda lo que haces en Flowise",
+          "tags": [
+            "setup",
+            "infra"
+          ],
+          "minutes": 16,
+          "why": "",
+          "what": [
+            "Identifica dónde Flowise guarda chatflows (DB interna) según tu método de instalación.",
+            "Define: carpeta de backups (export JSON) + convención de nombres.",
+            "Crea 1 export y reimport para comprobar que no dependes de ‘memoria’ del navegador."
+          ],
+          "deliverables": [
+            "Carpeta /backups_chatflows con 2 JSON (smoke + template)"
+          ],
+          "dissect": [
+            "Disecta: el JSON exportado (estructura de nodes/edges) — solo para entender, no para editar aún."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Chatflows API",
+              "url": "https://docs.flowiseai.com/api-reference/chatflows",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "setup-4",
+          "title": "Tu primera plantilla reutilizable (sin volverte loco)",
+          "tags": [
+            "setup",
+            "plantillas",
+            "práctico"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Crea un chatflow mínimo: LLM + Prompt Template + Output.",
+            "Exporta a JSON.",
+            "Vuelve a importarlo y solo cambia 1 parámetro (modelo o temperatura)."
+          ],
+          "deliverables": [
+            "Plantilla 'T0_Base.json' probada (import/export OK)"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Chatflows API",
+              "url": "https://docs.flowiseai.com/api-reference/chatflows",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Repo oficial Flowise (GitHub)",
+          "url": "https://github.com/FlowiseAI/Flowise",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Flowise Docs: Integrations",
+          "url": "https://docs.flowiseai.com/integrations",
+          "type": "usada (informe)"
+        }
+      ]
+    },
+    {
+      "id": "rag_local",
+      "title": "2) RAG local serio (PDF → chunk → embeddings → vector DB → chat)",
+      "subtitle": "Objetivo: que tu RAG funcione ‘de verdad’: chunking correcto, embeddings coherentes, y almacenamiento persistente.",
+      "outcomes": [
+        "Document Store creado y ordenado",
+        "Vector store funcionando (ideal: pgvector)",
+        "Un chatflow RAG con citas/metadata verificables"
+      ],
+      "steps": [
+        {
+          "id": "rag-1",
+          "title": "Levanta Postgres + pgvector (persistente) — y prueba conexión",
+          "tags": [
+            "rag",
+            "infra",
+            "pgvector"
+          ],
+          "minutes": 25,
+          "why": "",
+          "what": [
+            "Levanta Postgres con extensión pgvector (Docker recomendado).",
+            "Crea BD y usuario (mínimo permisos).",
+            "Desde Flowise, configura la conexión del vector store."
+          ],
+          "deliverables": [
+            "Conexión exitosa al vector store (captura/nota de DSN)"
+          ],
+          "dissect": [
+            "Disecta: qué columnas/tablas crea el vector store cuando indexas (para entender persistencia)."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Vector stores",
+              "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "rag-2",
+          "title": "Chunking que sirve (Recursive splitter) + regla práctica de tamaños",
+          "tags": [
+            "rag",
+            "chunking"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Define una política: chunk_size, chunk_overlap (según tu tipo de docs).",
+            "Prueba 2 configuraciones y compara: calidad de respuesta vs costo/latencia.",
+            "Registra tus defaults."
+          ],
+          "deliverables": [
+            "Tabla simple: config A vs B + conclusiones (en notas)"
+          ],
+          "dissect": [
+            "Disecta: por qué un chunk demasiado grande ‘diluye’ y uno pequeño ‘rompe contexto’."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Recursive Character Text Splitter (Flowise)",
+              "url": "https://docs.flowiseai.com/integrations/langchain/text-splitters/recursive-character-text-splitter",
+              "type": "usada (informe)"
+            },
+            {
+              "label": "LangChain: RecursiveTextSplitter (concepto)",
+              "url": "https://python.langchain.com/docs/how_to/recursive_text_splitter",
+              "type": "ref"
+            }
+          ]
+        },
+        {
+          "id": "rag-3",
+          "title": "Crea Document Store (orden, datasets y reindex controlado)",
+          "tags": [
+            "rag",
+            "document-store"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Crea un Document Store por tema (ej: Flowise_RAG).",
+            "Sube 1 PDF pequeño y verifica el conteo de chunks.",
+            "Define convención de nombres y metadata."
+          ],
+          "deliverables": [
+            "1 Document Store con 1 dataset y metadata útil"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Document Stores API",
+              "url": "https://docs.flowiseai.com/api-reference/document-stores",
+              "type": "usada (HTML base)"
+            }
+          ]
+        },
+        {
+          "id": "rag-4",
+          "title": "Arma el Chatflow RAG local (nodos exactos) y valida con preguntas trampa",
+          "tags": [
+            "rag",
+            "chatflow",
+            "práctico"
+          ],
+          "minutes": 30,
+          "why": "",
+          "what": [
+            "Construye: Loader → Splitter → Embeddings → Vector Store → Retriever → LLM.",
+            "Activa que devuelva fuentes/metadata si tu plantilla lo permite.",
+            "Prueba 3 preguntas: 1 fácil, 1 ambigua, 1 trampa (no está en el doc)."
+          ],
+          "deliverables": [
+            "Chatflow 'RAG_Local_v1' + lista de 3 preguntas y resultados"
+          ],
+          "dissect": [
+            "Disecta: cuando alucina — ¿es chunking? ¿retrieval? ¿prompt? (diagnóstico básico)."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Tutorial RAG",
+              "url": "https://docs.flowiseai.com/tutorials/rag",
+              "type": "usada (informe)"
+            },
+            {
+              "label": "Flowise Docs: Vector stores",
+              "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "rag-5",
+          "title": "Mejora rápida: metadata + filtros (para que no mezcle documentos)",
+          "tags": [
+            "rag",
+            "mejora"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Agrega metadata por documento (fuente, fecha, categoría).",
+            "Si tu vector store lo permite, aplica filtros por metadata.",
+            "Valida que preguntas de ‘Tema A’ no traigan ‘Tema B’."
+          ],
+          "deliverables": [
+            "RAG_Local_v1.1 con metadata filtrable"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Vector stores",
+              "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "rag-6",
+          "title": "Evaluación práctica (sin frameworks): 10 Q/A y scoring simple",
+          "tags": [
+            "rag",
+            "evaluación"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Crea 10 preguntas reales (de tu área).",
+            "Califica 0–2: Exactitud / Citas / Claridad.",
+            "Ajusta 1 variable (chunk o k) y repite 3 preguntas."
+          ],
+          "deliverables": [
+            "Mini-scoreboard (10 filas) guardado en notas o CSV"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Tutorial RAG",
+              "url": "https://docs.flowiseai.com/tutorials/rag",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Flowise Docs: Tutorial RAG",
+          "url": "https://docs.flowiseai.com/tutorials/rag",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Flowise Docs: Vector stores",
+          "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Flowise Docs: Document Stores API",
+          "url": "https://docs.flowiseai.com/api-reference/document-stores",
+          "type": "usada (HTML base)"
+        }
+      ]
+    },
+    {
+      "id": "rag_web",
+      "title": "3) RAG Web (Cheerio/Apify/Playwright) — convierte una web en base de conocimiento",
+      "subtitle": "Objetivo: indexar páginas sin romperte con links relativos, duplicados y ‘páginas basura’.",
+      "outcomes": [
+        "Un pipeline web que trae texto limpio",
+        "Control de profundidad/links",
+        "RAG web usable (no solo ‘scrape’)"
+      ],
+      "steps": [
+        {
+          "id": "web-1",
+          "title": "Cheerio ‘bien hecho’: 1 URL → texto limpio (sin navbars)",
+          "tags": [
+            "web",
+            "cheerio"
+          ],
+          "minutes": 22,
+          "why": "",
+          "what": [
+            "Usa Cheerio loader con 1 artículo.",
+            "Ajusta selectors/exclude si el contenido viene sucio.",
+            "Guarda el resultado en Document Store separado."
+          ],
+          "deliverables": [
+            "Document Store 'Web_1site' con 1 página indexada"
+          ],
+          "dissect": [
+            "Disecta: qué parte del HTML está contaminando (header/footer) y cómo lo detectas rápido."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Cheerio Web Scraper (Flowise)",
+              "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/cheerio-web-scraper",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "web-2",
+          "title": "Truco clave: links relativos → absolutos (para crawl estable)",
+          "tags": [
+            "web",
+            "cheerio",
+            "crawl"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Activa/usa ‘Get Relative Links’ (si tu flujo lo usa) o normaliza URLs.",
+            "Define profundidad (depth) y límite de páginas.",
+            "Evita bucles: querystrings y anchors."
+          ],
+          "deliverables": [
+            "Lista de URLs finales (10–30) que SÍ deseas indexar"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Cheerio Web Scraper (Flowise)",
+              "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/cheerio-web-scraper",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "web-3",
+          "title": "Apify crawler (cuando necesitas escala sin drama)",
+          "tags": [
+            "web",
+            "apify"
+          ],
+          "minutes": 25,
+          "why": "",
+          "what": [
+            "Crea cuenta/actor en Apify (si aplica).",
+            "Usa Website Content Crawler para extraer páginas.",
+            "Importa a Flowise vía loader o integración."
+          ],
+          "deliverables": [
+            "Dataset Apify exportado + indexado en Flowise"
+          ],
+          "dissect": [
+            "Disecta: settings de Apify (max pages, depth, proxy) y cómo afectan calidad."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Apify Website Content Crawler (Flowise)",
+              "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/apify-website-content-crawler",
+              "type": "usada (HTML base)"
+            },
+            {
+              "label": "Apify Docs: integración con Flowise",
+              "url": "https://docs.apify.com/platform/integrations/flowise",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "web-4",
+          "title": "Playwright loader (para sitios dinámicos)",
+          "tags": [
+            "web",
+            "playwright"
+          ],
+          "minutes": 25,
+          "why": "",
+          "what": [
+            "Elige una página que carga contenido con JS.",
+            "Usa Playwright loader y compara vs Cheerio.",
+            "Decide regla: cuándo usar cada uno."
+          ],
+          "deliverables": [
+            "Notas: ‘Cheerio vs Playwright’ con 3 criterios de decisión"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Playwright Web Scraper (Flowise)",
+              "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/playwright-web-scraper",
+              "type": "usada (HTML base)"
+            }
+          ]
+        },
+        {
+          "id": "web-5",
+          "title": "RAG web listo: pregunta/respuesta con citas (y prueba anti-alucinación)",
+          "tags": [
+            "web",
+            "rag"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Arma chatflow igual que RAG local pero usando tu Document Store web.",
+            "Pregunta: ‘¿qué dice exactamente X?’ y exige cita.",
+            "Pregunta: algo que NO está en el sitio (debe decir ‘no lo tengo’)."
+          ],
+          "deliverables": [
+            "Chatflow 'RAG_Web_v1' + 2 pruebas guardadas"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Tutorial RAG",
+              "url": "https://docs.flowiseai.com/tutorials/rag",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Cheerio Web Scraper (Flowise)",
+          "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/cheerio-web-scraper",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Apify Website Content Crawler (Flowise)",
+          "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/apify-website-content-crawler",
+          "type": "usada (HTML base)"
+        },
+        {
+          "label": "Playwright Web Scraper (Flowise)",
+          "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/playwright-web-scraper",
+          "type": "usada (HTML base)"
+        }
+      ]
+    },
+    {
+      "id": "agents",
+      "title": "4) Agentes (cuando ya tienes RAG funcionando)",
+      "subtitle": "Objetivo: tool-calling útil: agentes con herramientas, reglas y límites claros.",
+      "outcomes": [
+        "1 agente con 2 tools y output estructurado",
+        "1 mini-arquitectura Supervisor→Workers (secuencial)",
+        "Criterios para evitar agentes ‘locos’"
+      ],
+      "steps": [
+        {
+          "id": "ag-1",
+          "title": "Agent básico con 2 tools (RAG + Web Search) y contrato de salida",
+          "tags": [
+            "agentes",
+            "tools",
+            "práctico"
+          ],
+          "minutes": 30,
+          "why": "",
+          "what": [
+            "Tool A: tu retriever RAG (local o web).",
+            "Tool B: búsqueda web (si usas SerpApi u otra).",
+            "Define output: JSON con campos fijos (answer, sources, confidence)."
+          ],
+          "deliverables": [
+            "Chatflow 'Agent_Researcher_v1' con salida JSON consistente"
+          ],
+          "dissect": [
+            "Disecta: prompts del Agent — dónde pones reglas, dónde pones estilo, y dónde pones límites."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Agents",
+              "url": "https://docs.flowiseai.com/integrations/langchain/agents",
+              "type": "usada (informe)"
+            },
+            {
+              "label": "SerpApi: búsqueda web con Flowise",
+              "url": "https://serpapi.com/blog/how-to-get-live-google-search-results-in-flowise/",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "ag-2",
+          "title": "Reglas anti-caos: cuándo el agente NO debe usar tool",
+          "tags": [
+            "agentes",
+            "guardrails"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Define 3 reglas: no llamar tools si pregunta es ‘saludo’, si ya tiene respuesta del RAG, o si costo es alto.",
+            "Agrega un step de ‘plan’ antes de actuar (breve).",
+            "Valida con 5 prompts de prueba."
+          ],
+          "deliverables": [
+            "Lista de 3 reglas + 5 prompts validados"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Agents",
+              "url": "https://docs.flowiseai.com/integrations/langchain/agents",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "ag-3",
+          "title": "Sequential Agents (Supervisor → Workers) para tareas repetibles",
+          "tags": [
+            "agentes",
+            "secuencial"
+          ],
+          "minutes": 25,
+          "why": "",
+          "what": [
+            "Crea 2 workers: (1) Extractor (2) Redactor.",
+            "Supervisor decide qué worker usar y en qué orden.",
+            "Define ‘handoff’ (qué entrega uno al otro)."
+          ],
+          "deliverables": [
+            "Agente secuencial v1 con 2 workers + 1 caso de uso"
+          ],
+          "dissect": [
+            "Disecta: cómo se pasan datos entre agentes (inputs/outputs) y qué se rompe si cambias formato."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Agentflow v1: Sequential agents",
+              "url": "https://docs.flowiseai.com/using-flowise/agentflowv1/sequential-agents",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "ag-4",
+          "title": "Agente + RAG: ‘citas obligatorias’ como política",
+          "tags": [
+            "agentes",
+            "rag"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Exige que cualquier afirmación factual tenga cita (chunk/URL).",
+            "Si no hay cita, responde ‘no encontrado’ y sugiere qué indexar.",
+            "Prueba con 3 preguntas."
+          ],
+          "deliverables": [
+            "Política de citas aplicada (3 pruebas)"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Tutorial RAG",
+              "url": "https://docs.flowiseai.com/tutorials/rag",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "ag-5",
+          "title": "Ejercicio pro: tu ‘Agente de Soporte’ (Flowise + troubleshooting)",
+          "tags": [
+            "agentes",
+            "ejercicio"
+          ],
+          "minutes": 30,
+          "why": "",
+          "what": [
+            "Crea un DocStore con FAQs propias (errores que ya te pasaron).",
+            "El agente primero busca en tu RAG; si no, usa web search.",
+            "Devuelve pasos exactos (comandos y dónde mirar logs)."
+          ],
+          "deliverables": [
+            "Agent_Support_v1 + 5 preguntas reales"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Repo oficial Flowise (GitHub)",
+              "url": "https://github.com/FlowiseAI/Flowise",
+              "type": "usada (informe)"
+            },
+            {
+              "label": "Flowise Docs: Integrations",
+              "url": "https://docs.flowiseai.com/integrations",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Flowise Docs: Agents",
+          "url": "https://docs.flowiseai.com/integrations/langchain/agents",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Agentflow v1: Sequential agents",
+          "url": "https://docs.flowiseai.com/using-flowise/agentflowv1/sequential-agents",
+          "type": "usada (informe)"
+        }
+      ]
+    },
+    {
+      "id": "disectar",
+      "title": "5) Plantillas JSON de la comunidad (aprendes disectando)",
+      "subtitle": "Objetivo: aprender rápido copiando *bien*: importar, entender, modificar y re-exportar.",
+      "outcomes": [
+        "Importas 2 plantillas reales",
+        "Las entiendes (nodos, edges, settings)",
+        "Creas tu propia plantilla base (para tu perfil)"
+      ],
+      "steps": [
+        {
+          "id": "tpl-1",
+          "title": "Importa 1 JSON (Tech Researcher) y ejecútalo sin romper nada",
+          "tags": [
+            "plantillas",
+            "json",
+            "disectar"
+          ],
+          "minutes": 25,
+          "why": "",
+          "what": [
+            "Descarga el JSON de la comunidad (sin editar).",
+            "Importa en Flowise (Load Chatflow) y completa credenciales.",
+            "Ejecuta un caso de prueba y guarda resultados."
+          ],
+          "deliverables": [
+            "Import OK + 1 ejecución OK (nota de qué configuraste)"
+          ],
+          "dissect": [
+            "Disecta: lista de nodos (qué hace cada uno) y qué inputs requieren credenciales."
+          ],
+          "downloads": [
+            "Tech_Researcher_Agent.json (desde GitHub)"
+          ],
+          "refs": [
+            {
+              "label": "Plantilla JSON: Tech_Researcher_Agent",
+              "url": "https://github.com/ilsilfverskiold/flowise_flows/blob/main/Tech_Researcher_Agent.json",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "tpl-2",
+          "title": "Mapa mental del JSON: Node types → concepto (1 hoja)",
+          "tags": [
+            "plantillas",
+            "disectar"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Haz un mapa: Loader / Splitter / Embeddings / Vector / Retriever / Agent / Tools / Memory.",
+            "Anota: qué parámetros son sensibles (topK, chunk_size, temp).",
+            "Marca 3 que vas a estandarizar en tu ‘Base Template’."
+          ],
+          "deliverables": [
+            "Mapa 1 hoja (texto) + 3 parámetros estandarizados"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Integrations",
+              "url": "https://docs.flowiseai.com/integrations",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "tpl-3",
+          "title": "Tu plantilla base (para tu perfil): Research + RAG + JSON output",
+          "tags": [
+            "plantillas",
+            "práctico"
+          ],
+          "minutes": 30,
+          "why": "",
+          "what": [
+            "Duplica la plantilla importada y simplifica: deja solo lo que usarás siempre.",
+            "Fija output JSON y política de citas.",
+            "Exporta como 'Template_Base_ResearchRAG.json'."
+          ],
+          "deliverables": [
+            "Template_Base_ResearchRAG.json listo para reusar"
+          ],
+          "dissect": [
+            "Disecta: qué quitaste y por qué (evita ‘frankenflow’)."
+          ],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Chatflows API",
+              "url": "https://docs.flowiseai.com/api-reference/chatflows",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "tpl-4",
+          "title": "Ejercicio: ‘Disectar’ vs ‘Disecar’ (cierre de malentendido)",
+          "tags": [
+            "plantillas",
+            "meta"
+          ],
+          "minutes": 8,
+          "why": "",
+          "what": [
+            "Define tu verbo operativo: DISCTAR = analizar estructura/decisiones del flujo/código.",
+            "Evita ‘disecar’ (anatómico).",
+            "Actualiza tus notas: cada ejercicio dirá explícitamente qué vas a disectar (JSON, repo, nodo, prompt)."
+          ],
+          "deliverables": [
+            "Tus notas corregidas: ‘disectar’ en vez de ‘disecar’"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": []
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Plantilla JSON: Tech_Researcher_Agent",
+          "url": "https://github.com/ilsilfverskiold/flowise_flows/blob/main/Tech_Researcher_Agent.json",
+          "type": "usada (informe)"
+        },
+        {
+          "label": "Repo oficial Flowise (GitHub)",
+          "url": "https://github.com/FlowiseAI/Flowise",
+          "type": "usada (informe)"
+        }
+      ]
+    },
+    {
+      "id": "prod",
+      "title": "6) Producción (lo mínimo para no dispararte en el pie)",
+      "subtitle": "Objetivo: seguridad básica, persistencia, y despliegue que no te deja vendido.",
+      "outcomes": [
+        "Auth mínima",
+        "Reverse proxy / no exponer puertos crudos",
+        "Backups y logs"
+      ],
+      "steps": [
+        {
+          "id": "prod-1",
+          "title": "Activa auth mínima y NO expongas :3000 directo",
+          "tags": [
+            "producción",
+            "seguridad"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Habilita autenticación básica o capa de auth según tu setup.",
+            "Si sales a internet: usa reverse proxy (Caddy/Nginx) con HTTPS.",
+            "Restringe IP si es posible."
+          ],
+          "deliverables": [
+            "Checklist: auth ON + puerto protegido"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Repo oficial Flowise (GitHub)",
+              "url": "https://github.com/FlowiseAI/Flowise",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "prod-2",
+          "title": "Backups reales: export programado + copia de la DB",
+          "tags": [
+            "producción",
+            "backups"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Exporta chatflows críticos a JSON (convención de versiones).",
+            "Backups de Postgres (pg_dump) si usas pgvector.",
+            "Prueba restauración (en otra máquina o carpeta)."
+          ],
+          "deliverables": [
+            "2 backups + 1 restauración probada"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Vector stores",
+              "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "prod-3",
+          "title": "Observabilidad mínima: logs útiles (y qué mirar cuando falla)",
+          "tags": [
+            "producción",
+            "debug"
+          ],
+          "minutes": 20,
+          "why": "",
+          "what": [
+            "Define 5 cosas que SIEMPRE miras: logs server, logs Ollama, conexión DB, tamaño chunks, límites tokens.",
+            "Guarda un ‘playbook’ de errores comunes (tuyo)."
+          ],
+          "deliverables": [
+            "Playbook de troubleshooting v1 (5 puntos)"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Repo oficial Flowise (GitHub)",
+              "url": "https://github.com/FlowiseAI/Flowise",
+              "type": "usada (informe)"
+            }
+          ]
+        },
+        {
+          "id": "prod-4",
+          "title": "API usage: expón Chatflows a tu app sin inventar la rueda",
+          "tags": [
+            "producción",
+            "api"
+          ],
+          "minutes": 18,
+          "why": "",
+          "what": [
+            "Lee el API reference de Chatflows.",
+            "Prueba 1 llamada desde curl o Postman.",
+            "Define: timeouts y tamaño máximo de request."
+          ],
+          "deliverables": [
+            "1 llamada API funcionando + ejemplo guardado"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": [
+            {
+              "label": "Flowise Docs: Chatflows API",
+              "url": "https://docs.flowiseai.com/api-reference/chatflows",
+              "type": "usada (informe)"
+            }
+          ]
+        }
+      ],
+      "primary_refs": [
+        {
+          "label": "Repo oficial Flowise (GitHub)",
+          "url": "https://github.com/FlowiseAI/Flowise",
+          "type": "usada (informe)"
+        }
+      ]
+    },
+    {
+      "id": "biblioteca",
+      "title": "Biblioteca de recursos (usados en el informe + base)",
+      "subtitle": "Ordenados para que vayas primero a lo práctico/documentación oficial, luego repos y luego lecturas.",
+      "outcomes": [
+        "Tienes todos los enlaces en un solo lugar + ‘qué usar primero’"
+      ],
+      "steps": [
+        {
+          "id": "lib-1",
+          "title": "Recursos usados (del informe + base)",
+          "tags": [
+            "recursos"
+          ],
+          "minutes": 5,
+          "why": "",
+          "what": [
+            "Revisa la biblioteca. Están marcados como: ‘usada (informe)’ o ‘usada (HTML base)’.",
+            "Tip: abre primero docs.flowiseai.com (oficial)."
+          ],
+          "deliverables": [],
+          "dissect": [],
+          "downloads": [],
+          "refs": []
+        }
+      ],
+      "primary_refs": []
+    },
+    {
+      "id": "fuentes_no_usadas",
+      "title": "Fuentes no usadas (registradas + cómo decidir si valen)",
+      "subtitle": "No las ignoro: aquí quedan para triage. Tu trabajo: escoger cuáles integrar a tu biblioteca o ejercicios.",
+      "outcomes": [
+        "Triage rápido: lo que vale, lo que es relleno, lo que es duplicado"
+      ],
+      "steps": [
+        {
+          "id": "unused-1",
+          "title": "Triage en 15 minutos (método)",
+          "tags": [
+            "recursos",
+            "triage"
+          ],
+          "minutes": 15,
+          "why": "",
+          "what": [
+            "1) Si es docs oficial → prioridad alta.",
+            "2) Si es GitHub con templates → prioridad media-alta.",
+            "3) Si es YouTube → prioridad media (solo si muestra pantallas reales).",
+            "4) Si es blog genérico → prioridad baja (usa solo si aporta un ejemplo único).",
+            "Marca cada fuente: (A) integrar ahora, (B) guardar, (C) descartar."
+          ],
+          "deliverables": [
+            "Tabla A/B/C con al menos 15 fuentes clasificadas"
+          ],
+          "dissect": [],
+          "downloads": [],
+          "refs": []
+        }
+      ],
+      "primary_refs": []
+    }
+  ],
+  "resources_used": [
+    {
+      "label": "Apify Website Content Crawler",
+      "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/apify-website-content-crawler",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "Document Stores API ref",
+      "url": "https://docs.flowiseai.com/api-reference/document-stores",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "Embeddings (Flowise)",
+      "url": "https://docs.flowiseai.com/integrations/langchain/embeddings",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/api-reference/chatflows",
+      "url": "https://docs.flowiseai.com/api-reference/chatflows",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/espanol",
+      "url": "https://docs.flowiseai.com/espanol",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/espanol/documentacion-oficial/primeros-pasos",
+      "url": "https://docs.flowiseai.com/espanol/documentacion-oficial/primeros-pasos",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations",
+      "url": "https://docs.flowiseai.com/integrations",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/agents",
+      "url": "https://docs.flowiseai.com/integrations/langchain/agents",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/chains",
+      "url": "https://docs.flowiseai.com/integrations/langchain/chains",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/document-loaders/cheerio-web-scraper",
+      "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/cheerio-web-scraper",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/document-loaders/json-file",
+      "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/json-file",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/embeddings/localai-embeddings",
+      "url": "https://docs.flowiseai.com/integrations/langchain/embeddings/localai-embeddings",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/text-splitters",
+      "url": "https://docs.flowiseai.com/integrations/langchain/text-splitters",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/text-splitters/recursive-character-text-splitter",
+      "url": "https://docs.flowiseai.com/integrations/langchain/text-splitters/recursive-character-text-splitter",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+      "url": "https://docs.flowiseai.com/integrations/langchain/vector-stores",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/tutorials/rag",
+      "url": "https://docs.flowiseai.com/tutorials/rag",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.flowiseai.com/using-flowise/agentflowv1/sequential-agents",
+      "url": "https://docs.flowiseai.com/using-flowise/agentflowv1/sequential-agents",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "Playwright Web Scraper",
+      "url": "https://docs.flowiseai.com/integrations/langchain/document-loaders/playwright-web-scraper",
+      "domain": "docs.flowiseai.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "Extensión pgvector docs",
+      "url": "https://github.com/pgvector/pgvector",
+      "domain": "github.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://github.com/FlowiseAI/Flowise",
+      "url": "https://github.com/FlowiseAI/Flowise",
+      "domain": "github.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://github.com/FlowiseAI/Flowise/blob/main/CONTRIBUTING.md",
+      "url": "https://github.com/FlowiseAI/Flowise/blob/main/CONTRIBUTING.md",
+      "domain": "github.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://github.com/ilsilfverskiold/flowise_flows/blob/main/Tech_Researcher_Agent.json",
+      "url": "https://github.com/ilsilfverskiold/flowise_flows/blob/main/Tech_Researcher_Agent.json",
+      "domain": "github.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "RAG (AWS)",
+      "url": "https://aws.amazon.com/what-is/retrieval-augmented-generation/",
+      "domain": "aws.amazon.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://community.deeplearning.ai/t/sentence-text-splitters-and-chunk-overlap-sizes/383311",
+      "url": "https://community.deeplearning.ai/t/sentence-text-splitters-and-chunk-overlap-sizes/383311",
+      "domain": "community.deeplearning.ai",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://dev.to/tak089/what-is-chunk-size-and-chunk-overlap-1hlj",
+      "url": "https://dev.to/tak089/what-is-chunk-size-and-chunk-overlap-1hlj",
+      "domain": "dev.to",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://docs.apify.com/platform/integrations/flowise",
+      "url": "https://docs.apify.com/platform/integrations/flowise",
+      "domain": "docs.apify.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "n8n: Agents vs chains (docs)",
+      "url": "https://docs.n8n.io/advanced-ai/examples/agent-chain-comparison/",
+      "domain": "docs.n8n.io",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://flowiseai.com/",
+      "url": "https://flowiseai.com/",
+      "domain": "flowiseai.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "ankane/pgvector (imagen docker)",
+      "url": "https://hub.docker.com/r/ankane/pgvector",
+      "domain": "hub.docker.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://langfuse.com/blog/2025-03-19-ai-agent-comparison",
+      "url": "https://langfuse.com/blog/2025-03-19-ai-agent-comparison",
+      "domain": "langfuse.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://medium.com/@ahmed.sadraoui.it/exploring-chains-vs-agents-understanding-their-types-and-when-to-use-each-a18c32e82184",
+      "url": "https://medium.com/@ahmed.sadraoui.it/exploring-chains-vs-agents-understanding-their-types-and-when-to-use-each-a18c32e82184",
+      "domain": "medium.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://medium.com/@anbukkarasuak/empowering-chatbots-with-rag-a-practical-guide-with-flowise-ai-integration-fa6409397399",
+      "url": "https://medium.com/@anbukkarasuak/empowering-chatbots-with-rag-a-practical-guide-with-flowise-ai-integration-fa6409397399",
+      "domain": "medium.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://medium.com/@martk/talking-to-your-second-brain-build-a-flowise-rag-to-chat-with-your-obsidian-vault-00645106e73b",
+      "url": "https://medium.com/@martk/talking-to-your-second-brain-build-a-flowise-rag-to-chat-with-your-obsidian-vault-00645106e73b",
+      "domain": "medium.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://medium.com/@preetam19cs051/react-agents-vs-traditional-ai-agents-bridging-thought-and-action-b260f23c7fc3",
+      "url": "https://medium.com/@preetam19cs051/react-agents-vs-traditional-ai-agents-bridging-thought-and-action-b260f23c7fc3",
+      "domain": "medium.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://ostechnix.com/flowise-build-ai-agents-llm-workflows/",
+      "url": "https://ostechnix.com/flowise-build-ai-agents-llm-workflows/",
+      "domain": "ostechnix.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://serpapi.com/blog/how-to-get-live-google-search-results-in-flowise/",
+      "url": "https://serpapi.com/blog/how-to-get-live-google-search-results-in-flowise/",
+      "domain": "serpapi.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://sider.ai/blog/ai-tools/how-to-use-flowise-ai-a-practical-guide-to-building-llm-workflows-fast",
+      "url": "https://sider.ai/blog/ai-tools/how-to-use-flowise-ai-a-practical-guide-to-building-llm-workflows-fast",
+      "domain": "sider.ai",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://sider.ai/es/blog/ai-tools/how-to-use-flowise-ai-a-practical-guide-to-building-llm-workflows-fast",
+      "url": "https://sider.ai/es/blog/ai-tools/how-to-use-flowise-ai-a-practical-guide-to-building-llm-workflows-fast",
+      "domain": "sider.ai",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://stackoverflow.com/questions/76846895/how-can-i-use-cheerio-web-scraper-as-an-agent-tool-in-flowise",
+      "url": "https://stackoverflow.com/questions/76846895/how-can-i-use-cheerio-web-scraper-as-an-agent-tool-in-flowise",
+      "domain": "stackoverflow.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.datacamp.com/es/tutorial/flowise",
+      "url": "https://www.datacamp.com/es/tutorial/flowise",
+      "domain": "www.datacamp.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.gpt-labs.ai/post/chat-privately-with-your-documents-local-rag-with-flowise",
+      "url": "https://www.gpt-labs.ai/post/chat-privately-with-your-documents-local-rag-with-flowise",
+      "domain": "www.gpt-labs.ai",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "Cómo funciona RAG (IBM)",
+      "url": "https://www.ibm.com/think/topics/retrieval-augmented-generation",
+      "domain": "www.ibm.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "https://www.pulumi.com/blog/low-code-llm-apps-with-local-ai-flowise-and-pulumi/",
+      "url": "https://www.pulumi.com/blog/low-code-llm-apps-with-local-ai-flowise-and-pulumi/",
+      "domain": "www.pulumi.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.reddit.com/r/ollama/comments/1jbkbai/the_complete_guide_to_building_your_free_local_ai/",
+      "url": "https://www.reddit.com/r/ollama/comments/1jbkbai/the_complete_guide_to_building_your_free_local_ai/",
+      "domain": "www.reddit.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.youtube.com/watch?v=85gZ7G-ze3c",
+      "url": "https://www.youtube.com/watch?v=85gZ7G-ze3c",
+      "domain": "www.youtube.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.youtube.com/watch?v=GE9IlksvGiU",
+      "url": "https://www.youtube.com/watch?v=GE9IlksvGiU",
+      "domain": "www.youtube.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "https://www.youtube.com/watch?v=MB5cNY80S4M",
+      "url": "https://www.youtube.com/watch?v=MB5cNY80S4M",
+      "domain": "www.youtube.com",
+      "type": "usada (informe)"
+    },
+    {
+      "label": "YouTube: Flowise (otro)",
+      "url": "https://www.youtube.com/watch?v=TbZaj5SZcbM&vl=en",
+      "domain": "www.youtube.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "YouTube: RAG local con Ollama + pgvector",
+      "url": "https://www.youtube.com/watch?v=GoJq7A_AOag&t=6s",
+      "domain": "www.youtube.com",
+      "type": "usada (HTML base)"
+    },
+    {
+      "label": "YouTube: Tutorial Flowise (en inglés)",
+      "url": "https://www.youtube.com/watch?v=SOWE-wOIydk",
+      "domain": "www.youtube.com",
+      "type": "usada (HTML base)"
+    }
+  ],
+  "resources_unused": [
+    {
+      "domain": "github.com",
+      "title": "A template to create an LLM app using Flowise - GitHub",
+      "search": "https://www.google.com/search?q=A%20template%20to%20create%20an%20LLM%20app%20using%20Flowise%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "Awesome-LLM-Resources-List/img-gen/comfyui/flux_ipadapter_redux_styling.json at main",
+      "search": "https://www.google.com/search?q=Awesome-LLM-Resources-List/img-gen/comfyui/flux_ipadapter_redux_styling.json%20at%20main%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "Floswise Template for ready to use cases. · FlowiseAI Flowise · Discussion #16 - GitHub",
+      "search": "https://www.google.com/search?q=Floswise%20Template%20for%20ready%20to%20use%20cases.%20%C2%B7%20FlowiseAI%20Flowise%20%C2%B7%20Discussion%20%2316%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "Flowise/package.json at main - GitHub",
+      "search": "https://www.google.com/search?q=Flowise/package.json%20at%20main%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "FlowiseAI/FlowiseSDK - GitHub",
+      "search": "https://www.google.com/search?q=FlowiseAI/FlowiseSDK%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "FlowiseDocs/en/integrations/langchain/text-splitters/recursive-character-text-splitter.md at main - GitHub",
+      "search": "https://www.google.com/search?q=FlowiseDocs/en/integrations/langchain/text-splitters/recursive-character-text-splitter.md%20at%20main%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "[FEATURE] Ability to load the json file exported by Flowise and run the chain contained in it · Issue #1649 - GitHub",
+      "search": "https://www.google.com/search?q=%5BFEATURE%5D%20Ability%20to%20load%20the%20json%20file%20exported%20by%20Flowise%20and%20run%20the%20chain%20contained%20in%20it%20%C2%B7%20Issue%20%231649%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "[Question] Differences among Conversational Retrieval QA to Conversational Retrieval Agent · Issue #2395 · FlowiseAI/Flowise - GitHub",
+      "search": "https://www.google.com/search?q=%5BQuestion%5D%20Differences%20among%20Conversational%20Retrieval%20QA%20to%20Conversational%20Retrieval%20Agent%20%C2%B7%20Issue%20%232395%20%C2%B7%20FlowiseAI/Flowise%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "codesphere-community/FlowiseAI - GitHub",
+      "search": "https://www.google.com/search?q=codesphere-community/FlowiseAI%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "compose-templates/flowiseai/liara-compose.yaml at master - GitHub",
+      "search": "https://www.google.com/search?q=compose-templates/flowiseai/liara-compose.yaml%20at%20master%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "ilsilfverskiold/Awesome-LLM-Resources-List - GitHub",
+      "search": "https://www.google.com/search?q=ilsilfverskiold/Awesome-LLM-Resources-List%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "ilsilfverskiold/flowise_flows: Flowise Agent Workflows - GitHub",
+      "search": "https://www.google.com/search?q=ilsilfverskiold/flowise_flows%3A%20Flowise%20Agent%20Workflows%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "github.com",
+      "title": "twilio-samples/cr-flowiseai: A sample integration of Flowise AI with ConversationRelay to build voice-enabled AI agents powered by Twilio. Includes local development setup, Flowise configuration, and Fly.io deployment instructions. - GitHub",
+      "search": "https://www.google.com/search?q=twilio-samples/cr-flowiseai%3A%20A%20sample%20integration%20of%20Flowise%20AI%20with%20ConversationRelay%20to%20build%20voice-enabled%20AI%20agents%20powered%20by%20Twilio.%20Includes%20local%20development%20setup%2C%20Flowise%20configuration%2C%20and%20Fly.io%20deployment%20instructions.%20-%20GitHub%20site%3Agithub.com"
+    },
+    {
+      "domain": "docs.flowiseai.com",
+      "title": "Apify Website Content Crawler | FlowiseAI",
+      "search": "https://www.google.com/search?q=Apify%20Website%20Content%20Crawler%20%7C%20FlowiseAI%20site%3Adocs.flowiseai.com"
+    },
+    {
+      "domain": "docs.flowiseai.com",
+      "title": "Character Text Splitter | FlowiseAI",
+      "search": "https://www.google.com/search?q=Character%20Text%20Splitter%20%7C%20FlowiseAI%20site%3Adocs.flowiseai.com"
+    },
+    {
+      "domain": "docs.flowiseai.com",
+      "title": "Github | FlowiseAI",
+      "search": "https://www.google.com/search?q=Github%20%7C%20FlowiseAI%20site%3Adocs.flowiseai.com"
+    },
+    {
+      "domain": "docs.flowiseai.com",
+      "title": "Playwright Web Scraper | FlowiseAI",
+      "search": "https://www.google.com/search?q=Playwright%20Web%20Scraper%20%7C%20FlowiseAI%20site%3Adocs.flowiseai.com"
+    },
+    {
+      "domain": "youtube.com",
+      "title": "Create AI Agents in Flowise 3.0 + n8n (Complete Tutorial from Scratch) - YouTube",
+      "search": "https://www.google.com/search?q=Create%20AI%20Agents%20in%20Flowise%203.0%20%2B%20n8n%20%28Complete%20Tutorial%20from%20Scratch%29%20-%20YouTube%20site%3Ayoutube.com"
+    },
+    {
+      "domain": "youtube.com",
+      "title": "Empieza a Crear Agentes de IA con Flowise 3.0 (Guía Completa) - YouTube",
+      "search": "https://www.google.com/search?q=Empieza%20a%20Crear%20Agentes%20de%20IA%20con%20Flowise%203.0%20%28Gu%C3%ADa%20Completa%29%20-%20YouTube%20site%3Ayoutube.com"
+    },
+    {
+      "domain": "youtube.com",
+      "title": "Flowise AI Tutorial #9 - Using Local Models, LocalAI, GPT4ALL - YouTube",
+      "search": "https://www.google.com/search?q=Flowise%20AI%20Tutorial%20%239%20-%20Using%20Local%20Models%2C%20LocalAI%2C%20GPT4ALL%20-%20YouTube%20site%3Ayoutube.com"
+    },
+    {
+      "domain": "youtube.com",
+      "title": "Paso-a-Paso: Crea Agentes de IA desde Cero con Flowise (Tool Agent) - YouTube",
+      "search": "https://www.google.com/search?q=Paso-a-Paso%3A%20Crea%20Agentes%20de%20IA%20desde%20Cero%20con%20Flowise%20%28Tool%20Agent%29%20-%20YouTube%20site%3Ayoutube.com"
+    },
+    {
+      "domain": "youtube.com",
+      "title": "Tutorial de Flowise v3: Crea agentes de IA SIN programar - YouTube",
+      "search": "https://www.google.com/search?q=Tutorial%20de%20Flowise%20v3%3A%20Crea%20agentes%20de%20IA%20SIN%20programar%20-%20YouTube%20site%3Ayoutube.com"
+    },
+    {
+      "domain": "arie-m-prasetyo.medium.com",
+      "title": "Chunking strategies - Arie M. Prasetyo",
+      "search": "https://www.google.com/search?q=Chunking%20strategies%20-%20Arie%20M.%20Prasetyo%20site%3Aarie-m-prasetyo.medium.com"
+    },
+    {
+      "domain": "blog.n8n.io",
+      "title": "AI Agent Orchestration Frameworks: Which One Works Best for You? - n8n Blog",
+      "search": "https://www.google.com/search?q=AI%20Agent%20Orchestration%20Frameworks%3A%20Which%20One%20Works%20Best%20for%20You%3F%20-%20n8n%20Blog%20site%3Ablog.n8n.io"
+    },
+    {
+      "domain": "codesandbox.io",
+      "title": "Flowise-template - CodeSandbox",
+      "search": "https://www.google.com/search?q=Flowise-template%20-%20CodeSandbox%20site%3Acodesandbox.io"
+    },
+    {
+      "domain": "docs.langchain.com",
+      "title": "Splitting recursively - Docs by LangChain",
+      "search": "https://www.google.com/search?q=Splitting%20recursively%20-%20Docs%20by%20LangChain%20site%3Adocs.langchain.com"
+    },
+    {
+      "domain": "docs.n8n.io",
+      "title": "Agents vs chains | n8n Docs",
+      "search": "https://www.google.com/search?q=Agents%20vs%20chains%20%7C%20n8n%20Docs%20site%3Adocs.n8n.io"
+    },
+    {
+      "domain": "eladiorocha.com",
+      "title": "Cómo Crear un Chatbot con IA sin Código Usando Flowise - Eladio Rocha",
+      "search": "https://www.google.com/search?q=C%C3%B3mo%20Crear%20un%20Chatbot%20con%20IA%20sin%20C%C3%B3digo%20Usando%20Flowise%20-%20Eladio%20Rocha%20site%3Aeladiorocha.com"
+    },
+    {
+      "domain": "firecrawl.dev",
+      "title": "11 AI Agent Projects You Can Build Today (With Guides) - Firecrawl",
+      "search": "https://www.google.com/search?q=11%20AI%20Agent%20Projects%20You%20Can%20Build%20Today%20%28With%20Guides%29%20-%20Firecrawl%20site%3Afirecrawl.dev"
+    },
+    {
+      "domain": "hybrowlabs.com",
+      "title": "Flowise AI (PART-1): Create LLM Apps with Ease and Freedom Using Open-Source LangChain Apps - Hybrowlabs Technologies",
+      "search": "https://www.google.com/search?q=Flowise%20AI%20%28PART-1%29%3A%20Create%20LLM%20Apps%20with%20Ease%20and%20Freedom%20Using%20Open-Source%20LangChain%20Apps%20-%20Hybrowlabs%20Technologies%20site%3Ahybrowlabs.com"
+    },
+    {
+      "domain": "lagnchain.readthedocs.io",
+      "title": "RecursiveCharacterTextSplitter — LangChain 0.0.149 - Read the Docs",
+      "search": "https://www.google.com/search?q=RecursiveCharacterTextSplitter%20%E2%80%94%20LangChain%200.0.149%20-%20Read%20the%20Docs%20site%3Alagnchain.readthedocs.io"
+    },
+    {
+      "domain": "limitlessai.gumroad.com",
+      "title": "n8n x Flowise AI Agent Workflow Blueprint [JSON file] Template: Data Analytics AI Agent",
+      "search": "https://www.google.com/search?q=n8n%20x%20Flowise%20AI%20Agent%20Workflow%20Blueprint%20%5BJSON%20file%5D%20Template%3A%20Data%20Analytics%20AI%20Agent%20site%3Alimitlessai.gumroad.com"
+    },
+    {
+      "domain": "n8n.io",
+      "title": "Create a Branded AI Chatbot for Websites with Flowise Multi-Agent Chatflows - N8N",
+      "search": "https://www.google.com/search?q=Create%20a%20Branded%20AI%20Chatbot%20for%20Websites%20with%20Flowise%20Multi-Agent%20Chatflows%20-%20N8N%20site%3An8n.io"
+    },
+    {
+      "domain": "oxylabs.io",
+      "title": "Web Scraping With FlowiseAI and Oxylabs",
+      "search": "https://www.google.com/search?q=Web%20Scraping%20With%20FlowiseAI%20and%20Oxylabs%20site%3Aoxylabs.io"
+    },
+    {
+      "domain": "reddit.com",
+      "title": "Chains vs Agents. : r/LangChain - Reddit",
+      "search": "https://www.google.com/search?q=Chains%20vs%20Agents.%20%3A%20r/LangChain%20-%20Reddit%20site%3Areddit.com"
+    },
+    {
+      "domain": "redis.io",
+      "title": "Build a Conversational Agent with Redis Using Flowise",
+      "search": "https://www.google.com/search?q=Build%20a%20Conversational%20Agent%20with%20Redis%20Using%20Flowise%20site%3Aredis.io"
+    },
+    {
+      "domain": "reference.langchain.com",
+      "title": "Text Splitters | LangChain Reference",
+      "search": "https://www.google.com/search?q=Text%20Splitters%20%7C%20LangChain%20Reference%20site%3Areference.langchain.com"
+    },
+    {
+      "domain": "zenrows.com",
+      "title": "How to Build an AI Agent with Web Access Using Flowise and ZenRows",
+      "search": "https://www.google.com/search?q=How%20to%20Build%20an%20AI%20Agent%20with%20Web%20Access%20Using%20Flowise%20and%20ZenRows%20site%3Azenrows.com"
+    }
+  ]
+}</script>
+
+<script>
+(() => {
+  "use strict";
+
+  // ========= Carga de datos (sin JSON inválido, sin comentarios) =========
+  const DATA = JSON.parse(document.getElementById("DATA").textContent);
+
+  // ========= Estado =========
+  const LS_KEY = "flowise_plan_v21_progress";
+  const LS_NOTES = "flowise_plan_v21_notes";
+  let progress = {};
+  let notes = {};
+  let activeTag = "all";
+  let query = "";
+
+  // ========= Persistencia =========
+  function loadState(){
+    try{ progress = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); }catch(e){ progress={}; }
+    try{ notes = JSON.parse(localStorage.getItem(LS_NOTES) || "{}"); }catch(e){ notes={}; }
+  }
+  function saveState(){
+    localStorage.setItem(LS_KEY, JSON.stringify(progress));
+    localStorage.setItem(LS_NOTES, JSON.stringify(notes));
+  }
+
+  // ========= Util =========
+  function esc(s){
+    return (s||"").toString()
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#39;");
+  }
+  function getAllSteps(){
+    const all=[];
+    DATA.sections.forEach(sec => sec.steps.forEach(st => all.push({secId:sec.id, secTitle:sec.title, ...st})));
+    return all;
+  }
+  function matches(step){
+    const hay = [
+      step.secTitle, step.title, (step.tags||[]).join(" "),
+      (step.why||""), (step.what||[]).join(" "),
+      (step.dissect||[]).join(" "), (step.deliverables||[]).join(" "),
+      (step.downloads||[]).join(" ")
+    ].join(" ").toLowerCase();
+
+    const qok = !query || hay.includes(query.toLowerCase());
+    const tok = activeTag==="all" || (step.tags||[]).includes(activeTag);
+    return qok && tok;
+  }
+  function doneCount(){
+    const all = getAllSteps();
+    return all.reduce((acc,s)=> acc + (progress[s.id] ? 1 : 0), 0);
+  }
+  function totalCount(){
+    return getAllSteps().length;
+  }
+  function sectionCounts(){
+    const map={};
+    DATA.sections.forEach(sec => {
+      let tot=0, done=0;
+      sec.steps.forEach(st => {
+        tot++;
+        if(progress[st.id]) done++;
+      });
+      map[sec.id] = {tot, done};
+    });
+    return map;
+  }
+
+  // ========= Render pills =========
+  function renderTagPills(){
+    const tags = DATA.tags || [];
+    const el = document.getElementById("tagPills");
+    const pill = (id,label) => {
+      const cls = (activeTag===id) ? "pill active" : "pill";
+      return `<div class="${cls}" data-tag="${esc(id)}">${esc(label)}</div>`;
+    };
+    el.innerHTML = pill("all","Todo") + tags.map(t=>pill(t.id,t.label)).join("");
+    el.querySelectorAll("[data-tag]").forEach(n => {
+      n.addEventListener("click", () => {
+        activeTag = n.getAttribute("data-tag");
+        renderAll();
+      });
+    });
+  }
+
+  // ========= Render nav =========
+  function renderNav(){
+    const navEl = document.getElementById("nav");
+    const counts = sectionCounts();
+    navEl.innerHTML = DATA.sections.map(sec => {
+      const c = counts[sec.id] || {tot:0, done:0};
+      return `<a href="#sec-${esc(sec.id)}" data-sec="${esc(sec.id)}">
+        <span>${esc(sec.title)}</span>
+        <span class="badge">${c.done}/${c.tot}</span>
+      </a>`;
+    }).join("");
+
+    // smooth scroll
+    navEl.querySelectorAll("a[data-sec]").forEach(a => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = a.getAttribute("data-sec");
+        const target = document.getElementById("sec-" + id);
+        if(target) target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.replaceState(null, "", "#sec-" + id);
+      });
+    });
+  }
+
+  // ========= Render content =========
+  function renderContent(){
+    const content = document.getElementById("content");
+
+    const used = DATA.resources_used || [];
+    const unused = DATA.resources_unused || [];
+
+    const usedTable = () => {
+      const rows = used.map(r => `
+        <tr>
+          <td><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a><div class="small">${esc(r.url)}</div></td>
+          <td class="small">${esc(r.type||"")}</td>
+        </tr>
+      `).join("");
+      return `
+        <details open>
+          <summary>Recursos usados (informe + base) — ${used.length}</summary>
+          <table>
+            <thead><tr><th>Recurso</th><th>Etiqueta</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </details>
+      `;
+    };
+
+    const unusedTable = () => {
+      const rows = unused.map(r => `
+        <tr>
+          <td><div><b>${esc(r.title)}</b></div><div class="small">${esc(r.domain)}</div></td>
+          <td><a href="${esc(r.search)}" target="_blank" rel="noopener">Buscar / abrir</a></td>
+        </tr>
+      `).join("");
+      return `
+        <details>
+          <summary>Fuentes no usadas (registradas) — ${unused.length}</summary>
+          <div class="small" style="margin-top:8px">
+            Estas fuentes se registran aunque no se usen todavía. Úsalas para crear ejercicios nuevos o mejorar los existentes.
+          </div>
+          <table>
+            <thead><tr><th>Fuente</th><th>Acción</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </details>
+      `;
+    };
+
+    const stepHtml = (sec, st) => {
+      const checked = !!progress[st.id];
+      const chips = (st.tags||[]).map(t => `<span class="chip">${esc(t)}</span>`).join("");
+      const mins = st.minutes ? `<span class="chip ok">⏱ ${st.minutes}m</span>` : "";
+      const why = st.why ? `<div class="small" style="margin-top:6px">${esc(st.why)}</div>` : "";
+
+      const list = (arr) => arr && arr.length ? `<ul>${arr.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="small">—</div>`;
+      const refs = (st.refs||[]).length ? `<ul>${st.refs.map(r=>`<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a> <span class="small">(${
+        esc(r.type||"ref")
+      })</span></li>`).join("")}</ul>` : `<div class="small">—</div>`;
+
+      const noteKey = st.id;
+      const noteVal = notes[noteKey] || "";
+
+      return `
+        <div class="step" data-step="${esc(st.id)}" data-tags="${esc((st.tags||[]).join(" "))}">
+          <div class="stephead">
+            <div class="chk">
+              <input type="checkbox" data-check="${esc(st.id)}" ${checked ? "checked" : ""}/>
+            </div>
+            <div style="flex:1">
+              <h3>${esc(st.title)}</h3>
+              <div class="chips">${mins}${chips}</div>
+              ${why}
+              <details>
+                <summary>Ver receta, entregables, disectar y referencias</summary>
+                <div class="hr"></div>
+
+                <div><b>Qué harás</b></div>
+                ${list(st.what)}
+
+                <div class="hr"></div>
+                <div><b>Entregables</b></div>
+                ${list(st.deliverables)}
+
+                <div class="hr"></div>
+                <div><b>Qué disectar (analizar)</b></div>
+                ${list(st.dissect)}
+
+                <div class="hr"></div>
+                <div><b>Qué descargar / recolectar</b></div>
+                ${list(st.downloads)}
+
+                <div class="hr"></div>
+                <div><b>Referencias (link directo)</b></div>
+                ${refs}
+
+                <div class="hr"></div>
+                <div><b>Notas tuyas</b> <span class="small">(se guardan en tu navegador)</span></div>
+                <textarea data-note="${esc(noteKey)}" rows="3" style="width:100%;margin-top:6px;background:#0a1020;border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--text);outline:none">${esc(noteVal)}</textarea>
+              </details>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const sectionHtml = (sec) => {
+      // filtro por query/tag: si no hay steps visibles, oculta sección (salvo biblioteca y fuentes)
+      const visible = sec.steps.filter(st => matches({secTitle:sec.title, ...st}));
+      const isAppendix = (sec.id==="biblioteca" || sec.id==="fuentes_no_usadas");
+      if(!isAppendix && visible.length===0) return "";
+
+      const counts = sectionCounts()[sec.id] || {tot:sec.steps.length, done:0};
+      const outcomes = (sec.outcomes||[]).map(o=>`<span>${esc(o)}</span>`).join("");
+
+      const primaryRefs = (sec.primary_refs||[]).length
+        ? `<details><summary>Referencias clave de esta sección</summary><ul>${sec.primary_refs.map(r=>`<li><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)}</a></li>`).join("")}</ul></details>`
+        : "";
+
+      let extra = "";
+      if(sec.id==="biblioteca") {
+        extra = usedTable();
+      } else if(sec.id==="fuentes_no_usadas") {
+        extra = unusedTable();
+      }
+
+      return `
+        <section id="sec-${esc(sec.id)}" class="card">
+          <a class="toplink" href="#top" data-top>↑ arriba</a>
+          <h2>${esc(sec.title)} <span class="badge">${counts.done}/${counts.tot}</span></h2>
+          <div class="meta">${esc(sec.subtitle||"")}</div>
+          <div class="outcomes">${outcomes}</div>
+          ${primaryRefs}
+          <div class="hr"></div>
+          <div>
+            ${visible.map(st => stepHtml(sec, st)).join("")}
+          </div>
+          ${extra ? `<div class="hr"></div>${extra}` : ""}
+        </section>
+      `;
+    };
+
+    content.innerHTML = `<div id="top"></div>` + DATA.sections.map(sectionHtml).join("");
+  }
+
+  // ========= Eventos =========
+  function bindEvents(){
+    // checks
+    document.querySelectorAll('input[data-check]').forEach(chk => {
+      chk.addEventListener("change", () => {
+        const id = chk.getAttribute("data-check");
+        progress[id] = chk.checked;
+        saveState();
+        renderKpisAndNavOnly();
+      });
+    });
+    // notes
+    document.querySelectorAll('textarea[data-note]').forEach(t => {
+      t.addEventListener("input", () => {
+        const id = t.getAttribute("data-note");
+        notes[id] = t.value;
+        saveState();
+      });
+    });
+    // top links
+    document.querySelectorAll('a[data-top]').forEach(a => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById("top").scrollIntoView({behavior:"smooth", block:"start"});
+        history.replaceState(null,"","#top");
+      });
+    });
+  }
+
+  function renderKpisAndNavOnly(){
+    document.getElementById("kpiDone").textContent = doneCount();
+    document.getElementById("kpiTotal").textContent = totalCount();
+    renderNav();
+    setupScrollSpy();
+  }
+
+  function setupScrollSpy(){
+    const navEl = document.getElementById("nav");
+    const links = Array.from(navEl.querySelectorAll("a[data-sec]"));
+    links.forEach(l => l.classList.remove("active"));
+
+    const sections = DATA.sections
+      .map(s => document.getElementById("sec-" + s.id))
+      .filter(Boolean);
+
+    // limpia observer viejo
+    if(window.__spy) {
+      try { window.__spy.disconnect(); } catch(e){}
+    }
+    window.__spy = new IntersectionObserver((entries) => {
+      // elige el más visible
+      const visible = entries
+        .filter(e => e.isIntersecting)
+        .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if(!visible) return;
+      const id = visible.target.id.replace("sec-","");
+      links.forEach(l => l.classList.toggle("active", l.getAttribute("data-sec")===id));
+    }, {
+      root:null,
+      threshold:[0.15,0.25,0.4,0.55,0.7]
+    });
+
+    sections.forEach(s => window.__spy.observe(s));
+  }
+
+  function renderHeader(){
+    document.getElementById("title").textContent = DATA.meta.title;
+    document.getElementById("subtitle").textContent = DATA.meta.notes || "";
+    document.getElementById("genDate").textContent = DATA.meta.generated || "";
+  }
+
+  function renderAll(){
+    renderHeader();
+    renderTagPills();
+    renderContent();
+    bindEvents();
+    renderKpisAndNavOnly();
+  }
+
+  // search
+  document.getElementById("q").addEventListener("input", (e) => {
+    query = e.target.value.trim();
+    renderAll();
+  });
+
+  // export/import/reset
+  document.getElementById("btnExport").addEventListener("click", () => {
+    const payload = {
+      meta: DATA.meta,
+      exportedAt: new Date().toISOString(),
+      progress, notes
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "flowise_plan_progress.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  });
+  document.getElementById("btnImport").addEventListener("click", () => {
+    document.getElementById("importFile").click();
+  });
+  document.getElementById("importFile").addEventListener("change", async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    try {
+      const txt = await f.text();
+      const obj = JSON.parse(txt);
+      progress = obj.progress || {};
+      notes = obj.notes || {};
+      saveState();
+      renderAll();
+    } catch(err) {
+      alert("No pude importar: JSON inválido.");
+    } finally {
+      e.target.value = "";
+    }
+  });
+  document.getElementById("btnReset").addEventListener("click", () => {
+    if(!confirm("¿Borrar progreso y notas guardadas en este navegador?")) return;
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_NOTES);
+    progress = {};
+    notes = {};
+    renderAll();
+  });
+
+  // ========= INIT =========
+  loadState();
+  renderAll();
+})();
+</script>
+</body>
+</html>

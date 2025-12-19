@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sesión 3 – RAG local con AnythingLLM + LM Studio + Ollama</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #050814;
+      --panel: #0f172a;
+      --panel-soft: #111827;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.14);
+      --accent-strong: #0ea5e9;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f97373;
+      --success: #4ade80;
+      --warning: #facc15;
+      --radius-lg: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #020617 30%, #000 100%);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 1.5rem;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto 4rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin: 0 0 0.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      margin: 0 0 0.75rem;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin: 0.25rem 0 0.4rem;
+    }
+
+    p {
+      margin: 0.2rem 0 0.5rem;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .tagline {
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(250px, 1.4fr);
+      gap: 1.2rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(15,23,42,0.95), rgba(15,23,42,0.98));
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.1rem 1rem;
+      box-shadow: 0 18px 40px rgba(15,23,42,0.6);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+      gap: .5rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: 0.12rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--muted);
+      background: rgba(15,23,42,0.9);
+    }
+
+    .pill--accent {
+      border-color: rgba(56,189,248,0.7);
+      color: var(--accent-strong);
+      background: var(--accent-soft);
+    }
+
+    .module {
+      margin-bottom: 0.9rem;
+      padding: 0.9rem;
+      border-radius: 12px;
+      background: radial-gradient(circle at top left, rgba(15,118,255,0.12), transparent 55%), 
+                  radial-gradient(circle at bottom right, rgba(236, 72, 153,0.1), transparent 55%),
+                  var(--panel-soft);
+      border: 1px solid #1e293b;
+    }
+
+    .module-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.1rem;
+    }
+
+    .module-meta {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0.4rem 0 0.2rem;
+    }
+
+    .checklist li {
+      margin-bottom: 0.25rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      padding: 0.38rem 0.5rem;
+      border-radius: 9px;
+      transition: background 0.12s ease;
+    }
+
+    .check-item:hover {
+      background: rgba(15,23,42,0.9);
+    }
+
+    .check-item input[type="checkbox"] {
+      margin-top: 0.16rem;
+      accent-color: var(--accent-strong);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .check-label {
+      font-size: 0.9rem;
+    }
+    .check-label span.desc {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .sublist {
+      list-style: none;
+      padding-left: 1.6rem;
+      margin: 0.1rem 0 0.1rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(55,65,81,0.9);
+      color: var(--muted);
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-strong);
+    }
+
+    .progress {
+      margin-top: 0.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.55rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .progress-bar {
+      position: relative;
+      flex: 1;
+      height: 7px;
+      border-radius: 999px;
+      background: #020617;
+      overflow: hidden;
+    }
+    .progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #0ea5e9);
+      transition: width 0.22s ease-out;
+    }
+
+    .notes {
+      width: 100%;
+      min-height: 90px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      color: var(--text);
+      padding: 0.55rem 0.6rem;
+      font-size: 0.88rem;
+      resize: vertical;
+    }
+
+    .notes::placeholder {
+      color: #6b7280;
+    }
+
+    .notes-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .resource-list {
+      list-style: none;
+      padding: 0;
+      margin: 0.35rem 0 0.2rem;
+      font-size: 0.85rem;
+    }
+
+    .resource-list li {
+      margin-bottom: 0.15rem;
+    }
+
+    .pill-small {
+      font-size: 0.69rem;
+      padding: 0.06rem 0.36rem;
+      border-radius: 999px;
+      border: 1px solid rgba(55,65,81,0.9);
+      color: var(--muted);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .kbd {
+      display: inline-flex;
+      padding: 0.04rem 0.35rem;
+      border-radius: 5px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      font-size: 0.72rem;
+      font-family: inherit;
+    }
+
+    .callout {
+      font-size: 0.82rem;
+      padding: 0.55rem 0.65rem;
+      border-radius: 10px;
+      background: rgba(15,23,42,0.9);
+      border: 1px dashed rgba(55,65,81,0.9);
+      margin-top: 0.4rem;
+    }
+
+    .callout strong {
+      color: var(--accent-strong);
+    }
+
+    footer {
+      margin-top: 1.2rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header class="card">
+    <div class="card-header">
+      <div>
+        <h1>Sesión 3 · RAG local con AnythingLLM + LM Studio + Ollama</h1>
+        <p class="tagline">
+          Objetivo: que puedas subir PDFs/archivos propios y hacerles preguntas usando tus modelos locales.
+        </p>
+      </div>
+      <div>
+        <span class="pill pill--accent">Roadmap IA Local · S3</span>
+      </div>
+    </div>
+    <div class="progress">
+      <div>Progreso general:</div>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div><span id="progress-text">0 / 0</span></div>
+    </div>
+    <div class="callout">
+      <strong>Tip de uso:</strong> marca cada checkbox cuando termines una tarea. El estado se guarda en tu navegador (localStorage),
+      así puedes cerrar el archivo y retomarlo luego sin perder el progreso.
+    </div>
+  </header>
+
+  <section class="layout" aria-label="Contenido de la sesión 3">
+    <!-- Columna izquierda: módulos -->
+    <section aria-label="Módulos de trabajo">
+      <!-- Módulo A -->
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>A. Fundamentos de RAG y visión general</h2>
+          <span class="badge"><span class="badge-dot"></span>Teoría + práctica ligera</span>
+        </div>
+        <p class="module-meta">
+          Entender qué es RAG (Retrieval-Augmented Generation) y cómo encaja en tu ecosistema local:
+          LM Studio / Ollama como motores, AnythingLLM como “orquestador”.
+        </p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-a1" />
+              <span class="check-label">
+                Leer una definición corta de RAG y su flujo básico.
+                <span class="desc">Entrada → búsqueda en tus documentos → modelo genera respuesta usando lo recuperado.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-a2" />
+              <span class="check-label">
+                Esquematizar tu propio diagrama mental del flujo RAG.
+                <span class="desc">Dibújalo en papel o en un note app: “Usuario → AnythingLLM → vector DB → modelo local → respuesta”.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-a3" />
+              <span class="check-label">
+                Identificar al menos 3 casos de uso tuyos para RAG.
+                <span class="desc">Ej: buscar en tus PDFs de ingeniería, en documentación de código, en borradores de libros, etc.</span>
+              </span>
+            </label>
+          </li>
+        </ul>
+        <div class="notes-block">
+          <div class="notes-label">
+            <span>Notas de comprensión de RAG</span>
+          </div>
+          <textarea class="notes" data-note-id="s3-a-notes"
+            placeholder="Escribe aquí tus ejemplos de uso, dudas sobre RAG, o frases que te ayuden a explicarlo rápido."></textarea>
+        </div>
+      </article>
+
+      <!-- Módulo B -->
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>B. AnythingLLM: instalación rápida y conexión a modelos locales</h2>
+          <span class="badge"><span class="badge-dot"></span>Herramienta central de la sesión</span>
+        </div>
+        <p class="module-meta">
+          Configurar AnythingLLM como “capa RAG” encima de LM Studio u Ollama. Objetivo mínimo:
+          tener un “Workspace” que pueda leer un PDF tuyo y responder preguntas.
+        </p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-b1" />
+              <span class="check-label">
+                Instalar AnythingLLM (desktop o Docker, la que prefieras).
+                <span class="desc">
+                  Usa el instalador de Windows o la opción que encaje mejor con tu entorno.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-b2" />
+              <span class="check-label">
+                Crear tu primer <em>Workspace</em> vacío.
+                <span class="desc">Piensa en él como una “biblioteca temática” (ej. “Libros personales”, “Documentos de proyectos”, etc.).</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-b3" />
+              <span class="check-label">
+                Conectar AnythingLLM con un modelo vía <strong>LM Studio</strong>.
+                <span class="desc">
+                  Usa la API OpenAI-like de LM Studio (ej. <code class="kbd">http://127.0.0.1:1234/v1</code>) y prueba con Qwen o Llama 3.1.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-b4" />
+              <span class="check-label">
+                (Opcional) Crear una segunda conexión usando <strong>Ollama</strong>.
+                <span class="desc">
+                  Endpoint típico: <code class="kbd">http://127.0.0.1:11434</code>. Elige un modelo pequeño para empezar (ej. <code>qwen2.5:7b</code>).
+                </span>
+              </span>
+            </label>
+          </li>
+        </ul>
+        <div class="notes-block">
+          <div class="notes-label">
+            <span>Errores / aprendizajes de la configuración</span>
+          </div>
+          <textarea class="notes" data-note-id="s3-b-notes"
+            placeholder="Anota aquí errores de conexión, mensajes extraños o pasos que te costó encontrar. Esta lista te ayudará luego cuando montes otros proyectos."></textarea>
+        </div>
+      </article>
+
+      <!-- Módulo C -->
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>C. Mini-proyecto: “Pregúntale a tus PDFs”</h2>
+          <span class="badge"><span class="badge-dot"></span>Proyecto guiado</span>
+        </div>
+        <p class="module-meta">
+          Construir un flujo completo: subir documentos → indexarlos → hacer preguntas y comparar comportamiento entre modelos.
+          No importa si los documentos son técnicos, personales o de otro tipo.
+        </p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c1" />
+              <span class="check-label">
+                Elegir 1–3 documentos reales para usar en el proyecto.
+                <span class="desc">PDFs de ingeniería, capítulos de libros, documentación de código, borradores de cursos, etc.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c2" />
+              <span class="check-label">
+                Subir los documentos al Workspace de AnythingLLM.
+                <span class="desc">Verifica que el proceso de indexación/rag termine sin errores (logs o mensajes en la UI).</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c3" />
+              <span class="check-label">
+                Diseñar una pequeña batería de 5–7 preguntas de prueba.
+                <span class="desc">
+                  Mezcla: preguntas de detalle, de resumen, de “explica esto con ejemplos diarios”, y una de tipo “razonamiento”.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c4" />
+              <span class="check-label">
+                Ejecutar las preguntas con un modelo (ej. Qwen2.5:7B) y guardar las respuestas.
+                <span class="desc">Puedes copiarlas a un archivo <code>.md</code> o a un JSON como hicimos en los benchmarks.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c5" />
+              <span class="check-label">
+                Cambiar de modelo (ej. DeepSeek o Llama 3.1) y repetir las mismas preguntas.
+                <span class="desc">
+                  Igual que en los benchmarks: misma batería de prompts, diferente modelo; compara precisión, claridad y honestidad.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-c6" />
+              <span class="check-label">
+                Escribir un mini-resumen de conclusiones del mini-proyecto.
+                <span class="desc">
+                  ¿Qué modelo se comporta mejor con tus propios documentos? ¿Alguna sorpresa? ¿Qué tareas harías con cada uno?
+                </span>
+              </span>
+            </label>
+          </li>
+        </ul>
+        <div class="notes-block">
+          <div class="notes-label">
+            <span>Conclusiones del proyecto “Pregúntale a tus PDFs”</span>
+          </div>
+          <textarea class="notes" data-note-id="s3-c-notes"
+            placeholder="Escribe aquí tu resumen: puntos fuertes y débiles de cada modelo cuando trabaja con TUS documentos."></textarea>
+        </div>
+      </article>
+
+      <!-- Módulo D opcional -->
+      <article class="card module">
+        <div class="module-title-row">
+          <h2>D. Opcional · Afinar calidad de RAG</h2>
+          <span class="badge"><span class="badge-dot" style="background: var(--warning);"></span>Profundización</span>
+        </div>
+        <p class="module-meta">
+          Solo si te ves con energía: experimentar con configuraciones que suelen marcar diferencia en proyectos reales.
+        </p>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-d1" />
+              <span class="check-label">
+                Probar distintos tamaños de “chunk” y “overlap”.
+                <span class="desc">
+                  Ej: chunk 512 / overlap 64 vs chunk 1 024 / overlap 128. Observa si mejora la coherencia de las respuestas largas.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-d2" />
+              <span class="check-label">
+                Cambiar de modelo de embeddings o proveedor de vectores (si AnythingLLM lo permite en tu instalación).
+                <span class="desc">
+                  Haz 2–3 preguntas difíciles y compara si encuentra mejores fragmentos de contexto.
+                </span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-d3" />
+              <span class="check-label">
+                Definir una métrica rápida de calidad para tus proyectos RAG.
+                <span class="desc">
+                  Ej: escala 1–5 en “uso correcto del contexto”, “alucinaciones” y “claridad para humanos no técnicos”.
+                </span>
+              </span>
+            </label>
+          </li>
+        </ul>
+      </article>
+    </section>
+
+    <!-- Columna derecha: recursos y contexto -->
+    <aside aria-label="Recursos y atajos" class="card">
+      <div class="card-header">
+        <h3>Atajos & Recursos de apoyo</h3>
+        <span class="pill-small">Panel lateral · Sesión 3</span>
+      </div>
+
+      <section>
+        <h3>1. Enlaces oficiales de herramientas</h3>
+        <ul class="resource-list">
+          <li>
+            <strong>AnythingLLM:</strong>
+            <a href="https://anythingllm.com/" target="_blank" rel="noreferrer">Sitio oficial</a> ·			
+            <a href="https://github.com/Mintplex-Labs/anything-llm" target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </li>
+          <li>
+            <strong>LM Studio:</strong>
+            <a href="https://lmstudio.ai" target="_blank" rel="noreferrer">Sitio oficial</a> ·
+            <a href="https://github.com/lmstudio-ai" target="_blank" rel="noreferrer">GitHub</a>
+          </li>
+          <li>
+            <strong>Ollama:</strong>
+            <a href="https://ollama.com" target="_blank" rel="noreferrer">Página oficial</a> ·
+            <a href="https://github.com/ollama/ollama" target="_blank" rel="noreferrer">GitHub</a>
+          </li>
+          <li>
+            <strong>Qwen / DeepSeek / Llama:</strong>
+            <a href="https://huggingface.co/Qwen" target="_blank" rel="noreferrer">Modelos Qwen</a> ·
+            <a href="https://huggingface.co/deepseek-ai" target="_blank" rel="noreferrer">DeepSeek</a> ·
+            <a href="https://huggingface.co/meta-llama" target="_blank" rel="noreferrer">Llama</a>
+          </li>
+        </ul>
+      </section>
+
+      <section style="margin-top:0.9rem;">
+        <h3>2. Lecturas cortas recomendadas</h3>
+        <ul class="resource-list">
+          <li>
+            <strong>Resumen ligero de RAG:</strong>
+            busca “Retrieval-Augmented Generation primer” (hay varios artículos intro fáciles de 5–10 min).
+          </li>
+          <li>
+            <strong>Buenas prácticas con PDFs:</strong>
+            guía de “chunking & embeddings” para documentos largos (cualquier artículo moderno sobre RAG+PDF te sirve).
+          </li>
+          <li>
+            <strong>Comparar modelos:</strong>
+            tus propios JSON/MD de benchmarks; son tu dataset personal para ver evolución entre modelos.
+          </li>
+        </ul>
+      </section>
+
+      <section style="margin-top:0.9rem;">
+        <h3>3. Chequeo rápido de entorno</h3>
+        <ul class="checklist">
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-env1" />
+              <span class="check-label">
+                LM Studio funcionando con al menos 1 modelo cargado.
+                <span class="desc">Puedes hacer un prompt de prueba en la pestaña de chat.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-env2" />
+              <span class="check-label">
+                Ollama con al menos 1 modelo disponible.
+                <span class="desc">Comprueba con <code class="kbd">ollama list</code> en PowerShell o CMD.</span>
+              </span>
+            </label>
+          </li>
+          <li>
+            <label class="check-item">
+              <input type="checkbox" data-id="s3-env3" />
+              <span class="check-label">
+                AnythingLLM accesible (interfaz abre sin errores).
+                <span class="desc">Idealmente ya apuntando a LM Studio u Ollama.</span>
+              </span>
+            </label>
+          </li>
+        </ul>
+      </section>
+
+      <section style="margin-top:0.9rem;">
+        <h3>4. Notas rápidas de sesión</h3>
+        <div class="notes-label">
+          <span>Ideas / TODOs para la próxima sesión</span>
+        </div>
+        <textarea class="notes" data-note-id="s3-side-notes"
+          placeholder="Escribe aquí cosas que quieras revisar en la siguiente sesión: nuevos modelos a probar, ideas de mini-proyectos, etc."></textarea>
+      </section>
+
+      <footer>
+        Sesión 3 · RAG local · Tu “cheatsheet” vivo.  
+      </footer>
+    </aside>
+  </section>
+</main>
+
+<script>
+  (function () {
+    const PREFIX = "ia_local_s3_";
+
+    function updateProgress() {
+      const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"][data-id]'));
+      const total = checkboxes.length;
+      const done = checkboxes.filter(cb => cb.checked).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      const fill = document.getElementById("progress-fill");
+      const text = document.getElementById("progress-text");
+      if (fill) fill.style.width = pct + "%";
+      if (text) text.textContent = `${done} / ${total} · ${pct}%`;
+    }
+
+    function loadState() {
+      // checkboxes
+      document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+        const key = PREFIX + cb.getAttribute("data-id");
+        const stored = localStorage.getItem(key);
+        if (stored === "1") cb.checked = true;
+        if (stored === "0") cb.checked = false;
+
+        cb.addEventListener("change", () => {
+          localStorage.setItem(key, cb.checked ? "1" : "0");
+          updateProgress();
+        });
+      });
+
+      // notes
+      document.querySelectorAll("textarea.notes[data-note-id]").forEach(area => {
+        const key = PREFIX + "note_" + area.getAttribute("data-note-id");
+        const stored = localStorage.getItem(key);
+        if (stored !== null) area.value = stored;
+
+        area.addEventListener("input", () => {
+          localStorage.setItem(key, area.value);
+        });
+      });
+
+      updateProgress();
+    }
+
+    document.addEventListener("DOMContentLoaded", loadState);
+  })();
+</script>
+</body>
+</html>
