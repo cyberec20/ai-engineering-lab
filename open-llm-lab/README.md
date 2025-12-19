@@ -1,5 +1,3 @@
----
-
 ## AI Engineering Lab
 
 **Local LLMs · Agentic Systems · MCP · Real Projects**
@@ -123,5 +121,3 @@ This repository is meant to be **extended**, not consumed passively.
 
 Fork it. Modify it. Replace models. Break things.
 That’s the point.
-
----
