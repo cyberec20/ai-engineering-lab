@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Session4 — Research Operator (No RAG) · Guía + Checklists</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f1b33; --card:#101f3d;
+      --text:#e9efff; --muted:#a9b6da; --accent:#7aa2ff;
+      --good:#33d17a; --warn:#ffcc66; --bad:#ff6b6b;
+      --line:rgba(255,255,255,.10); --shadow:0 16px 40px rgba(0,0,0,.35);
+      --radius:16px; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1000px 700px at 20% 10%, rgba(122,162,255,.22), transparent 55%),
+        radial-gradient(900px 600px at 80% 0%, rgba(51,209,122,.18), transparent 50%),
+        radial-gradient(900px 650px at 50% 100%, rgba(255,204,102,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      line-height:1.35;
+    }
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    pre,code{font-family:var(--mono);font-size:12px}
+    pre{margin:10px 0 0;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(7,16,34,.35);overflow:auto}
+    .app{display:grid;grid-template-columns:340px 1fr;min-height:100vh}
+    @media (max-width:980px){.app{grid-template-columns:1fr}}
+    .sidebar{
+      position:sticky;top:0;height:100vh;padding:18px 14px;
+      border-right:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,27,51,.92), rgba(15,27,51,.60));
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+    @media (max-width:980px){.sidebar{position:relative;height:auto}}
+    .brand{display:flex;gap:10px;align-items:center;padding:10px 10px 14px}
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(122,162,255,.9), rgba(51,209,122,.7));
+      box-shadow:var(--shadow);
+      display:grid;place-items:center;
+      font-weight:900;color:#071022;
+    }
+    .brand h1{font-size:14px;margin:0}
+    .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    .search{
+      padding:10px;margin:6px 8px 10px;border:1px solid var(--line);
+      border-radius:14px;background:rgba(16,31,61,.55);
+    }
+    .search input{width:100%;border:none;outline:none;background:transparent;color:var(--text);font-size:13px}
+    .nav{margin:10px 8px;display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 310px);overflow:auto;padding-right:6px}
+    .nav::-webkit-scrollbar{width:10px}
+    .nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:999px}
+    .nav a{
+      display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;
+      color:var(--text);border:1px solid transparent;background:rgba(16,31,61,.20);font-size:13px;
+    }
+    .nav a:hover{border-color:rgba(122,162,255,.35);background:rgba(16,31,61,.40)}
+    .nav a.active{border-color:rgba(122,162,255,.60);background:rgba(122,162,255,.12)}
+    .pill{margin-left:auto;font-size:11px;color:var(--muted);border:1px solid rgba(255,255,255,.12);padding:2px 8px;border-radius:999px}
+    .side-footer{margin:10px 8px 0;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(16,31,61,.35)}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .btn{cursor:pointer;border:1px solid rgba(255,255,255,.14);background:rgba(16,31,61,.50);color:var(--text);padding:9px 10px;border-radius:12px;font-size:12px}
+    .btn:hover{border-color:rgba(122,162,255,.55)}
+    .btn.danger{border-color:rgba(255,107,107,.4)}
+    .btn.danger:hover{border-color:rgba(255,107,107,.8)}
+    .content{padding:22px 26px 80px}
+    .topbar{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);
+      background:rgba(15,27,51,.65);box-shadow:var(--shadow);position:sticky;top:14px;z-index:5;backdrop-filter:blur(10px);
+    }
+    .topbar .meta{display:flex;flex-direction:column;gap:2px}
+    .topbar .meta .title{font-weight:900}
+    .topbar .meta .sub{color:var(--muted);font-size:12px}
+    .progress{width:240px;height:10px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden;border:1px solid rgba(255,255,255,.10)}
+    .progress > div{height:100%;width:0%;background:linear-gradient(90deg, rgba(122,162,255,.95), rgba(51,209,122,.80))}
+    .kpis{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:12px}
+    .kpis .kpi{border:1px solid rgba(255,255,255,.12);background:rgba(16,31,61,.35);padding:4px 8px;border-radius:999px}
+    section.card{margin-top:14px;border:1px solid var(--line);background:rgba(16,31,61,.40);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    section.card h2{margin:0 0 10px;font-size:15px}
+    section.card h3{margin:14px 0 8px;font-size:13px;color:rgba(233,239,255,.95)}
+    section.card p{margin:8px 0;color:var(--muted);font-size:13px}
+    .list{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:13px}
+    .table{width:100%;border-collapse:separate;border-spacing:0;margin-top:10px}
+    .table th,.table td{vertical-align:top;padding:10px 12px;border-top:1px solid rgba(255,255,255,.10);font-size:13px}
+    .table th{color:rgba(233,239,255,.95);text-align:left;background:rgba(16,31,61,.35);position:sticky;top:0}
+    .table td{color:var(--muted)}
+    .table tr:first-child th,.table tr:first-child td{border-top:0}
+    .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(16,31,61,.35);color:rgba(233,239,255,.95)}
+    .tag.good{border-color:rgba(51,209,122,.35);background:rgba(51,209,122,.10)}
+    .tag.warn{border-color:rgba(255,204,102,.35);background:rgba(255,204,102,.10)}
+    .tag.bad{border-color:rgba(255,107,107,.35);background:rgba(255,107,107,.10)}
+    .hr{height:1px;background:var(--line);margin:14px 0}
+    .checklist{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+    .item{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(15,27,51,.45)}
+    .item:hover{border-color:rgba(122,162,255,.25)}
+    .item input{transform:translateY(2px);width:18px;height:18px}
+    .item .txt{flex:1}
+    .item .txt .t{font-weight:700;font-size:13px}
+    .item .txt .d{color:var(--muted);font-size:12px;margin-top:3px}
+    .callout{margin-top:10px;padding:12px;border-radius:14px;border:1px solid rgba(122,162,255,.25);background:rgba(122,162,255,.10);color:rgba(233,239,255,.95)}
+    .callout .h{font-weight:900}
+    .callout .p{color:rgba(233,239,255,.85);font-size:12px;margin-top:6px}
+    .mono{font-family:var(--mono)}
+    .key{font-weight:700;color:var(--text)}
+    .small{font-size:12px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">S4</div>
+        <div>
+          <h1>Session4</h1>
+          <p>Guía real + checklists<br/>LangGraph · UI · Tracing</p>
+        </div>
+      </div>
+
+      <div class="search"><input id="search" placeholder="Buscar secciones / checks…" /></div>
+
+      <nav class="nav" id="nav">
+        <a href="#overview"><span>📌</span> Overview <span class="pill">0</span></a>
+        <a href="#preflight"><span>🧰</span> Preflight <span class="pill">0</span></a>
+        <a href="#architecture"><span>🧩</span> Arquitectura real <span class="pill">0</span></a>
+        <a href="#query-design"><span>🧠</span> Intención & queries <span class="pill">0</span></a>
+        <a href="#models"><span>🧬</span> Modelos (Ollama) <span class="pill">0</span></a>
+        <a href="#run"><span>▶</span> Run (dev) <span class="pill">0</span></a>
+        <a href="#env"><span>⚙</span> .env (Session4) <span class="pill">0</span></a>
+        <a href="#langsmith"><span>🔎</span> LangSmith (nativo) <span class="pill">0</span></a>
+        <a href="#langfuse"><span>🧭</span> Langfuse (nativo) <span class="pill">0</span></a>
+        <a href="#langfuse-selfhost"><span>🐳</span> Langfuse self-host <span class="pill">0</span></a>
+        <a href="#langfuse-md"><span>📄</span> 4_LangFuse.md <span class="pill">0</span></a>
+        <a href="#read-traces"><span>🧠</span> Cómo leer trazas <span class="pill">0</span></a>
+        <a href="#optimize"><span>🚀</span> Playbook de optimización <span class="pill">0</span></a>
+        <a href="#providers"><span>⚖</span> LangSmith vs Langfuse <span class="pill">0</span></a>
+        <a href="#experiments"><span>🧪</span> Experimentos guiados <span class="pill">0</span></a>
+        <a href="#debug"><span>🧪</span> Debug & pruebas <span class="pill">0</span></a>
+        <a href="#troubleshoot"><span>🩺</span> Troubleshooting <span class="pill">0</span></a>
+        <a href="#files"><span>🗂</span> Archivos clave <span class="pill">0</span></a>
+      </nav>
+
+      <div class="side-footer">
+        <div class="row">
+          <button class="btn" id="exportBtn">Exportar</button>
+          <button class="btn danger" id="resetBtn">Reset</button>
+        </div>
+        <div class="hr"></div>
+        <div class="row small" style="color:var(--muted)">
+          <div>Progreso</div>
+          <div><span id="kDone">0</span>/<span id="kTotal">0</span></div>
+        </div>
+        <div class="row small" style="margin-top:6px;color:var(--muted)">
+          <div>Core</div>
+          <div><span id="kCore">0/0</span></div>
+        </div>
+        <div class="row small" style="margin-top:6px;color:var(--muted)">
+          <div>Obs</div>
+          <div><span id="kObs">0/0</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="topbar">
+        <div class="meta">
+          <div class="title">Session4 — Research Operator (No RAG)</div>
+          <div class="sub">Checklist alineado al repo + <span class="mono">4_LangFuse.md</span></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="progress" aria-label="progreso"><div id="bar"></div></div>
+          <div class="kpis">
+            <span class="kpi">Core: <span class="key" id="kCore2">0/0</span></span>
+            <span class="kpi">Obs: <span class="key" id="kObs2">0/0</span></span>
+          </div>
+        </div>
+      </header>
+
+      <section id="overview" class="card">
+        <h2>Overview</h2>
+        <p>
+          Este HTML está pensado como tu “panel operativo”: pasos claros, checklists y recordatorios de los errores típicos que cuestan horas.
+          Está alineado al estado real de Session4 y recoge las instrucciones de <span class="mono">4_LangFuse.md</span>.
+        </p>
+        <div class="callout">
+          <div class="h">Lección clave</div>
+          <div class="p">
+            Observabilidad = radiografía accionable: timeline para tiempos, inputs/outputs por nodo para entender fallos, y comparación de runs para optimizar sin adivinar.
+          </div>
+        </div>
+      </section>
+
+      <section id="preflight" class="card">
+        <h2>Preflight (antes de correr / antes de depurar)</h2>
+        <p>
+          Si te saltas esta sección, lo normal es terminar depurando “fantasmas”: el servidor corre, la UI responde,
+          pero faltan modelos, el venv no es el correcto, Docker no está arriba, o estás mirando el proyecto equivocado
+          en observabilidad.
+        </p>
+        <h3>Checklist rápido (Windows)</h3>
+        <ul class="list">
+          <li><span class="key">Carpeta</span> Estás en <span class="mono">C:\IA_Local\scripts\Agentic_AI\Session4</span>.</li>
+          <li><span class="key">Venv</span> El Python usado es <span class="mono">..\ .venv\Scripts\python.exe</span> (no el global).</li>
+          <li><span class="key">Modelo local</span> Ollama corriendo y el modelo configurado existe (o usas modo determinista).</li>
+          <li><span class="key">Puertos</span> 8100 libre (app) y 3000 libre (Langfuse self-host si aplica).</li>
+          <li><span class="key">Provider</span> <span class="mono">TRACE_PROVIDER</span> correcto para lo que quieres observar hoy.</li>
+        </ul>
+        <h3>Comandos de verificación (copia/pega)</h3>
+        <pre><code>cd C:\IA_Local\scripts\Agentic_AI\Session4
+..\ .venv\Scripts\python.exe -V
+..\ .venv\Scripts\python.exe -c "import sys; print(sys.executable)"
+
+REM (Opcional) si usas Ollama:
+ollama list
+
+REM (Opcional) si usas Langfuse self-host:
+cd langfuse
+docker compose ps</code></pre>
+        <div class="callout">
+          <div class="h">Qué es “ok” vs “no ok”</div>
+          <div class="p">
+            <span class="tag good">OK</span> ves el python del venv y el server responde en 8100.
+            <span class="tag bad">NO</span> ves python global, o <span class="mono">ollama list</span> vacío cuando esperabas modelos,
+            o <span class="mono">docker compose ps</span> con servicios en <span class="mono">Exited</span>.
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-preflight"></div>
+      </section>
+
+      <section id="architecture" class="card">
+        <h2>Arquitectura real (Session4)</h2>
+        <p>
+          Esto no es “un chat con un modelo”: es un flujo orquestado. La UI te muestra <span class="mono">run_id</span>/<span class="mono">trace_id</span>,
+          y el backend ejecuta un grafo LangGraph que mantiene estado y produce un <span class="mono">execution_summary</span>.
+        </p>
+        <h3>Flujo (nodos)</h3>
+        <ul class="list">
+          <li><span class="key">planner</span>: genera plan + queries. En modo fast suele ser fallback determinista.</li>
+          <li><span class="key">researcher</span>: ejecuta web_search/web_fetch y produce snippets/sources (suele ser el cuello de botella).</li>
+          <li><span class="key">synthesizer</span>: redacta respuesta con citas (puede ser determinista si LLM synth está desactivado).</li>
+          <li><span class="key">anti_hallucination_guard</span>: valida claims vs evidencia.</li>
+          <li><span class="key">reflector</span>: decide si final/hitl.</li>
+          <li><span class="key">final</span>: empaqueta respuesta.</li>
+        </ul>
+        <h3>Variables que realmente controlan latencia</h3>
+        <ul class="list">
+          <li><span class="mono">WEB_MAX_QUERIES</span> + <span class="mono">WEB_FETCHES_PER_QUERY</span> (I/O web).</li>
+          <li><span class="mono">WEB_CACHE_TTL_SECONDS</span> (evita refetch en la misma sesión).</li>
+          <li><span class="mono">GRAPH_MODE</span> y toggles <span class="mono">ENABLE_LLM_*</span> (LLM calls extra = más latencia).</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-architecture"></div>
+      </section>
+
+      <section id="query-design" class="card">
+        <h2>Intención & queries (sin depender de regex)</h2>
+        <p>
+          Lección dura de Session4: el <span class="key">researcher</span> es un “ejecutor” (busca/fetch), no es quien entiende al usuario.
+          Si le pasas preguntas largas tal cual (ej. “¿Quién fue Isaac Newton?”), muchos proveedores devuelven poco o se desvían.
+          El grafo necesita un paso explícito de <span class="key">normalización</span> para generar queries estilo keywords.
+        </p>
+        <h3>Regla práctica</h3>
+        <ul class="list">
+          <li><span class="key">Entrada usuario</span> puede ser larga, ambigua y con contexto.</li>
+          <li><span class="key">Queries para web</span> deben ser cortas, con entidad + intención + 1–2 keywords.</li>
+          <li><span class="key">Idioma</span> la respuesta final sigue el idioma del usuario; las búsquedas pueden mezclar idiomas si mejora recall.</li>
+        </ul>
+        <h3>Plantilla de conversión (ejemplos)</h3>
+        <table class="table" aria-label="Ejemplos de query conversion">
+          <tr>
+            <th style="width:34%">Usuario</th>
+            <th style="width:33%">Mala query (tal cual)</th>
+            <th>Buenas queries (keywords)</th>
+          </tr>
+          <tr>
+            <td>“Investiga acerca de Isaac Newton”</td>
+            <td><span class="tag bad">BAD</span> “Investiga acerca de Isaac Newton wikipedia”</td>
+            <td>
+              <span class="tag good">GOOD</span> “Isaac Newton biography contributions”<br/>
+              <span class="tag good">GOOD</span> “Isaac Newton Principia Mathematica”<br/>
+              <span class="tag good">GOOD</span> “Isaac Newton laws of motion”
+            </td>
+          </tr>
+          <tr>
+            <td>“¿Qué es internet?”</td>
+            <td><span class="tag bad">BAD</span> “¿Qué es internet? biography contributions”</td>
+            <td>
+              <span class="tag good">GOOD</span> “Internet definition TCP/IP”<br/>
+              <span class="tag good">GOOD</span> “Internet ARPANET history”<br/>
+              <span class="tag good">GOOD</span> “Internet protocol suite TCP/IP”
+            </td>
+          </tr>
+          <tr>
+            <td>“Analiza el impacto del trabajo remoto…”</td>
+            <td><span class="tag bad">BAD</span> 1 query gigante con todo el texto</td>
+            <td>
+              <span class="tag good">GOOD</span> “remote work productivity studies 2023”<br/>
+              <span class="tag good">GOOD</span> “remote work retention talent evidence”<br/>
+              <span class="tag warn">TIP</span> limitar por año/sector si hay demasiado ruido
+            </td>
+          </tr>
+        </table>
+        <h3>Cómo depurarlo con observabilidad</h3>
+        <ul class="list">
+          <li><span class="key">Mira el nodo planner</span>: ¿qué queries generó realmente?</li>
+          <li><span class="key">Mira researcher</span>: ¿0 snippets? entonces no hay evidencia → el resto del pipeline queda ciego.</li>
+          <li><span class="key">Ajuste rápido</span>: reduce queries, pero mejora su calidad; evita “pregunta completa + wikipedia”.</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-query-design"></div>
+      </section>
+
+      <section id="models" class="card">
+        <h2>Modelos (Ollama) y estrategia</h2>
+        <p>
+          En Session4 vimos que “multimodelo” solo tiene sentido si <span class="key">cada nodo</span> consume/produce salidas bien definidas y si
+          las llamadas LLM realmente agregan valor. Sin RAG y sin APIs, el cuello de botella suele ser web I/O, pero aún puedes practicar:
+          usar un modelo “rápido” para planificación/normalización y uno “mejor” para síntesis final.
+        </p>
+        <h3>Inventario (lo que tú reportaste instalado)</h3>
+        <pre><code>ministral-3:8b
+qwen3:8b
+deepseek-r1:8b
+qwen2.5-coder:7b
+qwen2.5:7b
+llama3.1:8b</code></pre>
+        <h3>Sugerencia práctica (para ejercicios)</h3>
+        <table class="table" aria-label="Sugerencia de modelos por nodo">
+          <tr>
+            <th style="width:22%">Nodo</th>
+            <th style="width:26%">Objetivo</th>
+            <th style="width:26%">Modelo sugerido</th>
+            <th>Notas</th>
+          </tr>
+          <tr>
+            <td><span class="tag">planner</span></td>
+            <td>Normalizar intención → queries</td>
+            <td><span class="tag good">qwen3:8b</span> o <span class="tag good">llama3.1:8b</span></td>
+            <td>Prioriza estabilidad en JSON/estructura. Mantén prompts cortos.</td>
+          </tr>
+          <tr>
+            <td><span class="tag">synthesizer</span></td>
+            <td>Redacción final con citas</td>
+            <td><span class="tag good">ministral-3:8b</span> o <span class="tag good">llama3.1:8b</span></td>
+            <td>Mejor en prosa; fuerza idioma de salida = idioma del usuario.</td>
+          </tr>
+          <tr>
+            <td><span class="tag">anti_hallucination_guard</span></td>
+            <td>Validación claims vs evidencia</td>
+            <td><span class="tag warn">determinista</span> (sin LLM) o <span class="tag">qwen3:8b</span></td>
+            <td>Si es LLM, que sea estricto: “si no hay evidencia → marcar missing”.</td>
+          </tr>
+          <tr>
+            <td><span class="tag">reflector</span></td>
+            <td>Decidir HITL vs final</td>
+            <td><span class="tag warn">determinista</span> o <span class="tag">qwen3:8b</span></td>
+            <td>En ejercicios, mejor determinista para no “chatear interno”.</td>
+          </tr>
+        </table>
+        <h3>Qué mirar en trazas (cuando activas LLM)</h3>
+        <ul class="list">
+          <li><span class="key">Tokens/latencia</span> si sube demasiado, baja <span class="mono">WEB_MAX_*</span> o desactiva nodos LLM no esenciales.</li>
+          <li><span class="key">Formato</span> si hay errores Pydantic/JSON, el problema suele ser prompt + parser, no el grafo.</li>
+          <li><span class="key">Idioma</span> si el modelo responde en otro idioma, es falta de instrucción en el último nodo (synth/final).</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-models"></div>
+      </section>
+
+      <section id="run" class="card">
+        <h2>Run (dev)</h2>
+        <p>Desde <span class="mono">C:\IA_Local\scripts\Agentic_AI\Session4</span>:</p>
+        <pre><code>scripts\run_dev.bat</code></pre>
+        <p class="small">UI: <span class="mono">http://127.0.0.1:8100/</span></p>
+        <h3>Si quieres correr sin .bat (control total)</h3>
+        <p class="small">Útil cuando quieres ver el command exacto, o evitar que una ventana se cierre.</p>
+        <pre><code>cd C:\IA_Local\scripts\Agentic_AI\Session4
+..\ .venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8100</code></pre>
+        <h3>Señales de salud (en terminal)</h3>
+        <ul class="list">
+          <li><span class="tag good">OK</span> <span class="mono">Application startup complete.</span></li>
+          <li><span class="tag good">OK</span> <span class="mono">GET /</span> devuelve 200 al abrir la UI.</li>
+          <li><span class="tag warn">WARN</span> <span class="mono">favicon.ico 404</span> es normal si no existe.</li>
+          <li><span class="tag bad">NO</span> excepciones en ASGI: revisa traceback y revisa <span class="mono">.env</span>.</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-run"></div>
+      </section>
+
+      <section id="env" class="card">
+        <h2>.env (Session4)</h2>
+        <p><span class="key">Regla #1</span>: sin espacios alrededor de <span class="mono">=</span>. En Windows eso te rompe dotenv.</p>
+        <h3>Variables críticas (las que más te afectan)</h3>
+        <table class="table" aria-label="Variables críticas de Session4">
+          <tr>
+            <th style="width:26%">Variable</th>
+            <th style="width:34%">Qué controla</th>
+            <th>Notas</th>
+          </tr>
+          <tr>
+            <td><span class="mono">TRACE_PROVIDER</span></td>
+            <td>Observabilidad nativa</td>
+            <td><span class="tag">none</span>, <span class="tag">langsmith</span>, <span class="tag">langfuse</span>. Cambias esto y reinicias server.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">GRAPH_MODE</span></td>
+            <td>Modo “fast” vs “full”</td>
+            <td>Fast: latencia baja; Full: más llamadas LLM y más control (pero más costo).</td>
+          </tr>
+          <tr>
+            <td><span class="mono">WEB_MAX_QUERIES</span></td>
+            <td>Cuántas queries se generan/usan</td>
+            <td>Más queries = más recall, pero más latencia y más ruido.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">WEB_FETCHES_PER_QUERY</span></td>
+            <td>Cuántos fetches por query</td>
+            <td>Más fetches = más evidencia, pero crece linealmente el tiempo de I/O.</td>
+          </tr>
+          <tr>
+            <td><span class="mono">WEB_CACHE_TTL_SECONDS</span></td>
+            <td>Cache de fetch/snippets</td>
+            <td>Clave para repetir preguntas sin volver a pagar el costo web.</td>
+          </tr>
+        </table>
+        <h3>Plantillas mínimas (copia/pega)</h3>
+        <p class="small">LangSmith:</p>
+        <pre><code>TRACE_PROVIDER=langsmith
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=sk-PASTE_HERE
+LANGCHAIN_PROJECT=Session4-ResearchOperator-NoRAG
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com</code></pre>
+        <p class="small">Langfuse:</p>
+        <pre><code>TRACE_PROVIDER=langfuse
+LANGFUSE_BASE_URL=http://localhost:3000
+LANGFUSE_PUBLIC_KEY=pk-lf-PASTE_HERE
+LANGFUSE_SECRET_KEY=sk-lf-PASTE_HERE</code></pre>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-env"></div>
+      </section>
+
+      <section id="langsmith" class="card">
+        <h2>LangSmith (nativo)</h2>
+        <pre><code>TRACE_PROVIDER=langsmith
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=sk-...
+LANGCHAIN_PROJECT=Session4-ResearchOperator-NoRAG
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com</code></pre>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-langsmith"></div>
+      </section>
+
+      <section id="langfuse" class="card">
+        <h2>Langfuse (nativo)</h2>
+        <pre><code>TRACE_PROVIDER=langfuse
+LANGFUSE_BASE_URL=http://localhost:3000
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...</code></pre>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-langfuse"></div>
+      </section>
+
+      <section id="langfuse-selfhost" class="card">
+        <h2>Langfuse self-host (Docker Desktop)</h2>
+        <p class="small">
+          Para el detalle “ridículo”, revisa <span class="mono">Session4/4_LangFuse.md</span>. Aquí se listan los pasos esenciales.
+        </p>
+        <div class="callout">
+          <div class="h">Paso que se te pasa y rompe todo</div>
+          <div class="p">Docker Desktop debe estar corriendo (“Engine running”) antes de ejecutar cualquier <span class="mono">docker compose</span>.</div>
+        </div>
+        <h3>2.a) Crear el .env del compose con secretos seguros</h3>
+        <p class="small">Ejecuta este bloque PowerShell en la carpeta del compose (<span class="mono">Session4\langfuse</span>):</p>
+        <pre><code>$NEXTAUTH_SECRET = [guid]::NewGuid().ToString("N")
+$SALT           = [guid]::NewGuid().ToString("N")
+$ENCRYPTION_KEY = -join ((48..57 + 97..102) | Get-Random -Count 64 | % {[char]$_})
+
+$POSTGRES_PASSWORD    = [guid]::NewGuid().ToString("N")
+$REDIS_AUTH           = [guid]::NewGuid().ToString("N")
+$CLICKHOUSE_PASSWORD  = [guid]::NewGuid().ToString("N")
+$MINIO_ROOT_PASSWORD  = [guid]::NewGuid().ToString("N")
+
+@"
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+
+SALT=$SALT
+ENCRYPTION_KEY=$ENCRYPTION_KEY
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+POSTGRES_DB=postgres
+
+REDIS_AUTH=$REDIS_AUTH
+
+CLICKHOUSE_USER=clickhouse
+CLICKHOUSE_PASSWORD=$CLICKHOUSE_PASSWORD
+
+MINIO_ROOT_USER=minio
+MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
+"@ | Set-Content -Encoding UTF8 .\.env</code></pre>
+        <h3>2.b) Puertos ocupados (5432/6379)</h3>
+        <p class="small">Si tienes Postgres local en 5432, cambia el puerto HOST (no el contenedor):</p>
+        <pre><code># En docker-compose.yml (Langfuse)
+# - 127.0.0.1:55432:5432  # Postgres
+# - 127.0.0.1:56379:6379  # Redis</code></pre>
+        <h3>Verificar Docker</h3>
+        <pre><code>docker version</code></pre>
+        <h3>Levantar compose</h3>
+        <pre><code>cd C:\IA_Local\scripts\Agentic_AI\Session4\langfuse
+docker compose up -d
+docker compose ps</code></pre>
+        <h3>Logs del web (si algo falla)</h3>
+        <pre><code>docker compose logs -n 200 langfuse-web</code></pre>
+        <h3>UI</h3>
+        <ul class="list">
+          <li>Abre <span class="mono">http://localhost:3000</span></li>
+          <li>Crea proyecto y API Keys</li>
+          <li>Pega keys en <span class="mono">Session4/.env</span> (app)</li>
+        </ul>
+        <h3>Comandos útiles (operación diaria)</h3>
+        <pre><code>docker compose ps
+docker compose logs -f langfuse-web
+docker compose down
+docker compose down -v   # reset total (borra datos)</code></pre>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-langfuse-selfhost"></div>
+      </section>
+
+      <section id="langfuse-md" class="card">
+        <h2>4_LangFuse.md (contenido completo, para no cambiar de archivo)</h2>
+        <p class="small">
+          Esta sección existe porque en la práctica necesitas el paso‑a‑paso completo cuando algo falla.
+          Está copiado desde <span class="mono">Session4/4_LangFuse.md</span> y sirve como checklist narrativo.
+        </p>
+        <details style="margin-top:10px">
+          <summary class="small" style="cursor:pointer;color:var(--accent)">Ver / ocultar guía completa</summary>
+          <pre><code># Langfuse Self-Host en Windows (Docker Desktop) — Guía ridícula, “no me hagas pensar”
+
+## 0) Requisitos (1 minuto)
+
+* Docker Desktop instalado ✔.
+
+### 0.1) Paso que se te pasó (y que te rompió todo): Docker debe estar corriendo
+
+1. Abre Docker Desktop
+2. Espera a ver abajo “Engine running”
+3. Verifica con:
+
+  docker version
+
+Si eso falla, NO sigas.
+
+## 1) Descarga Langfuse (2 opciones)
+
+### Opción A (recomendada): usar el repo oficial
+
+  cd C:\IA_Local\scripts\Agentic_AI\Session4
+  git clone https://github.com/langfuse/langfuse.git
+  cd .\langfuse\
+
+### Opción B: ya lo tienes clonado
+
+Entra a la carpeta donde está tu docker-compose.yml:
+
+  cd C:\IA_Local\scripts\Agentic_AI\Session4\langfuse
+  dir
+
+Confirma que existe docker-compose.yml (o compose.yml).
+
+## 2) Crea el archivo .env (EN LA RAÍZ) con secretos seguros
+
+En la misma carpeta donde está el docker-compose.yml, crea .env con este bloque PowerShell:
+
+  $NEXTAUTH_SECRET = [guid]::NewGuid().ToString("N")
+  $SALT           = [guid]::NewGuid().ToString("N")
+  $ENCRYPTION_KEY = -join ((48..57 + 97..102) | Get-Random -Count 64 | % {[char]$_})  # 64 hex chars
+
+  $POSTGRES_PASSWORD = [guid]::NewGuid().ToString("N")
+  $REDIS_AUTH        = [guid]::NewGuid().ToString("N")
+  $CLICKHOUSE_PASSWORD = [guid]::NewGuid().ToString("N")
+  $MINIO_ROOT_PASSWORD = [guid]::NewGuid().ToString("N")
+
+  @"
+  NEXTAUTH_URL=http://localhost:3000
+  NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+
+  SALT=$SALT
+  ENCRYPTION_KEY=$ENCRYPTION_KEY
+
+  POSTGRES_USER=postgres
+  POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+  POSTGRES_DB=postgres
+
+  REDIS_AUTH=$REDIS_AUTH
+
+  CLICKHOUSE_USER=clickhouse
+  CLICKHOUSE_PASSWORD=$CLICKHOUSE_PASSWORD
+
+  MINIO_ROOT_USER=minio
+  MINIO_ROOT_PASSWORD=$MINIO_ROOT_PASSWORD
+  "@ | Set-Content -Encoding UTF8 .\.env
+
+  Write-Host "OK: .env creado en $(Get-Location)\.env"
+
+## 3) Arregla el problema típico: puertos ocupados (5432/6379)
+
+Como ya tenías Postgres local usando 5432 (y a veces Redis 6379), lo correcto es cambiar el puerto HOST, no el interno.
+
+En docker-compose.yml:
+
+### 3.1) Postgres
+Busca:
+
+  ports:
+    - 127.0.0.1:5432:5432
+
+Cámbialo por:
+
+  ports:
+    - 127.0.0.1:55432:5432
+
+(Opción más segura: elimina el ports: completo si no necesitas acceder desde tu PC.)
+
+### 3.2) Redis
+Busca:
+
+  ports:
+    - 127.0.0.1:6379:6379
+
+Cámbialo por:
+
+  ports:
+    - 127.0.0.1:56379:6379
+
+Importante: dentro de Docker sigue siendo postgres:5432 y redis:6379.
+
+## 4) Levanta Langfuse (la forma que NO falla)
+
+En esa misma carpeta:
+
+  docker compose up -d
+  docker compose ps
+
+Si algo sale Exited, mira logs del web:
+
+  docker compose logs -n 200 langfuse-web
+
+## 5) Abre la interfaz
+
+  http://localhost:3000
+
+Ahí:
+1) Creas usuario
+2) Organización
+3) Proyecto
+
+## 6) API keys para que tus scripts envíen trazas
+
+En Langfuse UI:
+  Project → Settings → API Keys → Create Key
+
+Te dará:
+  LANGFUSE_PUBLIC_KEY=pk-lf-...
+  LANGFUSE_SECRET_KEY=sk-lf-...
+
+## 7) Configura tu app/script (Session4) para enviar trazas
+
+En el .env de TU APP (no el del compose), pon:
+
+  LANGFUSE_HOST=http://localhost:3000
+  LANGFUSE_PUBLIC_KEY=pk-lf-PEGA_AQUI
+  LANGFUSE_SECRET_KEY=sk-lf-PEGA_AQUI
+
+## 8) Mini test
+
+1) Abre tu app y ejecuta una corrida.
+2) En Langfuse → Traces deberías ver eventos nuevos.
+
+## 9) Comandos útiles
+
+Parar:
+  docker compose down
+
+Ver estado:
+  docker compose ps
+
+Ver logs:
+  docker compose logs -f langfuse-web
+
+Reset total (borra datos):
+  docker compose down -v
+  docker compose up -d
+
+## Checklist final (lo mínimo para no fallar)
+
+[ ] Docker Desktop abierto y “Engine running”
+[ ] .env creado en la misma carpeta del compose
+[ ] Puertos host cambiados (si 5432/6379 ocupados)
+[ ] docker compose ps muestra todo “Up”
+[ ] UI abre en http://localhost:3000
+[ ] Creaste Project y sacaste API Keys
+[ ] Tu app usa LANGFUSE_HOST + keys correctas
+</code></pre>
+        </details>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-langfuse-md"></div>
+      </section>
+
+      <section id="read-traces" class="card">
+        <h2>Cómo leer trazas (para optimizar sin adivinar)</h2>
+        <p>
+          Usa la traza como instrumento de diagnóstico. Tu objetivo es convertir observaciones (“se demora”, “no encuentra”) en hipótesis verificables.
+        </p>
+        <h3>1) Encuentra el cuello de botella</h3>
+        <ul class="list">
+          <li>Revisa el timeline: ¿qué nodo consume más tiempo?</li>
+          <li>En Session4 suele ser <span class="mono">researcher</span> por web I/O.</li>
+        </ul>
+        <h3>2) Valida la calidad de queries</h3>
+        <ul class="list">
+          <li>Si ves queries tipo pregunta (“¿Quién fue X?”), el extractor de tema falló.</li>
+          <li>Preferible: keywords + entidad principal (ej.: <span class="mono">isaac newton biography</span>).</li>
+        </ul>
+        <h3>3) Revisa inputs/outputs por nodo</h3>
+        <ul class="list">
+          <li>planner → <span class="mono">plan</span>/<span class="mono">queries</span></li>
+          <li>researcher → <span class="mono">snippets</span>/<span class="mono">sources</span>/<span class="mono">provider_errors</span></li>
+          <li>synthesizer → <span class="mono">final_answer</span> + citas</li>
+        </ul>
+        <h3>4) Cambia 1 variable y compara</h3>
+        <ul class="list">
+          <li>Ej.: reduce <span class="mono">WEB_MAX_QUERIES</span> o sube caching TTL, y compara latencia.</li>
+          <li>Ej.: activa/desactiva <span class="mono">ENABLE_LLM_PLANNER</span> y observa si mejora queries (pero aumenta latencia).</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-read-traces"></div>
+      </section>
+
+      <section id="optimize" class="card">
+        <h2>Playbook de optimización (lo que haces con la “radiografía”)</h2>
+        <p>
+          Cuando ya ves el grafo y el timeline, la pregunta correcta no es “¿qué está mal?”, sino “¿qué palanca muevo para cambiar el resultado?”.
+          Este playbook es una lista de palancas concretas y el criterio de éxito.
+        </p>
+
+        <h3>A) Si la latencia es alta</h3>
+        <ul class="list">
+          <li>Revisa el timeline. Si el tiempo está en <span class="mono">researcher</span>, el problema es I/O web.</li>
+          <li>Baja <span class="mono">WEB_MAX_QUERIES</span> y/o <span class="mono">WEB_FETCHES_PER_QUERY</span>.</li>
+          <li>Sube caching TTL (<span class="mono">WEB_CACHE_TTL_SECONDS</span>) para re‑preguntas de la misma sesión.</li>
+          <li>Usa <span class="mono">GRAPH_MODE=fast</span> mientras iteras.</li>
+        </ul>
+
+        <h3>B) Si la calidad de búsqueda es mala</h3>
+        <ul class="list">
+          <li>Inspecciona <span class="mono">queries</span>. Si son preguntas largas, extrae tema + keywords.</li>
+          <li>Activa planner LLM (<span class="mono">ENABLE_LLM_PLANNER=true</span>) solo si vale la pena el costo.</li>
+          <li>Introduce reglas: “queries como keywords”, “site:wikipedia.org” cuando aplique.</li>
+        </ul>
+
+        <h3>C) Si el idioma sale incorrecto</h3>
+        <ul class="list">
+          <li>Verifica <span class="mono">input_language</span> en el state y que solo la salida final se traduzca.</li>
+          <li>Si una UI envía idioma “stale”, prioriza detección por texto.</li>
+        </ul>
+
+        <h3>D) Si hay alucinación / claims sin evidencia</h3>
+        <ul class="list">
+          <li>El guard debe marcar puntos no soportados. Si no hay snippets, el problema es upstream (researcher).</li>
+          <li>Reduce claims. Prefiere “insufficient evidence” antes que inventar.</li>
+        </ul>
+
+        <h3>E) Si aparece bloqueo (403/429/CAPTCHA)</h3>
+        <ul class="list">
+          <li>Es normal en scraping. Reduce frecuencia, agrega delay, limita fetches.</li>
+          <li>Prefiere Wikipedia/direct sources cuando sea posible.</li>
+        </ul>
+
+        <div class="hr"></div>
+        <div class="checklist" id="checks-optimize"></div>
+      </section>
+
+      <section id="providers" class="card">
+        <h2>LangSmith vs Langfuse (cómo elegir según objetivo)</h2>
+        <p>
+          No compiten “quién es mejor”: sirven para decisiones distintas. En Session4 dejaste ambos listos con pipeline nativo (solo cambias <span class="mono">.env</span>).
+        </p>
+        <h3>Cuándo usar Langfuse</h3>
+        <ul class="list">
+          <li>Cuando quieres una vista visual tipo grafo/diagrama que te muestre el flujo de un vistazo.</li>
+          <li>Cuando quieres dashboards de observabilidad y seguimiento operacional (latencia, volumen, etc.).</li>
+        </ul>
+        <h3>Cuándo usar LangSmith</h3>
+        <ul class="list">
+          <li>Cuando quieres integración fuerte con el ecosistema LangChain/LangGraph y workflows de evaluación/datasets.</li>
+          <li>Cuando quieres inspección detallada de runs, entradas/salidas y debugging profundo de componentes.</li>
+        </ul>
+        <h3>Cómo comparar “de forma justa”</h3>
+        <ul class="list">
+          <li>Misma pregunta, mismos límites web, mismo modelo. Cambias solo <span class="mono">TRACE_PROVIDER</span>.</li>
+          <li>Comparas: latencia por nodo, errores, y facilidad para explicar un fallo concreto.</li>
+        </ul>
+        <div class="callout">
+          <div class="h">Nota práctica</div>
+          <div class="p">
+            Tu “enamoramiento” del grafo de Langfuse es normal: reduce el costo cognitivo. Aun así, LangSmith suele ser potente para “debug fino”
+            cuando ya estás iterando prompts/evals.
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-providers"></div>
+      </section>
+
+      <section id="experiments" class="card">
+        <h2>Experimentos guiados (para aprender rápido)</h2>
+        <p>
+          Objetivo: dejar de “sentir” que algo mejoró, y empezar a <span class="key">medirlo</span>. Aquí hay mini-experimentos
+          que se validan con una traza en LangSmith o Langfuse. Cambia 1 variable por vez.
+        </p>
+        <h3>Experimento A — Mejorar queries (sin tocar límites)</h3>
+        <ol class="list">
+          <li>Pregunta 1: <span class="mono">Investiga acerca de Isaac Newton</span></li>
+          <li>En la traza, mira <span class="mono">planner.queries</span> y <span class="mono">researcher.sources/snippets</span>.</li>
+          <li>Pregunta 2: <span class="mono">Isaac Newton biography contributions</span></li>
+          <li>Compara: ¿subieron snippets? ¿bajó la latencia? ¿mejoró la respuesta final?</li>
+        </ol>
+        <h3>Experimento B — Bottleneck (límites web)</h3>
+        <ol class="list">
+          <li>Con la misma pregunta, baja <span class="mono">WEB_MAX_QUERIES</span> y repite.</li>
+          <li>Compara en timeline: ¿el nodo researcher baja proporcionalmente?</li>
+          <li>Evalúa calidad: ¿todavía hay evidencia suficiente?</li>
+        </ol>
+        <h3>Experimento C — Idioma de salida</h3>
+        <ol class="list">
+          <li>Pregunta en español: <span class="mono">¿Qué es internet?</span></li>
+          <li>La respuesta final debe salir en español aunque las fuentes estén en inglés.</li>
+          <li>Si no ocurre, revisa el prompt del nodo final/synth (en ejercicios 5/5.1 esto debe quedar “blindado”).</li>
+        </ol>
+        <div class="callout">
+          <div class="h">Cómo cerrar el loop</div>
+          <div class="p">
+            Una traza útil siempre responde: <span class="key">qué pasó</span> (inputs/outputs), <span class="key">dónde se fue el tiempo</span> (timeline)
+            y <span class="key">qué cambió</span> entre un run y otro (comparación).
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-experiments"></div>
+      </section>
+
+      <section id="debug" class="card">
+        <h2>Debug & pruebas</h2>
+        <pre><code>scripts\run_tests.bat</code></pre>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-debug"></div>
+      </section>
+
+      <section id="troubleshoot" class="card">
+        <h2>Troubleshooting (lo que realmente pasa en Session4)</h2>
+        <p>
+          Esta tabla está pensada como “libreta de guerra”: síntoma → dónde mirar (traza/log) → acción concreta.
+          Úsala antes de tocar código.
+        </p>
+        <table class="table" aria-label="Troubleshooting matrix">
+          <tr>
+            <th style="width:22%">Síntoma</th>
+            <th style="width:28%">Qué mirar</th>
+            <th style="width:28%">Causa típica</th>
+            <th>Acción</th>
+          </tr>
+          <tr>
+            <td><span class="tag bad">Pending</span> en UI de tracing</td>
+            <td>
+              Root run: ¿tiene <span class="mono">end_time</span>? ¿tiene <span class="mono">outputs</span>?<br/>
+              App: ¿status final es <span class="mono">SUCCESS</span>?
+            </td>
+            <td>
+              Provider mal configurado o pipeline manual sin cierre/flush (deuda técnica).<br/>
+              También puede ser que estés viendo otro proyecto/env.
+            </td>
+            <td>
+              Confirmar <span class="mono">TRACE_PROVIDER</span> + keys + project y reiniciar server.<br/>
+              Preferir pipeline nativo por callbacks.
+            </td>
+          </tr>
+          <tr>
+            <td>0 snippets / 0 sources</td>
+            <td>
+              Nodo <span class="mono">researcher</span>: <span class="mono">queries_used</span>, <span class="mono">provider_errors</span>, latencia.
+            </td>
+            <td>
+              Queries malas (pregunta completa), bloqueos web, o límites demasiado bajos.
+            </td>
+            <td>
+              Mejorar queries (keywords). Revisar 403/429/CAPTCHA. Ajustar límites web.
+            </td>
+          </tr>
+          <tr>
+            <td>Respuesta en idioma equivocado</td>
+            <td>
+              Nodo synth/final: ¿qué idioma “ordenó” el prompt? ¿hay un <span class="mono">input_language</span> en state?
+            </td>
+            <td>
+              No se forzó “output_language = input_language” (o se tradujo en el nodo equivocado).
+            </td>
+            <td>
+              Traducir solo al final si hace falta. En prompts de 5/5.1 exigir idioma del usuario.
+            </td>
+          </tr>
+          <tr>
+            <td>Fuentes irrelevantes (QIP, acrónimos, etc.)</td>
+            <td>
+              Sources reales y snippets del researcher (no el texto final).
+            </td>
+            <td>
+              Query ambigua (“internet” puede matchear acrónimos) + poca restricción de intención.
+            </td>
+            <td>
+              Añadir keywords: “Internet TCP/IP definition”. Filtrar por Wikipedia/enciclopedia o añadir contexto.
+            </td>
+          </tr>
+          <tr>
+            <td>Latencia enorme</td>
+            <td>
+              Timeline: ¿researcher o LLM nodes?<br/>
+              ¿cuántos fetches por query?
+            </td>
+            <td>
+              Demasiados fetches/queries, o demasiados nodos LLM en modo “full”.
+            </td>
+            <td>
+              Reducir <span class="mono">WEB_MAX_*</span>, aumentar caching, desactivar nodos LLM no esenciales.
+            </td>
+          </tr>
+          <tr>
+            <td>“Se ve rápido” pero la respuesta es pobre</td>
+            <td>
+              ¿cuántos snippets? ¿de qué calidad? ¿cuántas fuentes distintas?
+            </td>
+            <td>
+              El sistema respondió determinista con poca evidencia (por límites o por queries malas).
+            </td>
+            <td>
+              Subir ligeramente fetches o mejorar queries. Si no hay evidencia, mejor “insufficient evidence”.
+            </td>
+          </tr>
+        </table>
+        <h3>Reglas anti-pérdida de tiempo</h3>
+        <ul class="list">
+          <li><span class="key">Primero</span> valida <span class="mono">.env</span> (provider/keys/espacios) y reinicia server.</li>
+          <li><span class="key">Luego</span> mira planner → queries (calidad).</li>
+          <li><span class="key">Luego</span> mira researcher → evidencia (snippets/sources).</li>
+          <li><span class="key">Último</span> ajusta modelos/prompts si ya hay evidencia suficiente.</li>
+        </ul>
+        <div class="hr"></div>
+        <div class="checklist" id="checks-troubleshoot"></div>
+      </section>
+
+      <section id="files" class="card">
+        <h2>Archivos clave</h2>
+        <ul class="list">
+          <li><span class="mono">Session4/README.md</span></li>
+          <li><span class="mono">Session4/4_LangFuse.md</span></li>
+          <li><span class="mono">Session4/.env</span></li>
+          <li><span class="mono">Session4/app/main.py</span></li>
+          <li><span class="mono">Session4/app/api/routes.py</span></li>
+          <li><span class="mono">Session4/app/orchestrator/graphs/research_operator.py</span></li>
+          <li><span class="mono">Session4/changelog.md</span></li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "session4_checklist_state_v3";
+    const UI = {
+      search: document.getElementById("search"),
+      nav: document.getElementById("nav"),
+      exportBtn: document.getElementById("exportBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      kDone: document.getElementById("kDone"),
+      kTotal: document.getElementById("kTotal"),
+      kCore: document.getElementById("kCore"),
+      kObs: document.getElementById("kObs"),
+      kCore2: document.getElementById("kCore2"),
+      kObs2: document.getElementById("kObs2"),
+      bar: document.getElementById("bar"),
+      containers: {
+        preflight: document.getElementById("checks-preflight"),
+        run: document.getElementById("checks-run"),
+        architecture: document.getElementById("checks-architecture"),
+        "query-design": document.getElementById("checks-query-design"),
+        models: document.getElementById("checks-models"),
+        env: document.getElementById("checks-env"),
+        langsmith: document.getElementById("checks-langsmith"),
+        langfuse: document.getElementById("checks-langfuse"),
+        lfhost: document.getElementById("checks-langfuse-selfhost"),
+        lfmd: document.getElementById("checks-langfuse-md"),
+        readtraces: document.getElementById("checks-read-traces"),
+        optimize: document.getElementById("checks-optimize"),
+        providers: document.getElementById("checks-providers"),
+        experiments: document.getElementById("checks-experiments"),
+        debug: document.getElementById("checks-debug"),
+        troubleshoot: document.getElementById("checks-troubleshoot"),
+      }
+    };
+
+    const CHECKS = [
+      // Preflight
+      {id:"core-preflight-cwd", bucket:"core", section:"preflight", title:"Estoy en Session4", desc:"CWD correcto antes de correr scripts."},
+      {id:"core-preflight-venv", bucket:"core", section:"preflight", title:"Estoy usando el Python del .venv", desc:"Valido sys.executable apunta a ..\\.venv\\Scripts\\python.exe."},
+      {id:"core-preflight-ports", bucket:"core", section:"preflight", title:"Puertos libres (8100/3000)", desc:"Evito conflictos antes de culpar al código."},
+      {id:"obs-preflight-provider", bucket:"obs", section:"preflight", title:"TRACE_PROVIDER correcto", desc:"Sé si hoy observo en LangSmith o Langfuse (nativo)."},
+      {id:"obs-preflight-ollama", bucket:"obs", section:"preflight", title:"(Opcional) Ollama listo", desc:"ollama list muestra el modelo que usaré si activo nodos LLM."},
+      {id:"obs-preflight-langfuse", bucket:"obs", section:"preflight", title:"(Opcional) Langfuse self-host arriba", desc:"docker compose ps muestra servicios Up (si uso langfuse)."},
+
+      // Arquitectura
+      {id:"core-arch-understand", bucket:"core", section:"architecture", title:"Entiendo el flujo de nodos", desc:"Sé qué produce planner/researcher/synthesizer/guard/final."},
+      {id:"core-arch-state", bucket:"core", section:"architecture", title:"Entiendo state + execution_summary", desc:"Sé dónde ver inputs/outputs por nodo y por qué un fallback ocurrió."},
+      {id:"obs-arch-trace", bucket:"obs", section:"architecture", title:"Puedo mapear un run a su traza", desc:"Uso run_id/trace_id para encontrar la ejecución en LangSmith/Langfuse."},
+
+      // Intención & queries
+      {id:"core-qy-extract", bucket:"core", section:"query-design", title:"Extraigo entidad + intención", desc:"Convierto texto largo del usuario a keywords."},
+      {id:"core-qy-avoid", bucket:"core", section:"query-design", title:"Evito queries tipo pregunta completa", desc:"No uso “Investiga acerca de … wikipedia” como query."},
+      {id:"obs-qy-verify", bucket:"obs", section:"query-design", title:"Verifico queries en trazas", desc:"Planner muestra queries; researcher muestra sources/snippets."},
+      {id:"obs-qy-improve", bucket:"obs", section:"query-design", title:"Itero 1 variable por vez", desc:"Cambio queries, no límites, para aislar causa."},
+
+      // Modelos
+      {id:"core-models-inventory", bucket:"core", section:"models", title:"Conozco mis modelos disponibles", desc:"Tengo una lista real de ollama list y sé qué usar."},
+      {id:"core-models-mapping", bucket:"core", section:"models", title:"Tengo un mapping por nodo", desc:"Planner rápido, synth mejor, guard estricto."},
+      {id:"obs-models-trace", bucket:"obs", section:"models", title:"Veo el impacto en trazas", desc:"Tokens/latencia por nodo me dicen si el cambio valió la pena."},
+
+      // Run
+      {id:"core-run-venv", bucket:"core", section:"run", title:"Venv activo / dependencias OK", desc:"Usa el python de .venv; si algo falla, primero valida el entorno."},
+      {id:"core-run-dev", bucket:"core", section:"run", title:"Servidor dev corriendo", desc:"scripts\\run_dev.bat levanta Uvicorn en 8100."},
+      {id:"core-run-ui", bucket:"core", section:"run", title:"UI carga en 8100", desc:"http://127.0.0.1:8100/ renderiza."},
+      {id:"core-run-chat", bucket:"core", section:"run", title:"Consulta responde", desc:"Una pregunta simple responde y muestra sources."},
+
+      // Env
+      {id:"core-env-no-spaces", bucket:"core", section:"env", title:".env sin espacios alrededor de '='", desc:"Clásico: LANGFUSE_SECRET_KEY = ... no se carga."},
+      {id:"core-env-graph-mode", bucket:"core", section:"env", title:"GRAPH_MODE definido", desc:"fast para baja latencia; full para más LLMs."},
+      {id:"core-env-web-limits", bucket:"core", section:"env", title:"Límites web razonables", desc:"WEB_MAX_QUERIES/FETCHES bajos evitan latencias grandes."},
+      {id:"core-env-restart", bucket:"core", section:"env", title:"Reiniciaste tras cambiar .env", desc:"Especialmente al cambiar provider y keys."},
+
+      // LangSmith
+      {id:"obs-ls-provider", bucket:"obs", section:"langsmith", title:"TRACE_PROVIDER=langsmith", desc:"Usa pipeline nativo por callbacks/env vars."},
+      {id:"obs-ls-v2", bucket:"obs", section:"langsmith", title:"LANGCHAIN_TRACING_V2=true", desc:"Habilita tracing en LangChain/LangGraph."},
+      {id:"obs-ls-key", bucket:"obs", section:"langsmith", title:"LANGCHAIN_API_KEY configurada", desc:"API key válida y sin comillas raras."},
+      {id:"obs-ls-verify", bucket:"obs", section:"langsmith", title:"Trazas visibles en LangSmith", desc:"Tras 1 consulta, el run aparece en el proyecto."},
+
+      // Langfuse (app)
+      {id:"obs-lf-provider", bucket:"obs", section:"langfuse", title:"TRACE_PROVIDER=langfuse", desc:"Callback handler nativo de Langfuse."},
+      {id:"obs-lf-url", bucket:"obs", section:"langfuse", title:"LANGFUSE_BASE_URL correcto", desc:"Self-host típico: http://localhost:3000"},
+      {id:"obs-lf-keys", bucket:"obs", section:"langfuse", title:"Keys pegadas sin espacios", desc:"LANGFUSE_PUBLIC_KEY y LANGFUSE_SECRET_KEY."},
+      {id:"obs-lf-verify", bucket:"obs", section:"langfuse", title:"Trazas y grafo visibles", desc:"Tracing → Traces muestra la ejecución."},
+
+      // Langfuse self-host
+      {id:"obs-lfhost-docker", bucket:"obs", section:"lfhost", title:"Docker Desktop Engine running", desc:"Sin esto, compose falla."},
+      {id:"obs-lfhost-up", bucket:"obs", section:"lfhost", title:"docker compose up -d OK", desc:"docker compose ps muestra todo Up."},
+      {id:"obs-lfhost-ui", bucket:"obs", section:"lfhost", title:"UI abre en 3000", desc:"http://localhost:3000 carga."},
+      {id:"obs-lfhost-apikeys", bucket:"obs", section:"lfhost", title:"API keys creadas", desc:"Project Settings → API Keys → Create Key."},
+
+      // Debug
+      {id:"core-test-pytest", bucket:"core", section:"debug", title:"Tests pasan", desc:"scripts\\run_tests.bat (o pytest -q)."},
+      {id:"obs-debug-timeline", bucket:"obs", section:"debug", title:"Identificas bottleneck", desc:"En la traza: normalmente researcher (I/O web)."},
+      {id:"core-debug-queries", bucket:"core", section:"debug", title:"Revisas calidad de queries", desc:"Evitar preguntas largas; preferir keywords + entidad."},
+
+      // Troubleshoot
+      {id:"core-ts-env", bucket:"core", section:"troubleshoot", title:"Si falla algo, revisas .env primero", desc:"Provider, keys, URL, espacios alrededor de '='."},
+      {id:"obs-ts-provider", bucket:"obs", section:"troubleshoot", title:"Confirmas provider en UI", desc:"El run cae en el proyecto esperado."},
+      {id:"core-ts-web", bucket:"core", section:"troubleshoot", title:"Si web falla, revisas bloqueos", desc:"403/429/CAPTCHA y límites web."},
+
+      // Leer trazas
+      {id:"obs-rt-bottleneck", bucket:"obs", section:"readtraces", title:"Identifico el bottleneck en timeline", desc:"Veo qué nodo consume más tiempo y por qué."},
+      {id:"obs-rt-queries", bucket:"obs", section:"readtraces", title:"Evalúo calidad de queries", desc:"Queries como keywords; evito preguntas largas."},
+      {id:"obs-rt-compare", bucket:"obs", section:"readtraces", title:"Comparo runs de forma científica", desc:"Cambio 1 variable y comparo latencia/calidad en trazas."},
+
+      // 4_LangFuse.md (checklist narrativo)
+      {id:"obs-lfmd-docker", bucket:"obs", section:"lfmd", title:"Docker OK", desc:"Docker Desktop corriendo y docker version responde."},
+      {id:"obs-lfmd-env", bucket:"obs", section:"lfmd", title:".env del compose creado", desc:"El .env está en la carpeta del docker-compose.yml (Langfuse)."},
+      {id:"obs-lfmd-ports", bucket:"obs", section:"lfmd", title:"Puertos host sin conflicto", desc:"Si 5432/6379 ocupados, cambiaste host ports."},
+      {id:"obs-lfmd-up", bucket:"obs", section:"lfmd", title:"Servicios Up", desc:"docker compose ps muestra todo Up."},
+      {id:"obs-lfmd-keys", bucket:"obs", section:"lfmd", title:"API keys generadas", desc:"Project Settings → API Keys → Create Key."},
+      {id:"obs-lfmd-app", bucket:"obs", section:"lfmd", title:"App configurada", desc:"TRACE_PROVIDER=langfuse + keys correctas en Session4/.env."},
+
+      // Playbook de optimización
+      {id:"core-opt-latency", bucket:"core", section:"optimize", title:"Tengo una meta de latencia", desc:"Ej.: responder en < 10s en fast mode para preguntas simples."},
+      {id:"obs-opt-timeline", bucket:"obs", section:"optimize", title:"Uso timeline para elegir palanca", desc:"No optimizo a ciegas; decido por el nodo más lento."},
+      {id:"core-opt-limits", bucket:"core", section:"optimize", title:"Ajusto límites web sin romper calidad", desc:"Menos fetches/queries con caching para mantener utilidad."},
+      {id:"core-opt-queries", bucket:"core", section:"optimize", title:"Queries como keywords", desc:"Extraigo entidad principal + keywords; evito preguntas largas."},
+      {id:"core-opt-language", bucket:"core", section:"optimize", title:"Idioma de salida consistente", desc:"La respuesta final sigue el idioma del usuario."},
+      {id:"obs-opt-compare", bucket:"obs", section:"optimize", title:"Comparo runs antes/después", desc:"Verifico que el cambio produjo el efecto esperado."},
+
+      // Proveedores
+      {id:"core-prov-switch", bucket:"core", section:"providers", title:"Puedo alternar solo con .env", desc:"TRACE_PROVIDER cambia sin tocar código."},
+      {id:"obs-prov-compare", bucket:"obs", section:"providers", title:"Hago comparaciones controladas", desc:"Misma pregunta y límites; comparo lo que cada UI muestra mejor."},
+      {id:"core-prov-choose", bucket:"core", section:"providers", title:"Elijo herramienta por objetivo", desc:"Grafo/operación (Langfuse) vs debug/evals (LangSmith)."},
+
+      // Experimentos
+      {id:"core-exp-a", bucket:"core", section:"experiments", title:"Corrí Experimento A (queries)", desc:"Comparé pregunta larga vs keywords y revisé snippets."},
+      {id:"core-exp-b", bucket:"core", section:"experiments", title:"Corrí Experimento B (límites web)", desc:"Medí impacto en timeline del researcher."},
+      {id:"core-exp-c", bucket:"core", section:"experiments", title:"Corrí Experimento C (idioma)", desc:"Verifiqué que la respuesta final siga el idioma del usuario."},
+      {id:"obs-exp-compare", bucket:"obs", section:"experiments", title:"Comparé runs", desc:"Usé LangSmith/Langfuse para comparar antes/después con 1 cambio."},
+    ];
+
+    function loadState(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+      catch{ return {}; }
+    }
+    function saveState(s){ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+    let state = loadState();
+
+    function createItem(check){
+      const wrap = document.createElement("label");
+      wrap.className = "item";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.id = check.id;
+      cb.checked = !!state[check.id];
+      const txt = document.createElement("div");
+      txt.className = "txt";
+      const t = document.createElement("div");
+      t.className = "t";
+      t.textContent = check.title;
+      const d = document.createElement("div");
+      d.className = "d";
+      d.textContent = check.desc;
+      txt.appendChild(t); txt.appendChild(d);
+      wrap.appendChild(cb); wrap.appendChild(txt);
+      return wrap;
+    }
+
+    function render(){
+      Object.values(UI.containers).forEach(c => c.innerHTML = "");
+      CHECKS.forEach(ch => {
+        const container = UI.containers[ch.section];
+        if(!container) return;
+        container.appendChild(createItem(ch));
+      });
+      document.querySelectorAll(".item input").forEach(cb => {
+        cb.addEventListener("change", (e) => {
+          const id = e.target.dataset.id;
+          state[id] = e.target.checked;
+          saveState(state);
+          updateStats();
+          updateNavCounts();
+        });
+      });
+      updateStats();
+      updateNavCounts();
+    }
+
+    function updateStats(){
+      const total = CHECKS.length;
+      const done = CHECKS.filter(c => !!state[c.id]).length;
+      const core = CHECKS.filter(c => c.bucket === "core");
+      const obs = CHECKS.filter(c => c.bucket === "obs");
+      const coreDone = core.filter(c => !!state[c.id]).length;
+      const obsDone = obs.filter(c => !!state[c.id]).length;
+
+      UI.kTotal.textContent = total;
+      UI.kDone.textContent = done;
+      UI.kCore.textContent = `${coreDone}/${core.length}`;
+      UI.kObs.textContent = `${obsDone}/${obs.length}`;
+      UI.kCore2.textContent = `${coreDone}/${core.length}`;
+      UI.kObs2.textContent = `${obsDone}/${obs.length}`;
+      UI.bar.style.width = (total ? Math.round(done/total*100) : 0) + "%";
+    }
+
+    function updateNavCounts(){
+      const bySection = {};
+      CHECKS.forEach(c => {
+        if(!bySection[c.section]) bySection[c.section] = {total:0, done:0};
+        bySection[c.section].total++;
+        if(state[c.id]) bySection[c.section].done++;
+      });
+      document.querySelectorAll("#nav a").forEach(a => {
+        const id = (a.getAttribute("href")||"").replace("#","");
+        const pill = a.querySelector(".pill");
+        const s = bySection[id];
+        if(pill) pill.textContent = s ? `${s.done}/${s.total}` : "0";
+      });
+    }
+
+    UI.exportBtn.addEventListener("click", () => {
+      const payload = {exported_at:new Date().toISOString(), checks: state};
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "session4_checklist_progress.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    UI.resetBtn.addEventListener("click", () => {
+      if(!confirm("¿Seguro? Se borrará el progreso guardado en este navegador.")) return;
+      state = {};
+      saveState(state);
+      render();
+    });
+
+    UI.search.addEventListener("input", () => {
+      const q = (UI.search.value || "").trim().toLowerCase();
+      Array.from(UI.nav.querySelectorAll("a")).forEach(a => {
+        a.style.display = (!q || a.textContent.toLowerCase().includes(q)) ? "" : "none";
+      });
+      Array.from(document.querySelectorAll(".item")).forEach(it => {
+        it.style.display = (!q || it.textContent.toLowerCase().includes(q)) ? "" : "none";
+      });
+    });
+
+    const sections = Array.from(document.querySelectorAll("main section[id]"));
+    const navLinks = Array.from(UI.nav.querySelectorAll("a[href^='#']"));
+    function setActive(id){
+      navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + id));
+    }
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if(visible) setActive(visible.target.id);
+    }, {threshold:[0.2,0.35,0.5,0.65]});
+    sections.forEach(s => observer.observe(s));
+
+    render();
+  </script>
+</body>
+</html>

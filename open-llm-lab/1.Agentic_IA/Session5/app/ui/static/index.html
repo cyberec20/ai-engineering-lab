@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Session5 - Research Operator</title>
+    <link rel="stylesheet" href="/static/assets/styles.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="header">
+        <div class="title">Session5 · Research Operator (AutoGen-style)</div>
+        <div class="meta" id="meta"></div>
+      </header>
+
+      <main class="main">
+        <section class="panel chat">
+          <div class="panel-title">Chat</div>
+          <div class="messages" id="messages"></div>
+          <div class="composer">
+            <textarea id="message" rows="3" placeholder="Escribe tu pregunta..."></textarea>
+            <button id="send">Enviar</button>
+          </div>
+          <div class="hitl" id="hitl" style="display:none;">
+            <div class="hitl-title">Aprobación humana requerida (HITL)</div>
+            <textarea id="hitlNotes" rows="2" placeholder="Notas (opcional)"></textarea>
+            <div class="hitl-actions">
+              <button class="secondary" id="reject">Rechazar</button>
+              <button id="approve">Aprobar</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel info">
+          <div class="panel-title">Ejecución</div>
+          <div class="kv">
+            <div class="k">session_id</div><div class="v" id="sessionId">-</div>
+            <div class="k">run_id</div><div class="v" id="runId">-</div>
+            <div class="k">trace_id</div><div class="v" id="traceId">-</div>
+            <div class="k">status</div><div class="v" id="status">-</div>
+          </div>
+
+          <div class="sub">agents_created</div>
+          <pre id="agents" class="pre"></pre>
+
+          <div class="sub">models_used</div>
+          <pre id="modelsUsed" class="pre"></pre>
+
+          <div class="sub">execution_summary</div>
+          <pre id="summary" class="pre"></pre>
+
+          <div class="sub">sources</div>
+          <div id="sources" class="sources"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/static/assets/app.js"></script>
+  </body>
+</html>
+

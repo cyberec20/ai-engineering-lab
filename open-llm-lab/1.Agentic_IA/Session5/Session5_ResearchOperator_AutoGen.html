@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Session5 · Paso a Paso</title>
+<style>
+  :root{
+    --bg0:#070b14;
+    --bg1:#0a1224;
+    --card:rgba(255,255,255,.06);
+    --card2:rgba(255,255,255,.04);
+    --text:#e9eefc;
+    --muted:rgba(233,238,252,.72);
+    --muted2:rgba(233,238,252,.55);
+    --border:rgba(233,238,252,.10);
+    --accent:#66d9ff;
+    --accent2:#a78bfa;
+    --warn:#fbbf24;
+    --good:#34d399;
+    --bad:#fb7185;
+    --shadow: 0 16px 60px rgba(0,0,0,.40);
+    --radius:16px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--text);
+    background: radial-gradient(1200px 800px at 18% 10%, rgba(102,217,255,.18), transparent 55%),
+                radial-gradient(900px 700px at 88% 15%, rgba(167,139,250,.18), transparent 50%),
+                linear-gradient(180deg, var(--bg0), var(--bg1));
+  }
+  a{color:inherit; text-decoration:none}
+  .app{display:grid; grid-template-columns: 360px 1fr; height:100vh}
+  .side{
+    padding:22px 18px;
+    border-right:1px solid var(--border);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  }
+  .main{padding:26px 26px 36px; overflow:auto}
+  .brand h1{margin:0; font-size:22px; letter-spacing:.2px}
+  .brand .sub{margin-top:6px; color:var(--muted); font-size:13px; line-height:1.35}
+  .search{margin-top:14px}
+  .search input{
+    width:100%;
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background: rgba(0,0,0,.18);
+    color:var(--text);
+    outline:none;
+  }
+  .progressCard{
+    margin-top:14px;
+    padding:14px 14px;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+  .progressTop{display:flex; align-items:baseline; justify-content:space-between; gap:10px}
+  .pct{font-size:22px; font-weight:700}
+  .counts{color:var(--muted); font-size:13px}
+  .bar{margin-top:10px; height:10px; background: rgba(255,255,255,.10); border-radius:999px; overflow:hidden}
+  .bar > div{height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius:999px}
+  .small{margin-top:10px; color:var(--muted2); font-size:12px; line-height:1.35}
+  .btnRow{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
+  button{
+    border:1px solid var(--border);
+    background: rgba(0,0,0,.18);
+    color:var(--text);
+    border-radius:12px;
+    padding:10px 12px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  button:hover{border-color: rgba(233,238,252,.20)}
+  button:active{transform:translateY(1px)}
+  .nav{
+    margin-top:14px;
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background: var(--card2);
+  }
+  .nav a{
+    display:flex;
+    gap:10px;
+    padding:10px 12px;
+    border-bottom:1px solid rgba(233,238,252,.08);
+    color:var(--muted);
+    font-size:13px;
+    align-items:center;
+  }
+  .nav a:last-child{border-bottom:none}
+  .nav a:hover{background: rgba(255,255,255,.03); color:var(--text)}
+  .nav .count{margin-left:auto; font-family:var(--mono); font-size:12px; color:var(--muted2)}
+  .footerMeta{margin-top:14px; color:var(--muted2); font-size:12px; line-height:1.35}
+  .card{
+    border:1px solid var(--border);
+    border-radius:22px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    padding:18px 18px;
+    max-width: 980px;
+  }
+  .title{font-size:34px; margin:0 0 6px}
+  .lead{color:var(--muted); margin:0 0 12px; line-height:1.6}
+  .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+  .chip{font-size:12px; color:var(--muted); border:1px solid rgba(233,238,252,.12); background: rgba(0,0,0,.14); padding:7px 10px; border-radius:999px}
+  .note{
+    margin-top:12px;
+    padding:12px 14px;
+    border-radius:16px;
+    border:1px solid rgba(233,238,252,.12);
+    background: rgba(0,0,0,.14);
+    color:var(--muted);
+    line-height:1.55;
+  }
+  h2{margin:22px 0 10px; font-size:18px}
+  .section{margin-top:16px}
+  .box{
+    border:1px solid rgba(233,238,252,.10);
+    border-radius:18px;
+    background: rgba(0,0,0,.14);
+    padding:14px 14px;
+  }
+  .step{padding:10px 10px; border:1px solid rgba(233,238,252,.10); border-radius:14px; background: rgba(255,255,255,.03); margin-top:10px}
+  .step label{display:flex; gap:10px; align-items:flex-start; cursor:pointer}
+  .step input[type=checkbox]{margin-top:3px; width:18px; height:18px; accent-color: var(--accent)}
+  .step .t{font-weight:700; margin:0}
+  .step .d{margin:3px 0 0; color:var(--muted); line-height:1.45; font-size:13px}
+  .kbd{font-family:var(--mono); font-size:12px; padding:2px 6px; border-radius:8px; border:1px solid rgba(233,238,252,.16); background: rgba(0,0,0,.18)}
+  pre{
+    margin:10px 0 0;
+    padding:12px 12px;
+    border-radius:14px;
+    border:1px solid rgba(233,238,252,.12);
+    background: rgba(0,0,0,.26);
+    overflow:auto;
+    font-family:var(--mono);
+    font-size:12px;
+    line-height:1.5;
+    color: rgba(233,238,252,.92);
+  }
+  code{font-family:var(--mono)}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media (max-width: 980px){
+    .app{grid-template-columns:1fr}
+    .side{position:sticky; top:0; z-index:2}
+  }
+  .hide{display:none !important}
+  .hl{outline:2px solid rgba(102,217,255,.35)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <h1>Session5 · Paso a Paso</h1>
+      <div class="sub">Multi‑Agente Conversacional (AutoGen‑style) · FastAPI + UI estática · Web tools + HITL · Tracing opcional</div>
+    </div>
+
+    <div class="search">
+      <input id="q" type="text" placeholder="Buscar pasos, comandos, objetivos..."/>
+    </div>
+
+    <div class="progressCard">
+      <div class="progressTop">
+        <div><span class="pct" id="pct">0%</span> <span class="counts">completo</span></div>
+        <div class="counts"><span id="done">0</span>/<span id="total">0</span></div>
+      </div>
+      <div class="bar"><div id="barFill"></div></div>
+      <div class="small">Progreso guardado en este navegador (localStorage). Exporta si quieres moverlo a otra PC.</div>
+      <div class="btnRow">
+        <button id="btnExport" type="button">Exportar</button>
+        <button id="btnImport" type="button">Importar</button>
+        <button id="btnReset" type="button">Reset</button>
+        <button id="btnAll" type="button">Check all</button>
+      </div>
+      <input id="fileImport" type="file" accept="application/json" style="display:none"/>
+    </div>
+
+    <nav class="nav" id="nav">
+      <a href="#objetivo"><span>🎯</span> Objetivo & mapa <span class="count" data-count-for="objetivo"></span></a>
+      <a href="#prereqs"><span>🧰</span> Prerrequisitos <span class="count" data-count-for="prereqs"></span></a>
+      <a href="#setup"><span>🧪</span> Setup del proyecto <span class="count" data-count-for="setup"></span></a>
+      <a href="#run"><span>🚀</span> Levantar el servidor <span class="count" data-count-for="run"></span></a>
+      <a href="#verify"><span>✅</span> Validación rápida <span class="count" data-count-for="verify"></span></a>
+      <a href="#hitl"><span>🧑‍⚖️</span> Flujo HITL <span class="count" data-count-for="hitl"></span></a>
+      <a href="#tracing"><span>🧾</span> Tracing (opcional) <span class="count" data-count-for="tracing"></span></a>
+      <a href="#tests"><span>🧪</span> Tests / smoke <span class="count" data-count-for="tests"></span></a>
+      <a href="#extras"><span>✨</span> Objetivos extra <span class="count" data-count-for="extras"></span></a>
+      <a href="#troubles"><span>🩹</span> Troubleshooting <span class="count" data-count-for="troubles"></span></a>
+      <a href="#refs"><span>🔗</span> Referencias oficiales <span class="count" data-count-for="refs"></span></a>
+    </nav>
+
+    <div class="footerMeta">
+      Archivo: <b>Session5_ResearchOperator_AutoGen.html</b><br/>
+      Generado: <span id="genAt">2025-12-17 14:46 UTC</span><br/>
+      Clave de progreso: <span class="kbd" id="storageKey"></span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="card" id="objetivo">
+      <h1 class="title">Objetivo</h1>
+      <p class="lead">
+        Construir y ejecutar un <b>sistema multi‑agente conversacional</b> estilo “AutoGen”, con:
+        <b>interpretación de consultas</b>, <b>investigación web con fuentes</b>, <b>síntesis</b>,
+        y un flujo de <b>HITL (Human‑in‑the‑Loop)</b> cuando no exista evidencia suficiente.
+        Opcionalmente, activar <b>tracing</b> (LangSmith / Langfuse) para auditoría.
+      </p>
+      <div class="chips">
+        <div class="chip">Servidor: FastAPI</div>
+        <div class="chip">UI: /static (HTML)</div>
+        <div class="chip">Web: provider <span class="kbd">live|stub</span></div>
+        <div class="chip">Tracing: <span class="kbd">none|langsmith|langfuse</span></div>
+        <div class="chip">Puerto recomendado: <span class="kbd">8100</span></div>
+      </div>
+      <div class="note">
+        Este documento es la guía paso a paso. <b>El código ya existe</b> en tu carpeta Session5.
+        Aquí usamos snippets mínimos solo cuando ayudan a entender configuración / requests.
+      </div>
+
+      <div class="section">
+        <h2>Objetivos de aprendizaje (del Pensum)</h2>
+        <div class="box">
+          
+          <div class="step" data-section="objetivo">
+            <label><input type="checkbox" data-step="S5-01"/>
+              <div>
+                <div class="t">S5‑01 · Entender el flujo “AutoGen‑style” (roles + orquestación)</div>
+                <div class="d">Identificar: intérprete de consulta → investigación web → síntesis → decisión (respuesta o NEEDS_HITL).</div>
+              </div>
+            </label>
+          </div>
+          <div class="step" data-section="objetivo">
+            <label><input type="checkbox" data-step="S5-02"/>
+              <div>
+                <div class="t">S5‑02 · Ejecutar el chat end‑to‑end (UI → API → respuesta)</div>
+                <div class="d">Levantar FastAPI, abrir la UI, enviar prompts, ver fuentes cuando use web tools, y validar endpoints.</div>
+              </div>
+            </label>
+          </div>
+          <div class="step" data-section="objetivo">
+            <label><input type="checkbox" data-step="S5-03"/>
+              <div>
+                <div class="t">S5‑03 · Aplicar HITL cuando no hay evidencia suficiente</div>
+                <div class="d">Forzar un caso de “NEEDS_HITL”, aprobarlo (endpoint /approve) y observar el cambio de estado.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="prereqs">
+      <h2>Prerrequisitos (software + cuentas)</h2>
+      <div class="box">
+        <div class="step" data-section="prereqs">
+          <label><input type="checkbox" data-step="PR-01"/>
+            <div>
+              <div class="t">Tener Python instalado (recomendado 3.11+)</div>
+              <div class="d">Verifica con <span class="kbd">python --version</span>. Si usas Windows, asegúrate de tener “Add to PATH”.</div>
+            </div>
+          </label>
+          <pre>python --version</pre>
+        </div>
+
+        <div class="step" data-section="prereqs">
+          <label><input type="checkbox" data-step="PR-02"/>
+            <div>
+              <div class="t">Tener Git / descompresión lista (ya tienes el zip)</div>
+              <div class="d">Si usas repo, Git ayuda; si no, con el zip basta. Asegúrate de poder abrir la carpeta Session5.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="prereqs">
+          <label><input type="checkbox" data-step="PR-03"/>
+            <div>
+              <div class="t">Tener un LLM local disponible (recomendado: Ollama)</div>
+              <div class="d">Si Session5 usa Ollama, instala y descarga un modelo. Si no, salta este paso.</div>
+            </div>
+          </label>
+          <pre># (ejemplo) comprobar Ollama
+ollama --version
+
+# (ejemplo) descargar un modelo
+ollama pull qwen2.5:7b</pre>
+        </div>
+
+        <div class="step" data-section="prereqs">
+          <label><input type="checkbox" data-step="PR-04"/>
+            <div>
+              <div class="t">Opcional: tener cuentas/API keys para tracing</div>
+              <div class="d">Solo si activarás LangSmith o Langfuse. Si no, usa <span class="kbd">TRACE_PROVIDER=none</span>.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="setup">
+      <h2>Setup del proyecto (entorno + dependencias)</h2>
+      <div class="box">
+        <div class="step" data-section="setup">
+          <label><input type="checkbox" data-step="ST-01"/>
+            <div>
+              <div class="t">Abrir terminal en la carpeta Session5</div>
+              <div class="d">Ej.: PowerShell → “Abrir en Terminal” dentro de la carpeta del proyecto.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="setup">
+          <label><input type="checkbox" data-step="ST-02"/>
+            <div>
+              <div class="t">Crear y activar un entorno virtual</div>
+              <div class="d">Mantiene dependencias aisladas del sistema.</div>
+            </div>
+          </label>
+          <pre># Windows (PowerShell)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1</pre>
+        </div>
+
+        <div class="step" data-section="setup">
+          <label><input type="checkbox" data-step="ST-03"/>
+            <div>
+              <div class="t">Instalar dependencias</div>
+              <div class="d">Usa <span class="kbd">requirements.txt</span> o el método definido en Session5. Si hay scripts, sigue los scripts.</div>
+            </div>
+          </label>
+          <pre># ejemplo típico
+pip install -r requirements.txt</pre>
+        </div>
+
+        <div class="step" data-section="setup">
+          <label><input type="checkbox" data-step="ST-04"/>
+            <div>
+              <div class="t">Configurar variables de entorno (.env)</div>
+              <div class="d">Crea un archivo <span class="kbd">.env</span> en la raíz. Empieza mínimo con providers seguros.</div>
+            </div>
+          </label>
+          <pre># .env (mínimo recomendado para empezar)
+TRACE_PROVIDER=none
+WEB_PROVIDER=stub
+APP_PORT=8100</pre>
+        </div>
+
+        <div class="step" data-section="setup">
+          <label><input type="checkbox" data-step="ST-05"/>
+            <div>
+              <div class="t">Si usarás web real: cambiar WEB_PROVIDER a live</div>
+              <div class="d">Empieza con stub para tests. Cambia a live cuando quieras investigación real con fuentes.</div>
+            </div>
+          </label>
+          <pre># .env (cuando quieras web real)
+WEB_PROVIDER=live</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="run">
+      <h2>Levantar el servidor (dev)</h2>
+      <div class="box">
+        <div class="step" data-section="run">
+          <label><input type="checkbox" data-step="RN-01"/>
+            <div>
+              <div class="t">Ejecutar el script de desarrollo</div>
+              <div class="d">Este proyecto incluye <span class="kbd">scripts/run_dev.bat</span> y está pensado para evitar comandos manuales.</div>
+            </div>
+          </label>
+          <pre>scripts\run_dev.bat</pre>
+        </div>
+
+        <div class="step" data-section="run">
+          <label><input type="checkbox" data-step="RN-02"/>
+            <div>
+              <div class="t">Si NO quieres usar el .bat: comando equivalente (referencial)</div>
+              <div class="d">Útil para entender qué hace el .bat o si estás en otro SO. (Ajusta el módulo/app si difiere.)</div>
+            </div>
+          </label>
+          <pre># ejemplo típico (puede variar según tu proyecto)
+uvicorn app.main:app --host 127.0.0.1 --port 8100 --reload</pre>
+        </div>
+
+        <div class="step" data-section="run">
+          <label><input type="checkbox" data-step="RN-03"/>
+            <div>
+              <div class="t">Abrir la UI</div>
+              <div class="d">Abre en tu navegador la ruta del servidor. La UI suele estar servida desde <span class="kbd">/static</span>.</div>
+            </div>
+          </label>
+          <pre>http://127.0.0.1:8100/</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="verify">
+      <h2>Validación rápida (API + UI)</h2>
+      <div class="box">
+        <div class="grid2">
+          <div>
+            <div class="step" data-section="verify">
+              <label><input type="checkbox" data-step="VF-01"/>
+                <div>
+                  <div class="t">Verificar salud del servidor</div>
+                  <div class="d">Debe responder OK. Si falla: puerto, venv, dependencias o .env.</div>
+                </div>
+              </label>
+              <pre>curl http://127.0.0.1:8100/health</pre>
+            </div>
+          </div>
+          <div>
+            <div class="step" data-section="verify">
+              <label><input type="checkbox" data-step="VF-02"/>
+                <div>
+                  <div class="t">Enviar un mensaje por API</div>
+                  <div class="d">La respuesta debería incluir texto y (si aplica) fuentes / estado.</div>
+                </div>
+              </label>
+              <pre>curl -X POST http://127.0.0.1:8100/chat ^
+  -H "Content-Type: application/json" ^
+  -d "{\"session_id\":\"demo\",\"message\":\"Resume qué es HITL y cuándo se activa.\"}"</pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-section="verify">
+          <label><input type="checkbox" data-step="VF-03"/>
+            <div>
+              <div class="t">Probar desde la UI</div>
+              <div class="d">Escribe un prompt simple, luego uno que requiera evidencia (si <span class="kbd">WEB_PROVIDER=live</span>).</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="verify">
+          <label><input type="checkbox" data-step="VF-04"/>
+            <div>
+              <div class="t">Validar que el “stub” funciona (sin internet)</div>
+              <div class="d">Con <span class="kbd">WEB_PROVIDER=stub</span>, el sistema debe responder sin llamadas reales y permitir tests.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="hitl">
+      <h2>Flujo HITL (Human‑in‑the‑Loop)</h2>
+      <div class="box">
+        <div class="step" data-section="hitl">
+          <label><input type="checkbox" data-step="HL-01"/>
+            <div>
+              <div class="t">Forzar un caso “NEEDS_HITL”</div>
+              <div class="d">Haz una pregunta donde el sistema no pueda justificar con evidencia o esté en modo stub.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="hitl">
+          <label><input type="checkbox" data-step="HL-02"/>
+            <div>
+              <div class="t">Aprobar / corregir por endpoint /approve</div>
+              <div class="d">Envía la aprobación (o corrección) para desbloquear la respuesta final.</div>
+            </div>
+          </label>
+          <pre>curl -X POST http://127.0.0.1:8100/approve ^
+  -H "Content-Type: application/json" ^
+  -d "{\"session_id\":\"demo\",\"approval\":true,\"note\":\"Aprobado por humano\"}"</pre>
+        </div>
+
+        <div class="step" data-section="hitl">
+          <label><input type="checkbox" data-step="HL-03"/>
+            <div>
+              <div class="t">Confirmar que el estado cambia y la UI refleja el resultado</div>
+              <div class="d">Debes ver que el bloqueo desaparece (o que se aplica el contenido aprobado).</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="tracing">
+      <h2>Tracing (opcional): LangSmith / Langfuse</h2>
+      <div class="box">
+        <div class="step" data-section="tracing">
+          <label><input type="checkbox" data-step="TR-01"/>
+            <div>
+              <div class="t">Empezar sin tracing (recomendado)</div>
+              <div class="d">Usa <span class="kbd">TRACE_PROVIDER=none</span> para validar funcionalidad primero.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="tracing">
+          <label><input type="checkbox" data-step="TR-02"/>
+            <div>
+              <div class="t">Activar LangSmith (si lo necesitas)</div>
+              <div class="d">Configura variables de entorno requeridas por tu integración. Reinicia el servidor.</div>
+            </div>
+          </label>
+          <pre># ejemplo (ajusta a tu integración real)
+TRACE_PROVIDER=langsmith
+LANGSMITH_API_KEY=tu_key
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_PROJECT=session5</pre>
+        </div>
+
+        <div class="step" data-section="tracing">
+          <label><input type="checkbox" data-step="TR-03"/>
+            <div>
+              <div class="t">Activar Langfuse (si lo necesitas)</div>
+              <div class="d">Puede ser cloud o self-host. Configura keys y URL. Reinicia el servidor.</div>
+            </div>
+          </label>
+          <pre># ejemplo (ajusta a tu integración real)
+TRACE_PROVIDER=langfuse
+LANGFUSE_PUBLIC_KEY=tu_public
+LANGFUSE_SECRET_KEY=tu_secret
+LANGFUSE_HOST=https://cloud.langfuse.com</pre>
+        </div>
+
+        <div class="step" data-section="tracing">
+          <label><input type="checkbox" data-step="TR-04"/>
+            <div>
+              <div class="t">Verificar trazas por “run_id/trace_id”</div>
+              <div class="d">Ejecuta 2–3 chats y comprueba que aparecen spans/eventos y que se asocian a la sesión.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="tests">
+      <h2>Tests / smoke (rápidos y confiables)</h2>
+      <div class="box">
+        <div class="step" data-section="tests">
+          <label><input type="checkbox" data-step="TS-01"/>
+            <div>
+              <div class="t">Ejecutar tests con el script</div>
+              <div class="d">Usa <span class="kbd">scripts/run_tests.bat</span>. Normalmente fuerza tracing off y web stub para estabilidad.</div>
+            </div>
+          </label>
+          <pre>scripts\run_tests.bat</pre>
+        </div>
+
+        <div class="step" data-section="tests">
+          <label><input type="checkbox" data-step="TS-02"/>
+            <div>
+              <div class="t">Si no usas .bat: correr pytest manual</div>
+              <div class="d">Útil para depurar fallos. Asegúrate de tener el venv activo.</div>
+            </div>
+          </label>
+          <pre>pytest -q</pre>
+        </div>
+
+        <div class="step" data-section="tests">
+          <label><input type="checkbox" data-step="TS-03"/>
+            <div>
+              <div class="t">Confirmar que WEB_PROVIDER=stub mantiene tests offline</div>
+              <div class="d">Esto evita falsos negativos por red o cambios en páginas externas.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="extras">
+      <h2>Objetivos extra (más allá del Pensum)</h2>
+      <div class="box">
+        <div class="step" data-section="extras">
+          <label><input type="checkbox" data-step="EX-01"/>
+            <div>
+              <div class="t">Separar providers (live vs stub) para reproducibilidad</div>
+              <div class="d">Objetivo de ingeniería: misma lógica, distinto backend web para tests vs producción.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="extras">
+          <label><input type="checkbox" data-step="EX-02"/>
+            <div>
+              <div class="t">Budgets y límites (tokens / tiempo / pasos)</div>
+              <div class="d">Evitar loops infinitos y controlar costo/latencia del orquestador.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="extras">
+          <label><input type="checkbox" data-step="EX-03"/>
+            <div>
+              <div class="t">Trazabilidad por session_id (TTL / reuse de equipo)</div>
+              <div class="d">Mantener consistencia: reusar equipo por sesión, limpiar por TTL, y evitar estado “fantasma”.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="troubles">
+      <h2>Troubleshooting rápido</h2>
+      <div class="box">
+        <div class="step" data-section="troubles">
+          <label><input type="checkbox" data-step="TB-01"/>
+            <div>
+              <div class="t">El puerto 8100 está ocupado</div>
+              <div class="d">Cambia <span class="kbd">APP_PORT</span> en .env o edita el .bat (si está parametrizado). Reinicia.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="troubles">
+          <label><input type="checkbox" data-step="TB-02"/>
+            <div>
+              <div class="t">La UI no carga / 404</div>
+              <div class="d">Verifica que FastAPI esté montando <span class="kbd">/static</span> y que estás entrando a la ruta correcta.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="troubles">
+          <label><input type="checkbox" data-step="TB-03"/>
+            <div>
+              <div class="t">Falla por tracing</div>
+              <div class="d">Pon <span class="kbd">TRACE_PROVIDER=none</span> y valida primero. Luego re‑habilita con keys correctas.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="step" data-section="troubles">
+          <label><input type="checkbox" data-step="TB-04"/>
+            <div>
+              <div class="t">Falla por web live (bloqueos/red)</div>
+              <div class="d">Vuelve a <span class="kbd">WEB_PROVIDER=stub</span> para aislar el problema. Luego revisa provider live.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card section" id="refs">
+      <h2>Referencias oficiales</h2>
+      <div class="box">
+        <div class="step" data-section="refs">
+          <label><input type="checkbox" data-step="RF-01"/>
+            <div>
+              <div class="t">Leer docs oficiales (solo lo necesario)</div>
+              <div class="d">
+                FastAPI, Uvicorn, pytest, Ollama, LangSmith, Langfuse. (Links clicables abajo.)
+              </div>
+            </div>
+          </label>
+        </div>
+        <pre>FastAPI: https://fastapi.tiangolo.com/
+Uvicorn: https://www.uvicorn.org/
+pytest: https://docs.pytest.org/
+Ollama: https://ollama.com/
+LangSmith: https://docs.smith.langchain.com/
+Langfuse: https://langfuse.com/docs</pre>
+        <div class="note">Si quieres, puedo convertir estos links en una sección con tarjetas clicables y descripción corta, pero preferí mantenerlo simple y rápido.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+(() => {
+  const STORAGE_KEY = "session5_progress_v1";
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  $("#storageKey").textContent = STORAGE_KEY;
+
+  const checks = () => $$('input[type="checkbox"][data-step]');
+  const steps = () => $$('.step');
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const data = JSON.parse(raw);
+      for (const cb of checks()) {
+        cb.checked = !!data[cb.dataset.step];
+      }
+    } catch(e) {
+      console.warn("No se pudo cargar progreso:", e);
+    }
+  }
+
+  function save() {
+    const data = {};
+    for (const cb of checks()) {
+      data[cb.dataset.step] = !!cb.checked;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function updateCounts() {
+    const all = checks();
+    const total = all.length;
+    const done = all.filter(x => x.checked).length;
+    $("#total").textContent = String(total);
+    $("#done").textContent = String(done);
+    const pct = total ? Math.round((done/total)*100) : 0;
+    $("#pct").textContent = pct + "%";
+    $("#barFill").style.width = pct + "%";
+
+    // counts por sección
+    const bySection = {};
+    for (const cb of all) {
+      const sec = cb.closest(".step")?.dataset.section || "unknown";
+      bySection[sec] = bySection[sec] || {done:0,total:0};
+      bySection[sec].total += 1;
+      if (cb.checked) bySection[sec].done += 1;
+    }
+    for (const el of $$('[data-count-for]')) {
+      const sec = el.getAttribute("data-count-for");
+      const s = bySection[sec] || {done:0,total:0};
+      el.textContent = `${s.done}/${s.total}`;
+    }
+  }
+
+  function wire() {
+    for (const cb of checks()) {
+      cb.addEventListener("change", () => {
+        save();
+        updateCounts();
+      });
+    }
+
+    $("#btnReset").addEventListener("click", () => {
+      for (const cb of checks()) cb.checked = false;
+      save(); updateCounts();
+    });
+
+    $("#btnAll").addEventListener("click", () => {
+      for (const cb of checks()) cb.checked = true;
+      save(); updateCounts();
+    });
+
+    $("#btnExport").addEventListener("click", () => {
+      const raw = localStorage.getItem(STORAGE_KEY) || "{}";
+      const blob = new Blob([raw], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Session5_progress.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    $("#btnImport").addEventListener("click", () => {
+      $("#fileImport").click();
+    });
+
+    $("#fileImport").addEventListener("change", async (ev) => {
+      const file = ev.target.files?.[0];
+      if(!file) return;
+      try {
+        const txt = await file.text();
+        const data = JSON.parse(txt);
+        for (const cb of checks()) {
+          cb.checked = !!data[cb.dataset.step];
+        }
+        save(); updateCounts();
+      } catch(e) {
+        alert("JSON inválido o archivo corrupto.");
+      } finally {
+        ev.target.value = "";
+      }
+    });
+
+    // búsqueda
+    $("#q").addEventListener("input", (ev) => {
+      const q = (ev.target.value || "").trim().toLowerCase();
+      if(!q) {
+        for (const s of steps()) s.classList.remove("hide");
+        return;
+      }
+      for (const s of steps()) {
+        const text = s.innerText.toLowerCase();
+        s.classList.toggle("hide", !text.includes(q));
+      }
+    });
+
+    // resaltar ancla al navegar
+    window.addEventListener("hashchange", () => {
+      const id = location.hash.replace("#","");
+      if(!id) return;
+      const el = document.getElementById(id);
+      if(el) {
+        el.classList.add("hl");
+        setTimeout(() => el.classList.remove("hl"), 700);
+      }
+    });
+  }
+
+  // init
+  load();
+  wire();
+  updateCounts();
+})();
+</script>
+</body>
+</html>
