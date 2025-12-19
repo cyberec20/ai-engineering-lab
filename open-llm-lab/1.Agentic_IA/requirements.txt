@@ -1,0 +1,34 @@
+fastapi
+uvicorn[standard]
+requests
+urllib3 #puede bastar con requests
+pydantic
+crewai
+yfinance
+pyyaml
+psycopg2-binary
+python-dotenv
+pandas
+numpy
+scikit-learn
+pmdarima
+statsmodels
+arch
+prophet  # usa cmdstanpy; puede tardar en compilar la primera vez
+matplotlib
+seaborn
+reportlab
+#fpdf2
+langgraph
+langchain
+langchain-community
+langchain-ollama
+langsmith
+langfuse
+lxml #opcional
+langchain-ollama
+mcp
+MetaTrader5
+uv
+litellm
+

@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pensum IGENTIQ IA · Ruta Local-First (Franklin)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark light;
+      --bg: #050810;
+      --bg-alt: #0b1020;
+      --bg-card: #0f172a;
+      --border-subtle: #1e293b;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56,189,248,0.2);
+      --accent-strong: #0ea5e9;
+      --text: #e5e7eb;
+      --text-soft: #94a3b8;
+      --danger: #fb7185;
+      --success: #4ade80;
+      --warning: #facc15;
+      --shadow-soft: 0 18px 45px rgba(15,23,42,0.65);
+      --radius-xl: 18px;
+      --radius-2xl: 24px;
+      --radius-full: 999px;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0b1120 0, #020617 38%, #000 100%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    a {
+      color: var(--accent-strong);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(22px);
+      background: linear-gradient(
+        to right,
+        rgba(15,23,42,0.96),
+        rgba(15,23,42,0.92),
+        rgba(15,23,42,0.96)
+      );
+      border-bottom: 1px solid rgba(148,163,184,0.15);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title-block h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    .title-block p {
+      margin: 2px 0 0;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+    }
+    .header-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .pill {
+      border-radius: var(--radius-full);
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      color: var(--text-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.16), transparent 60%);
+    }
+    .pill span.dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      box-shadow: 0 0 8px rgba(56,189,248,0.8);
+    }
+    .pill.success span.dot {
+      background: var(--success);
+      box-shadow: 0 0 8px rgba(74,222,128,0.8);
+    }
+    .pill.warn span.dot {
+      background: var(--warning);
+      box-shadow: 0 0 8px rgba(250,204,21,0.8);
+    }
+
+    /* Layout */
+    .layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 18px 16px 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 270px) minmax(0, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 78px;
+      align-self: flex-start;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.85), rgba(15,23,42,0.98));
+      border-radius: var(--radius-2xl);
+      padding: 16px 14px 14px;
+      border: 1px solid rgba(148,163,184,0.18);
+      box-shadow: var(--shadow-soft);
+    }
+    .sidebar h2 {
+      margin: 0 0 8px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+    }
+    .sidebar small {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--text-soft);
+      margin-bottom: 12px;
+    }
+    .search-box {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    .search-box input {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      padding: 6px 26px 6px 24px;
+      font-size: 0.8rem;
+      background: rgba(15,23,42,0.95);
+      color: var(--text);
+      outline: none;
+    }
+    .search-box input::placeholder {
+      color: var(--text-soft);
+    }
+    .search-box span.icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0;
+      max-height: calc(100vh - 190px);
+      overflow: auto;
+    }
+    .nav-item {
+      margin: 2px 0;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: transparent;
+    }
+    .nav-link span.label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-link span.badge {
+      font-size: 0.68rem;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-soft);
+    }
+    .nav-link.active {
+      color: var(--accent-strong);
+      border-color: rgba(56,189,248,0.7);
+      background: linear-gradient(
+        135deg,
+        rgba(56,189,248,0.16),
+        rgba(37,99,235,0.18)
+      );
+    }
+    .nav-section-label {
+      margin: 8px 6px 2px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+      opacity: 0.8;
+    }
+
+    /* Content */
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.14), transparent 60%),
+                  radial-gradient(circle at bottom right, rgba(79,70,229,0.14), transparent 60%),
+                  rgba(15,23,42,0.98);
+      border-radius: var(--radius-2xl);
+      border: 1px solid rgba(148,163,184,0.25);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-soft);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 10% -10%, rgba(56,189,248,0.18), transparent 60%);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+    h2.section-title {
+      margin: 0 0 8px;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    p.section-sub {
+      margin: 0 0 10px;
+      font-size: 0.86rem;
+      color: var(--text-soft);
+    }
+
+    .session-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .meta-tag {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: rgba(15,23,42,0.9);
+      color: var(--text-soft);
+    }
+    .meta-tag.highlight {
+      border-color: rgba(56,189,248,0.8);
+      background: rgba(56,189,248,0.18);
+      color: #e0f2fe;
+    }
+    .meta-tag.local {
+      border-color: rgba(74,222,128,0.85);
+      background: rgba(22,163,74,0.3);
+      color: #dcfce7;
+    }
+
+    .flex-cols {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 780px) {
+      .flex-cols {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .block-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+      margin-bottom: 6px;
+    }
+    ul.bullets {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 0.84rem;
+      color: var(--text-soft);
+    }
+    ul.bullets li {
+      margin-bottom: 4px;
+    }
+
+    /* Checklist */
+    .checklist {
+      margin: 6px 0 6px;
+      padding: 8px 10px;
+      border-radius: var(--radius-xl);
+      border: 1px dashed rgba(148,163,184,0.45);
+      background: rgba(15,23,42,0.88);
+    }
+    .checklist h3 {
+      margin: 0 0 6px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-soft);
+    }
+    .task {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      color: var(--text-soft);
+      cursor: pointer;
+    }
+    .task input[type="checkbox"] {
+      margin-top: 2px;
+      accent-color: var(--accent-strong);
+      cursor: pointer;
+    }
+    .task.done {
+      color: var(--success);
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+      text-decoration-color: rgba(148,163,184,0.7);
+    }
+
+    .note {
+      font-size: 0.76rem;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    /* Comparison table */
+    .comparison-table-wrapper {
+      margin-top: 8px;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(148,163,184,0.4);
+      overflow: hidden;
+      background: rgba(15,23,42,0.96);
+    }
+    table.comparison {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    table.comparison thead {
+      background: linear-gradient(
+        to right,
+        rgba(15,23,42,0.96),
+        rgba(15,23,42,0.9)
+      );
+    }
+    table.comparison th,
+    table.comparison td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(30,41,59,0.9);
+      vertical-align: top;
+    }
+    table.comparison th {
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.72rem;
+      color: var(--text-soft);
+    }
+    table.comparison td.label {
+      font-weight: 500;
+      color: #e5e7eb;
+      width: 18%;
+      white-space: nowrap;
+    }
+    table.comparison tbody tr:nth-child(odd) td {
+      background: rgba(15,23,42,0.97);
+    }
+    table.comparison tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      border: 1px solid rgba(148,163,184,0.6);
+      color: var(--text-soft);
+      background: rgba(15,23,42,0.95);
+      gap: 5px;
+    }
+    .badge.local {
+      border-color: rgba(74,222,128,0.9);
+      background: rgba(22,163,74,0.32);
+      color: #dcfce7;
+    }
+    .badge.api {
+      border-color: rgba(56,189,248,0.9);
+      background: rgba(8,47,73,0.6);
+      color: #e0f2fe;
+    }
+    .badge.mix {
+      border-color: rgba(250,204,21,0.9);
+      background: rgba(113,63,18,0.6);
+      color: #fef9c3;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .chip {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.55);
+      color: var(--text-soft);
+      background: rgba(15,23,42,0.96);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="title-block">
+        <h1>Pensum IGENTIQ IA · Ruta Local-First</h1>
+        <p>Versión personalizada para Franklin · LLMs locales + agentes + APIs opcionales</p>
+      </div>
+      <div class="header-tags">
+        <div class="pill">
+          <span class="dot"></span>
+          <span>Modo: <strong>Local-First</strong></span>
+        </div>
+        <div class="pill success">
+          <span class="dot"></span>
+          <span>Enfoque: <strong>Agentes + Orquestación</strong></span>
+        </div>
+        <div class="pill warn">
+          <span class="dot"></span>
+          <span>Compatibilidad futura con APIs cloud</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <h2>Sesiones del Pensum</h2>
+      <small>Haz clic para navegar. Las tareas marcadas se guardan en este navegador.</small>
+      <div class="search-box">
+        <span class="icon">🔍</span>
+        <input id="navSearch" type="text" placeholder="Filtrar sesiones…" />
+      </div>
+      <div class="nav-section-label">Resumen</div>
+      <ul class="nav-list" id="navList">
+        <li class="nav-item">
+          <button class="nav-link active" data-target="overview">
+            <span class="label">Vista general</span>
+            <span class="badge">Intro</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="comparativa">
+            <span class="label">Comparativa Curso Original vs Local-First</span>
+            <span class="badge">Mapa mental</span>
+          </button>
+        </li>
+
+        <div class="nav-section-label">Sesiones núcleo</div>
+
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion1">
+            <span class="label">Sesión 1 · Laboratorio Local</span>
+            <span class="badge">Infra</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion2">
+            <span class="label">Sesión 2 · Agentes &amp; Tools (Runtime Propio)</span>
+            <span class="badge">Agents</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion3">
+            <span class="label">Sesión 3 · CrewAI con LLM Local</span>
+            <span class="badge">Teams</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion4">
+            <span class="label">Sesión 4 · LangGraph Local &amp; Memoria</span>
+            <span class="badge">Grafos</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion5">
+            <span class="label">Sesión 5 · Multi-Agente Conversacional</span>
+            <span class="badge">AutoGen</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-target="sesion6">
+            <span class="label">Sesión 6 · MCP-like &amp; Trading Floor Local</span>
+            <span class="badge">Capstone</span>
+          </button>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+      <!-- OVERVIEW -->
+      <section id="overview" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Vista general del pensum local-first</h2>
+          <p class="section-sub">
+            Este pensum toma la arquitectura del curso original de agentes IGENTIQ y la
+            re-implementa con un enfoque <strong>LLM local-first</strong>, dejando ganchos claros
+            para APIs (OpenAI, Anthropic, Gemini, etc.) cuando decidas utilizarlas.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Objetivo: dominar ingeniería agéntica sin depender de un solo proveedor</span>
+            <span class="meta-tag local">Motor base: modelos locales (DeepSeek, Qwen, Llama3…) sobre RTX 16&nbsp;GB</span>
+            <span class="meta-tag">Estructura: 6 sesiones troncales + proyectos equivalentes al curso original</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Resultados de este pensum</div>
+              <ul class="bullets">
+                <li>Montar tu propio <strong>“OpenAI local”</strong> con LM Studio + Ollama.</li>
+                <li>Diseñar un <strong>runtime de agentes</strong> propio (Agent, Tools, Runner, Trace).</li>
+                <li>Usar <strong>CrewAI</strong> y <strong>LangGraph</strong> con LLM locales como backend.</li>
+                <li>Construir un <strong>Operator-like Assistant</strong> local con memoria persistente.</li>
+                <li>Crear un <strong>Trading Floor multi-agente</strong> usando servicios tipo MCP locales.</li>
+                <li>Dejar preparada la capa de integración para que, si lo decides, puedas usar APIs cloud
+                  sin reescribir la arquitectura.</li>
+              </ul>
+            </div>
+            <div>
+              <div class="block-title">Cómo navegar este HTML</div>
+              <ul class="bullets">
+                <li>Usa el panel lateral para saltar a cada sesión.</li>
+                <li>Marca los checkboxes de las listas de tareas: se guardan en
+                  <code>localStorage</code> del navegador.</li>
+                <li>La sección de <strong>Comparativa</strong> te recuerda en todo momento qué parte
+                  del curso original estás cubriendo y cómo se traduce a la ruta local.</li>
+                <li>Este documento es tu <strong>pensum maestro</strong>; las implementaciones,
+                  scripts y prompts vivirán en carpetas de proyecto separadas.</li>
+              </ul>
+              <div class="note">
+                Sugerencia: guarda este HTML en una ruta estable (ej. <code>/IA-local/pensum_igentiq_local.html</code>)
+                y ábrelo siempre desde ahí para mantener consistencia en los estados guardados.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMPARATIVA -->
+      <section id="comparativa" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Comparativa · Curso original vs Ruta Local-First</h2>
+          <p class="section-sub">
+            Esta vista resume cómo se mapean los conceptos del curso “Complete Agentic AI Engineering”
+            a tu nuevo pensum centrado en LLM locales, y por qué esta variante te posiciona por encima
+            de un perfil que solo consume APIs.
+          </p>
+
+          <div class="comparison-table-wrapper">
+            <table class="comparison">
+              <thead>
+                <tr>
+                  <th>Bloque</th>
+                  <th>Curso original (API-First)</th>
+                  <th>Nueva ruta (Local-First)</th>
+                  <th>Ventaja estratégica</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="label">Fundamentos</td>
+                  <td>
+                    Configuración de entorno para usar <strong>OpenAI Assistants API</strong>, claves API,
+                    ejemplos en la nube.
+                    <div class="chips">
+                      <span class="chip">OpenAI</span>
+                      <span class="chip">APIs cloud</span>
+                    </div>
+                  </td>
+                  <td>
+                    Laboratorio local con <strong>LM Studio</strong>, <strong>Ollama</strong> y
+                    modelos como Qwen / DeepSeek en tu GPU.
+                    <div class="chips">
+                      <span class="chip">LLMs locales</span>
+                      <span class="chip">Infra propia</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge local">Autonomía técnica</span>
+                    <br />No dependes de cuentas, cuotas ni políticas de un tercero; puedes experimentar sin coste variable.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">Agentes &amp; Tools</td>
+                  <td>
+                    Agents SDK de OpenAI, function calling nativo, herramientas definidas en el contexto de
+                    la Assistants API.
+                    <div class="chips">
+                      <span class="chip">OpenAI Agents</span>
+                      <span class="chip">Tool Calls</span>
+                    </div>
+                  </td>
+                  <td>
+                    Runtime de agentes propio en Python: <strong>Agent</strong>, <strong>Runner</strong>,
+                    <strong>Trace</strong>, tool-router genérico.
+                    <div class="chips">
+                      <span class="chip">Runtime propio</span>
+                      <span class="chip">Backend conmutables</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge mix">Patrón portable</span>
+                    <br />Aprendes el patrón conceptual, no una SDK específica. Puedes intercambiar backend (local o API) sin re-pensar la arquitectura.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">CrewAI</td>
+                  <td>
+                    CrewAI con GPT-4o/Claude como backend estándar para equipos de agentes.
+                    <div class="chips">
+                      <span class="chip">Cloud LLMs</span>
+                    </div>
+                  </td>
+                  <td>
+                    CrewAI configurado para hablar con tu servidor local (Ollama/LM Studio), manteniendo
+                    roles, tareas y procesos.
+                    <div class="chips">
+                      <span class="chip">Teams con LLM local</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge local">Coste y privacidad</span>
+                    <br />Puedes mantener equipos de agentes trabajando sobre datos privados sin sacarlos de tu entorno.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">LangGraph</td>
+                  <td>
+                    Grafos con LangGraph + OpenAI + LangSmith en cloud, checkpointing remoto.
+                    <div class="chips">
+                      <span class="chip">LangGraph cloud</span>
+                    </div>
+                  </td>
+                  <td>
+                    LangGraph ejecutándose contra tu <strong>call_llm_local()</strong> y almacenando
+                    estado en SQLite o Postgres local.
+                    <div class="chips">
+                      <span class="chip">Grafos + estado local</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge local">Control total</span>
+                    <br />Mantienes la misma teoría de grafos agénticos, pero el estado y los mensajes viven en tu infraestructura.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">AutoGen</td>
+                  <td>
+                    Enjambres conversacionales con GPT-4o, ejecución de código guiada por la nube.
+                  </td>
+                  <td>
+                    Multi-agente conversacional con backend local (DeepSeek/Qwen) o wrapper para elegir
+                    proveedor en cada proyecto.
+                  </td>
+                  <td>
+                    <span class="badge mix">Flexibilidad</span>
+                    <br />Puedes prototipar con local y, si en algún proyecto requieres capacidad extra, subirlo a una API sin reescribir el diseño.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">MCP &amp; Capstone</td>
+                  <td>
+                    MCP oficial + Claude Desktop + servidores MCP conectados a datos de mercado reales.
+                  </td>
+                  <td>
+                    Arquitectura “MCP-like” con servicios REST locales (precios, noticias, análisis, órdenes),
+                    totalmente simulable en tu PC, con opción a migrar a MCP real.
+                  </td>
+                  <td>
+                    <span class="badge local">Arquitecto de sistemas</span>
+                    <br />Te obliga a pensar en protocolos, contratos y servicios, no solo en “pegar APIs”.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="label">Perfil resultante</td>
+                  <td>
+                    Ingeniero que sabe usar y orquestar APIs de agente (perfil muy útil, pero más común).
+                  </td>
+                  <td>
+                    <strong>Arquitecto agéntico local-first</strong>: capaz de montar runtimes propios, integrar o sustituir APIs y operar con total autonomía.
+                  </td>
+                  <td>
+                    <span class="badge local">Diferenciación fuerte</span>
+                    <br />Tu perfil no depende de un curso en Udemy; demuestra comprensión profunda y capacidad de adaptación a cualquier stack agéntico moderno.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note">
+            Cuando dudes “¿qué parte del curso original estoy replicando?”, vuelve a esta tabla y ubica
+            la sesión en la fila correspondiente.
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 1 -->
+      <section id="sesion1" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 1 · Laboratorio Local: tu “OpenAI personal”</h2>
+          <p class="section-sub">
+            Objetivo: dejar instalada y verificada la infraestructura de LLMs locales (LM Studio, Ollama,
+            drivers, Python, uv/Git) y entender cómo orquestar un modelo local básico desde código.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: Fundamentos + entorno del curso original</span>
+            <span class="meta-tag local">Todo corre en tu RTX local (16&nbsp;GB VRAM)</span>
+            <span class="meta-tag">Salida clave: función <code>call_llm_local()</code> + API mínima</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Instalar / actualizar drivers, Python, Git, uv (o venv si lo prefieres).</li>
+                <li>Instalar y probar <strong>LM Studio</strong> como explorador de modelos.</li>
+                <li>Instalar y probar <strong>Ollama</strong> como servidor LLM local.</li>
+                <li>Descargar al menos un modelo general (Qwen / Llama3) y uno de razonamiento (DeepSeek R1 distill).</li>
+                <li>Crear una función `call_llm_local(model, messages)` en Python y exponerla como
+                  endpoint HTTP simple (FastAPI / Flask).</li>
+              </ul>
+
+              <div class="checklist">
+                <h3>Checklist Sesión 1</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S1-01" />
+                  Drivers NVIDIA y Python 3.11/3.12 instalados y probados.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S1-02" />
+                  LM Studio instalado; he descargado y probado al menos un modelo (ej. Qwen 7B/8B).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S1-03" />
+                  Ollama instalado y funcionando: <code>ollama run llama3</code> o similar.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S1-04" />
+                  Tengo una carpeta <code>/IA-local/</code> con subcarpetas para modelos y proyectos.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S1-05" />
+                  He implementado <code>call_llm_local(model, messages)</code> y probado una llamada desde
+                  un script o una pequeña API (FastAPI/Flask).
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li>Archivo <code>config_hardware.md</code> con detalles de tu GPU, VRAM y límites prácticos.</li>
+                <li>Script <code>llm_client_local.py</code> con la función <code>call_llm_local()</code>.</li>
+                <li>API mínima (ej. <code>main.py</code> con FastAPI) que expone un endpoint
+                  <code>/chat</code> para probar el motor local.</li>
+                <li>Notas HTML/Markdown con problemas encontrados y cómo los resolviste
+                  (drivers, permisos, VRAM, etc.).</li>
+              </ul>
+              <div class="note">
+                Esta sesión es tu cimiento. Todo lo demás (CrewAI, LangGraph, AutoGen, Capstone) se apoyará
+                en este motor local.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 2 -->
+      <section id="sesion2" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 2 · Runtime de Agentes &amp; Tools (OpenAI-style pero local)</h2>
+          <p class="section-sub">
+            Objetivo: implementar tu propio runtime de agentes (Agent, Runner, Trace) y un patrón de
+            herramientas compatible con LLMs locales, preparando ganchos para futuros backends API.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: OpenAI Agents SDK + function calling</span>
+            <span class="meta-tag local">LLM local como motor principal</span>
+            <span class="meta-tag">Proyecto: Agente SDR local (ventas)</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Definir una clase <code>Agent</code> con:
+                  <ul class="bullets">
+                    <li>nombre, rol, herramientas, memoria, llm_client</li>
+                  </ul>
+                </li>
+                <li>Definir una clase <code>AgentRunner</code> (o similar) que ejecute el loop de
+                  percepción → pensamiento → acción → reflexión.</li>
+                <li>Definir un esquema simple de tool-calls vía JSON:
+                  <code>{"tool": "nombre", "args": {...}}</code>.</li>
+                <li>Implementar un router de herramientas que:
+                  <ul class="bullets">
+                    <li>parsea el JSON que devuelve el modelo,</li>
+                    <li>ejecuta la función Python correspondiente,</li>
+                    <li>inyecta la respuesta de vuelta en el contexto del modelo.</li>
+                  </ul>
+                </li>
+                <li>Introducir <strong>asyncio</strong> para llamadas concurrentes a LLM y herramientas.</li>
+                <li>Construir un agente SDR local que:
+                  <ul class="bullets">
+                    <li>lea la web de una empresa (scraping básico o HTML descargado),</li>
+                    <li>extraiga su propuesta de valor,</li>
+                    <li>redacte un correo personalizado.</li>
+                  </ul>
+                </li>
+              </ul>
+              <div class="checklist">
+                <h3>Checklist Sesión 2</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S2-01" />
+                  He creado la clase <code>Agent</code> y puedo instanciar un agente simple con descripción de rol.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S2-02" />
+                  Tengo un router de herramientas que ejecuta funciones Python según un JSON devuelto por el modelo.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S2-03" />
+                  He implementado alguna forma de <strong>asincronía</strong> (asyncio, tareas concurrentes).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S2-04" />
+                  El agente SDR local es capaz de leer información de una empresa y generar un correo razonable.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S2-05" />
+                  El diseño del runtime deja claro dónde podría usarse un <code>OpenAIClient</code> en lugar del cliente local.
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li><code>agents/runtime.py</code>: definiciones de <code>Agent</code>, <code>Runner</code>, <code>Trace</code>.</li>
+                <li><code>agents/tools.py</code>: funciones de negocio (ej. <code>get_company_profile()</code>,
+                  <code>generate_email()</code>).</li>
+                <li><code>agents/sdr_agent.py</code>: script principal del agente SDR local.</li>
+                <li>Docs breves sobre:
+                  <ul class="bullets">
+                    <li>cómo se define una herramienta,</li>
+                    <li>cómo el modelo decide usarla,</li>
+                    <li>cómo reemplazar el backend local por OpenAI en el futuro.</li>
+                  </ul>
+                </li>
+              </ul>
+              <div class="note">
+                Esta sesión fija tu forma mental de “agente + herramientas”; más adelante, CrewAI, LangGraph y
+                AutoGen se apoyarán en estos conceptos.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 3 -->
+      <section id="sesion3" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 3 · CrewAI con LLM Local: equipos de agentes</h2>
+          <p class="section-sub">
+            Objetivo: dominar el patrón de trabajo en equipo con CrewAI usando modelos locales, replicando
+            los proyectos tipo “Stock Picker” y “Debate” sin depender de GPT-4o.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: Semana CrewAI del curso original</span>
+            <span class="meta-tag local">Backend: Qwen / DeepSeek vía Ollama / LM Studio</span>
+            <span class="meta-tag">Proyecto: Stock Picker local y/o sistema de debate</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Configurar CrewAI para usar tu cliente LLM local (wrapping de <code>call_llm_local</code>).</li>
+                <li>Definir agentes con roles claros: Investigador, Analista, Redactor, Manager.</li>
+                <li>Construir un Crew que:
+                  <ul class="bullets">
+                    <li>cargue datos de mercado locales (CSV / API gratuita),</li>
+                    <li>analice tendencias básicas,</li>
+                    <li>produzca un informe de inversión.</li>
+                  </ul>
+                </li>
+                <li>Explorar patrones jerárquicos (manager agent) y procesos secuenciales.</li>
+              </ul>
+              <div class="checklist">
+                <h3>Checklist Sesión 3</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S3-01" />
+                  CrewAI está instalado y configurado para usar un modelo local como backend.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S3-02" />
+                  Tengo al menos 3 agentes definidos con roles distintos (Researcher, Analyst, Writer).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S3-03" />
+                  He ejecutado un flujo donde el Crew analiza 1–3 acciones y produce un informe en texto.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S3-04" />
+                  Entiendo la diferencia entre procesos secuenciales, jerárquicos y en paralelo en CrewAI.
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li><code>crew/config/agents.yaml</code> y <code>crew/config/tasks.yaml</code> adaptados a tu proyecto.</li>
+                <li><code>crew/stock_picker.py</code> (o equivalente) con el flujo completo.</li>
+                <li>Dataset de prueba (CSV de precios) para no depender de APIs externas.</li>
+                <li>Pequeño informe comparando desempeño del Crew con un agente único.</li>
+              </ul>
+              <div class="note">
+                Aquí consolidarás tu habilidad para pensar en equipos de agentes, una pieza clave para el
+                Capstone de Trading más adelante.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 4 -->
+      <section id="sesion4" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 4 · LangGraph Local &amp; Memoria Persistente</h2>
+          <p class="section-sub">
+            Objetivo: aprender a modelar procesos como grafos con estado, usando LangGraph sobre un backend
+            LLM local y almacenamiento (SQLite/Postgres) en tu máquina.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: Semana LangGraph + LangSmith</span>
+            <span class="meta-tag local">Estado y memoria 100% locales</span>
+            <span class="meta-tag">Proyecto: Operator-like Assistant local</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Entender <strong>StateGraph</strong>, nodos, edges y edges condicionales.</li>
+                <li>Definir un tipo de estado (TypedDict / Pydantic) para tu asistente.</li>
+                <li>Crear nodos <code>planner</code>, <code>executor</code>, <code>reflector</code> que:
+                  <ul class="bullets">
+                    <li>descomponen la petición del usuario,</li>
+                    <li>ejecutan herramientas (o agentes),</li>
+                    <li>deciden si la respuesta es suficiente o hay que iterar.</li>
+                  </ul>
+                </li>
+                <li>Persistir estado en SQLite local, simulando LangGraph + LangSmith pero en tu entorno.</li>
+                <li>Implementar nodos “human-in-the-loop” para acciones críticas.</li>
+              </ul>
+              <div class="checklist">
+                <h3>Checklist Sesión 4</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S4-01" />
+                  He definido un <code>StateGraph</code> con al menos 3 nodos funcionales.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S4-02" />
+                  El grafo usa un LLM local a través de una función de abstracción (<code>call_llm</code>).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S4-03" />
+                  El estado del asistente se guarda en una base de datos local (SQLite/Postgres).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S4-04" />
+                  He creado al menos un nodo donde el flujo se detiene para pedir confirmación humana.
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li><code>langgraph/state.py</code>: definición del estado del asistente.</li>
+                <li><code>langgraph/nodes.py</code>: implementación de planner, executor, reflector, etc.</li>
+                <li><code>langgraph/app.py</code>: construcción y ejecución del grafo.</li>
+                <li>Un breve diagrama (puede ser en texto) de cómo fluyen los datos entre nodos.</li>
+              </ul>
+              <div class="note">
+                Esta sesión es clave para pensar en sistemas robustos y reanudables, más allá de simples
+                “chat loops”.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 5 -->
+      <section id="sesion5" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 5 · Multi-Agente Conversacional (AutoGen-style)</h2>
+          <p class="section-sub">
+            Objetivo: explorar patrones de multi-agente conversacional, donde varios agentes especializados
+            colaboran, se corrigen y generan soluciones complejas usando tu backend local.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: Semana AutoGen</span>
+            <span class="meta-tag local">Backends configurables (local y/o cloud)</span>
+            <span class="meta-tag">Proyecto: Creador de agentes (Agent-Creator local)</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Configurar un pequeño entorno multi-agente:
+                  <ul class="bullets">
+                    <li><strong>UserAgent</strong></li>
+                    <li><strong>CoderAgent</strong></li>
+                    <li><strong>ReviewerAgent</strong></li>
+                    <li><strong>PM_Agent</strong> (project manager)</li>
+                  </ul>
+                </li>
+                <li>Definir reglas de quién habla cuándo (speaker selection) y cómo se decide terminar.</li>
+                <li>Diseñar un agente que genere:
+                  <ul class="bullets">
+                    <li>archivos de configuración,</li>
+                    <li>esqueletos de agentes,</li>
+                    <li>instrucciones iniciales para nuevos “micro-proyectos”.</li>
+                  </ul>
+                </li>
+              </ul>
+              <div class="checklist">
+                <h3>Checklist Sesión 5</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S5-01" />
+                  He definido al menos 3 agentes con roles distintos en un entorno conversacional.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S5-02" />
+                  He implementado lógica de turnos (quién habla, cuándo termina la conversación).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S5-03" />
+                  El “Agent-Creator” es capaz de generar archivos iniciales o configuración para nuevos agentes.
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li><code>multi_agent/config.py</code>: definición de agentes, roles y parámetros.</li>
+                <li><code>multi_agent/engine.py</code>: lógica de turnos, selección de hablante, fin de conversación.</li>
+                <li><code>multi_agent/agent_creator.py</code>: agente que genera código/archivos para nuevos agentes.</li>
+              </ul>
+              <div class="note">
+                Esta sesión te entrena para pensar en sistemas donde varios cerebros IA colaboran, modelo
+                mental clave para proyectos grandes y complejos.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SESIÓN 6 -->
+      <section id="sesion6" class="card">
+        <div class="card-inner">
+          <h2 class="section-title">Sesión 6 · MCP-like &amp; Capstone: Trading Floor Local</h2>
+          <p class="section-sub">
+            Objetivo: construir una arquitectura tipo MCP con servicios especializados (precios, noticias,
+            análisis, órdenes) y un Trading Floor multi-agente que funcione completamente en tu PC, con
+            opción a conectar APIs reales en el futuro.
+          </p>
+          <div class="session-meta">
+            <span class="meta-tag highlight">Equivalente a: Semana MCP + Capstone Trading Floor</span>
+            <span class="meta-tag local">Servicios REST/MCP-like locales</span>
+            <span class="meta-tag">Proyecto final: Trading Floor con 4 agentes + N “servers”</span>
+          </div>
+          <div class="flex-cols">
+            <div>
+              <div class="block-title">Metas de la sesión</div>
+              <ul class="bullets">
+                <li>Diseñar varios servicios independientes:
+                  <ul class="bullets">
+                    <li><strong>prices_service</strong>: datos de mercado (CSV / API simple).</li>
+                    <li><strong>news_service</strong>: noticias (RSS / archivos locales).</li>
+                    <li><strong>analysis_service</strong>: indicadores técnicos (RSI, MACD, etc.).</li>
+                    <li><strong>orders_service</strong>: simulador de órdenes/portfolio.</li>
+                  </ul>
+                </li>
+                <li>Exponerlos vía HTTP/JSON con contratos claros (MCP-like).</li>
+                <li>Crear agentes:
+                  <ul class="bullets">
+                    <li><strong>QuantAgent</strong></li>
+                    <li><strong>FundamentalAgent</strong></li>
+                    <li><strong>PortfolioManager</strong></li>
+                    <li><strong>RiskManager</strong></li>
+                  </ul>
+                </li>
+                <li>Orquestar a los agentes con:
+                  <ul class="bullets">
+                    <li>tu runtime (Sesión 2), o</li>
+                    <li>CrewAI, o</li>
+                    <li>LangGraph como grafo orquestador.</li>
+                  </ul>
+                </li>
+              </ul>
+              <div class="checklist">
+                <h3>Checklist Sesión 6</h3>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S6-01" />
+                  Tengo al menos 3 servicios REST locales (precios, noticias, análisis).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S6-02" />
+                  He definido 4 agentes con roles financieros distintos (Quant, Fundamental, Portfolio, Risk).
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S6-03" />
+                  El sistema puede simular decisiones de compra/venta y registrar órdenes en un “portfolio”.
+                </label>
+                <label class="task">
+                  <input type="checkbox" data-task-id="S6-04" />
+                  Entiendo qué partes podría migrar a MCP oficial o APIs de broker/mercado en el futuro.
+                </label>
+              </div>
+            </div>
+            <div>
+              <div class="block-title">Entregables técnicos</div>
+              <ul class="bullets">
+                <li><code>services/prices_service.py</code>, <code>news_service.py</code>, <code>analysis_service.py</code>, <code>orders_service.py</code>.</li>
+                <li><code>trading_floor/agents.py</code>: definición de agentes financieros.</li>
+                <li><code>trading_floor/orchestrator.py</code>: lógica que coordina agentes y servicios.</li>
+                <li>Logs CSV/JSON con ejecuciones de sesiones de trading simuladas.</li>
+              </ul>
+              <div class="note">
+                Este capstone es tu “prueba de fuego” agéntica: si puedes construir y entender este sistema,
+                tienes todo lo necesario para proyectos reales con clientes o productos propios.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // Navegación entre secciones
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('main section');
+
+    function activateSection(id) {
+      sections.forEach(sec => {
+        if (sec.id === id) {
+          sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+      navLinks.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.target === id);
+      });
+    }
+
+    navLinks.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.target;
+        activateSection(target);
+      });
+    });
+
+    // Filtro de navegación
+    const navSearch = document.getElementById('navSearch');
+    const navList = document.getElementById('navList');
+
+    navSearch.addEventListener('input', () => {
+      const term = navSearch.value.toLowerCase();
+      navList.querySelectorAll('.nav-item').forEach(item => {
+        const btn = item.querySelector('.nav-link');
+        if (!btn) return;
+        const label = btn.querySelector('.label').textContent.toLowerCase();
+        item.style.display = label.includes(term) ? '' : 'none';
+      });
+    });
+
+    // Persistencia de checklists en localStorage
+    const STORAGE_KEY = 'pensum_igentiq_local_tasks_v1';
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+    function saveTasks(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // ignore
+      }
+    }
+
+    const tasksState = loadTasks();
+    const taskInputs = document.querySelectorAll('input[type="checkbox"][data-task-id]');
+
+    // Inicializar estado visual
+    taskInputs.forEach(input => {
+      const id = input.dataset.taskId;
+      if (tasksState[id]) {
+        input.checked = true;
+      }
+      const label = input.closest('.task');
+      if (label && input.checked) {
+        label.classList.add('done');
+      }
+      input.addEventListener('change', () => {
+        tasksState[id] = input.checked;
+        saveTasks(tasksState);
+        if (label) {
+          label.classList.toggle('done', input.checked);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
