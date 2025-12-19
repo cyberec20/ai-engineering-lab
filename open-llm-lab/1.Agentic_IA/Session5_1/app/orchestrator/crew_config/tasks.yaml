@@ -1,0 +1,46 @@
+tasks:
+  - name: planning
+    agent_role: ResearchLead
+    description: |
+      You will receive the interpreted user request JSON.
+      Create a short plan and 1-3 keyword-style web search queries (NOT long questions).
+      If the intent is biography, use patterns like: "<entity> biography contributions".
+      If the intent is definition, use patterns like: "<entity> definition tcp/ip".
+      Prefer Wikipedia via "site:wikipedia.org <entity>" as one query.
+    expected_output: |
+      JSON matching PlanOutput: {"plan":[...], "queries":[...]}.
+  - name: web_research
+    agent_role: WebResearcher
+    description: |
+      Use web_search and web_fetch tools to gather evidence.
+      For each query, run web_search, then web_fetch on top results.
+      Extract 1-3 evidence items with url/title/snippet.
+      Do NOT invent URLs or snippets.
+    expected_output: |
+      JSON matching WebResearchOutput: {"evidence":[{"url":"...","title":"...","snippet":"..."}]}.
+  - name: fact_check
+    agent_role: FactChecker
+    description: |
+      Verify whether the evidence supports answering the user question.
+      If evidence is insufficient, set verdict.status = "INSUFFICIENT_EVIDENCE".
+      Otherwise set verdict.status = "APPROVE".
+    expected_output: |
+      JSON matching VerdictOutput: {"verdict":{"status":"APPROVE|INSUFFICIENT_EVIDENCE","missing":[...],"notes":"...","required_actions":[...]}}.
+  - name: synthesis
+    agent_role: Synthesizer
+    description: |
+      Write the final answer in the user's language.
+      Use ONLY the provided evidence snippets for factual claims and cite sources as "(source: URL)".
+      Provide a short "Key points" list and a clear final answer.
+    expected_output: |
+      JSON matching DraftOutput: {"draft":{"final_answer":"...","key_points":[...],"limitations":[...],"followups":[...]}}.
+  - name: critic
+    agent_role: Critic
+    description: |
+      Review the draft for language and evidence coverage.
+      If the language does not match input_language, request revise.
+      If evidence is insufficient, set verdict.status="INSUFFICIENT_EVIDENCE".
+      Else approve.
+    expected_output: |
+      JSON matching VerdictOutput.
+

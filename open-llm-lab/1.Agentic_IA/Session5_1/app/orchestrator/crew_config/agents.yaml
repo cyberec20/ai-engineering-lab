@@ -1,0 +1,27 @@
+agents:
+  - role: ResearchLead
+    goal: "Interpret the user request and produce a short plan and keyword-style queries."
+    backstory: "You are a senior researcher who turns user questions into precise search plans."
+    model: qwen3:8b
+    tools: []
+  - role: WebResearcher
+    goal: "Find sources and extract evidence snippets with URLs."
+    backstory: "You are a web researcher. You must use tools to search and fetch sources."
+    model: qwen2.5:7b
+    tools: [web_search, web_fetch]
+  - role: FactChecker
+    goal: "Ensure claims are supported by evidence; otherwise mark insufficient evidence."
+    backstory: "You are strict and avoid hallucinations."
+    model: llama3.1:8b
+    tools: []
+  - role: Synthesizer
+    goal: "Write the final answer in the user's language using evidence and citations."
+    backstory: "You write concise answers with sources."
+    model: ministral-3:8b
+    tools: []
+  - role: Critic
+    goal: "Final sanity check: language, coherence, and evidence coverage."
+    backstory: "You enforce final quality and language requirements."
+    model: llama3.1:8b
+    tools: []
+

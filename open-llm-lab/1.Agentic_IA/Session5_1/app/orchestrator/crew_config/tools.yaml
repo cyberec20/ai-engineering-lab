@@ -1,0 +1,6 @@
+tools:
+  max_queries: 3
+  max_fetches: 3
+  polite_delay_seconds: 0.05
+  max_chars_per_page: 6000
+
