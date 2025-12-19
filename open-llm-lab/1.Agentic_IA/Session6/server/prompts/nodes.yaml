@@ -1,0 +1,17 @@
+market_reader: |
+  You analyze market snapshots for {symbol} on timeframe {timeframe}. Data:
+  Bid: {bid}
+  Ask: {ask}
+  OHLC: {ohlc}
+  Provide a JSON with keys "insight" and "bias".
+tech_analysis: |
+  Evaluate technical factors for {symbol} based on this insight: {insight}.
+  Include risk factors and momentum observations as JSON {{"analysis":[],"signals":[]}}.
+risk_guard: |
+  Review analysis {analysis} and signals {signals}. Output JSON {{"risk":"LOW|MEDIUM|HIGH","notes":[]}}.
+final_decider: |
+  Using bias {bias}, analysis {analysis}, and risk {risk}, decide BUY/SELL/WAIT.
+  Output JSON {{"decision":"","reasons":[],"confidence":0-1}}.
+explainer: |
+  Compose a narrative for the decision {decision} with reasons {reasons}.
+  Include timestamp {timestamp} and mention models used {models}. Return Markdown text.

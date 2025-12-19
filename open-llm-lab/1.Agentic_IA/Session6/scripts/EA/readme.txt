@@ -1,0 +1,1 @@
+A copy of the scripts used and located in MT5 folder.

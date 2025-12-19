@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "local-mt5": {
+      "type": "streamable-http",
+      "url": "http://127.0.0.1:8100/mcp/",
+      "note": "Session6 MCP server (local)"
+    }
+  }
+}

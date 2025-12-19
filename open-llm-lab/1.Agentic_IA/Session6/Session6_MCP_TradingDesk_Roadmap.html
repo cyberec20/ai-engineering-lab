@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Session6 — MCP Trading Desk (XAUUSD H1) · Guía + Checklists</title>
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg:#0b1220; --panel:#0f1b33; --card:#101f3d;
+      --text:#e9efff; --muted:#a9b6da; --accent:#7aa2ff;
+      --good:#33d17a; --warn:#ffcc66; --bad:#ff6b6b;
+      --line:rgba(255,255,255,.10); --shadow:0 16px 40px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text); background: radial-gradient(1200px 800px at 20% -10%, rgba(122,162,255,.28), transparent 55%),
+      radial-gradient(900px 700px at 85% 10%, rgba(51,209,122,.18), transparent 52%),
+      radial-gradient(1200px 900px at 60% 110%, rgba(255,204,102,.10), transparent 60%),
+      var(--bg);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{
+      padding:26px 18px 10px; position:sticky; top:0; z-index:5;
+      background: linear-gradient(180deg, rgba(11,18,32,.92), rgba(11,18,32,.75), rgba(11,18,32,0));
+      backdrop-filter: blur(10px);
+    }
+    .wrap{max-width:1180px; margin:0 auto; padding:0 18px 40px}
+    .topline{display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; justify-content:space-between}
+    .title h1{margin:0; font-size:20px; letter-spacing:.2px}
+    .title .sub{margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.35}
+    .pillrow{display:flex; gap:8px; flex-wrap:wrap}
+    .pill{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:999px;
+      background: rgba(255,255,255,.04); color:var(--muted); font-size:12px;
+    }
+    .pill b{color:var(--text); font-weight:600}
+    .controls{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:14px;
+    }
+    input[type="search"]{
+      flex:1 1 320px; max-width:520px;
+      padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+      background: rgba(255,255,255,.04); color:var(--text); outline:none;
+    }
+    .btn{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--line);
+      background: rgba(255,255,255,.05); color:var(--text); cursor:pointer;
+      box-shadow: 0 8px 20px rgba(0,0,0,.18);
+    }
+    .btn:hover{background: rgba(255,255,255,.08)}
+    .grid{display:grid; grid-template-columns: 310px 1fr; gap:18px; align-items:start; margin-top:10px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} header{position:relative} }
+    nav{
+      position:sticky; top:156px;
+      border:1px solid var(--line); border-radius:var(--radius); background: rgba(255,255,255,.03);
+      box-shadow: var(--shadow); overflow:hidden;
+    }
+    @media (max-width: 980px){ nav{position:relative; top:auto} }
+    .navhdr{
+      padding:14px 14px 10px; border-bottom:1px solid var(--line);
+      display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .navhdr .kpi{display:flex; gap:10px; align-items:center; color:var(--muted); font-size:12px}
+    .navhdr .kpi b{color:var(--text)}
+    .barwrap{width:140px; height:8px; border-radius:999px; background: rgba(255,255,255,.07); overflow:hidden}
+    .bar{height:100%; width:0%; background: linear-gradient(90deg, rgba(122,162,255,.9), rgba(51,209,122,.9));}
+    .navlist{padding:10px 6px 12px; max-height: 62vh; overflow:auto}
+    .navitem{
+      display:block; padding:10px 12px; border-radius:12px; color:var(--text);
+      margin:6px; border:1px solid transparent;
+    }
+    .navitem small{display:block; color:var(--muted); margin-top:4px; font-size:11px}
+    .navitem:hover{background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.08)}
+    main{display:flex; flex-direction:column; gap:18px}
+    section.card{
+      border:1px solid var(--line); border-radius:var(--radius); background: rgba(255,255,255,.03);
+      box-shadow: var(--shadow); overflow:hidden;
+    }
+    .card .hd{
+      padding:16px 16px 12px; border-bottom:1px solid var(--line);
+      display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .card .hd h2{margin:0; font-size:16px}
+    .card .hd p{margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.4; max-width: 72ch}
+    .card .bd{padding:14px 16px 16px}
+    .two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    @media (max-width: 780px){ .two{grid-template-columns:1fr} }
+    .note{
+      padding:12px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04); color:var(--muted); font-size:13px; line-height:1.45;
+    }
+    .note b{color:var(--text)}
+    .note.good{border-color: rgba(51,209,122,.22); background: rgba(51,209,122,.06)}
+    .note.warn{border-color: rgba(255,204,102,.25); background: rgba(255,204,102,.06)}
+    .note.bad{border-color: rgba(255,107,107,.25); background: rgba(255,107,107,.06)}
+    .mono{font-family:var(--mono)}
+    ul{margin:10px 0 0 18px; color:var(--muted)}
+    li{margin:6px 0}
+    code,kbd{
+      font-family:var(--mono); font-size:12.5px;
+      background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10);
+      padding:2px 6px; border-radius:9px; color:var(--text)
+    }
+    pre{
+      margin:10px 0 0; padding:12px; border-radius:14px; overflow:auto;
+      background: rgba(0,0,0,.30); border:1px solid rgba(255,255,255,.10);
+      font-family:var(--mono); font-size:12.5px; color:var(--text);
+    }
+    .checklist{margin-top:12px; display:flex; flex-direction:column; gap:10px}
+    .item{
+      border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.03);
+      padding:12px; display:flex; gap:10px; align-items:flex-start;
+    }
+    .item input{margin-top:2px; transform: scale(1.1)}
+    .item .txt{flex:1}
+    .item .txt .t{font-size:13.5px; line-height:1.35}
+    .item .txt .m{color:var(--muted); font-size:12.5px; line-height:1.35; margin-top:4px}
+    details{
+      border:1px solid rgba(255,255,255,.10); border-radius:14px; background: rgba(255,255,255,.02);
+      padding:12px; margin-top:10px;
+    }
+    details > summary{cursor:pointer; color:var(--text); font-weight:600}
+    footer{color:var(--muted); font-size:12px; margin-top:26px; text-align:center}
+    .tag{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04); font-size:12px; color:var(--muted)
+    }
+    .tag .dot{width:8px; height:8px; border-radius:999px; background: var(--accent); display:inline-block}
+    .sep{height:1px; background: var(--line); margin:12px 0}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topline">
+      <div class="title">
+        <h1>Session6 — MCP Trading Desk (XAUUSD · H1)</h1>
+        <p class="sub">
+          Guía práctica y auditable para aprender <b>MCP</b> con un solo ejercicio real: <b>Trading Desk local</b> + <b>MetaTrader 5</b> (feed de broker).<br/>
+          Estilo del pensum: <b>herramientas nativas</b> primero (no reinventar), y teoría “manual” solo como contexto.
+        </p>
+      </div>
+      <div class="pillrow">
+        <span class="pill">📁 Base: <b class="mono">C:\IA_Local\scripts\Agentic_AI</b></span>
+        <span class="pill">🧪 Venv: <b class="mono">.venv</b></span>
+        <span class="pill">🧩 Sesión: <b class="mono">Session6</b></span>
+        <span class="pill">🔌 Puerto: <b class="mono">8100</b></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="search" type="search" placeholder="Buscar en la guía (ej: inspector, MT5, uv, puerto, tools, logs…)" />
+      <button class="btn" id="exportBtn">Exportar progreso</button>
+      <button class="btn" id="resetBtn">Reset checklist</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <nav aria-label="Navegación">
+      <div class="navhdr">
+        <div class="kpi">
+          <span>Progreso:</span>
+          <b><span id="kDone">0</span>/<span id="kTotal">0</span></b>
+          <span class="barwrap"><span class="bar" id="bar"></span></span>
+        </div>
+        <div class="kpi">
+          <span class="tag"><span class="dot"></span>Local-first</span>
+          <span class="tag"><span class="dot" style="background:var(--good)"></span>Auditable</span>
+        </div>
+      </div>
+      <div class="navlist" id="nav">
+        <a class="navitem" href="#objetivos">1) Objetivos & alcance<small>Qué vas a lograr y qué NO incluye</small></a>
+        <a class="navitem" href="#contexto">2) Contexto del proyecto<small>Rutas, .venv compartido, puerto 8100</small></a>
+        <a class="navitem" href="#arquitectura">3) Arquitectura MCP<small>Host/Client/Server + Tools/Resources/Prompts</small></a>
+        <a class="navitem" href="#herramientas">4) Herramientas nativas<small>uv + mcp + inspector + MT5</small></a>
+        <a class="navitem" href="#instalacion">5) Instalación & prerequisitos<small>Links oficiales + pasos reproducibles</small></a>
+        <a class="navitem" href="#ejercicio">6) Ejercicio: Trading Desk<small>Qué hace, qué valida, cómo se prueba</small></a>
+        <a class="navitem" href="#inspector">7) Debug con MCP Inspector<small>Ver “este por este”</small></a>
+        <a class="navitem" href="#observabilidad">8) Observabilidad & logs<small>Qué se registra y cómo leerlo</small></a>
+        <a class="navitem" href="#checklists">9) Checklists de validación<small>Setup → tools → decisión trazable</small></a>
+        <a class="navitem" href="#troubleshooting">10) Troubleshooting<small>Puertos, MT5, inspector, errores comunes</small></a>
+        <a class="navitem" href="#roadmap">11) Extensiones futuras<small>VPS/Backtest/API LLM (solo roadmap)</small></a>
+      </div>
+    </nav>
+
+    <main>
+      <!-- 1) Objetivos -->
+      <section class="card" id="objetivos">
+        <div class="hd">
+          <div>
+            <h2>1) Objetivos y alcance</h2>
+            <p>
+              Al finalizar, podrás <b>montar y depurar</b> un servidor MCP local que expone herramientas (tools) para operar un “Trading Desk” auditable:
+              obtiene datos desde <b>MetaTrader 5</b>, calcula señales básicas y deja rastro claro del porqué.
+            </p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note good">
+              <b>Incluye (práctico):</b>
+              <ul>
+                
+                <li><b>UI mínima en navegador</b> (obligatoria): panel simple para probar flujo end‑to‑end.</li><li>MCP real con SDK (Python): server con Tools / Resources / Prompts.</li>
+                <li>Debug con <b>MCP Inspector</b> para ver cada llamada y respuesta.</li>
+                <li>Fuente de datos real: <b>MT5</b> conectado a broker (demo).</li>
+                <li>Guías reproducibles en tu estructura: <span class="mono">Agentic_AI\.venv</span> y <span class="mono">Session6</span>.</li>
+              </ul>
+            </div>
+            <div class="note warn">
+              <b>No incluye (a propósito):</b>
+              <ul>
+                <li>Implementar MCP “a mano” (JSON-RPC/transport). Solo teoría.</li>
+                <li>Volver esto un bot real con dinero real. Aquí es aprendizaje + demo/paper.</li>
+                <li>Pegar código largo dentro del HTML. El HTML guía, el código vive en Session6.</li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Definición de “éxito” (criterio rápido)</summary>
+            <ul>
+              <li>Puedes abrir MCP Inspector, conectar tu servidor y ver Tools listadas.</li>
+              <li>Puedes ejecutar un tool de mercado (XAUUSD) y recibir JSON válido.</li>
+              <li>Puedes ejecutar un tool de “evaluación” y recibir decisión + justificación.</li>
+              <li>Tienes logs mínimos para auditoría (inputs, outputs, decisión final).</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+
+      <!-- 2) Contexto -->
+      <section class="card" id="contexto">
+        <div class="hd">
+          <div>
+            <h2>2) Contexto del proyecto (rutas, venv y puerto)</h2>
+            <p>Esta sesión se integra al pensum existente. Usas un solo entorno Python compartido para todas las sesiones.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="note">
+            <b>Rutas oficiales de este pensum (Windows):</b>
+            <pre class="mono">Base:     C:\IA_Local\scripts\Agentic_AI
+Venv:     C:\IA_Local\scripts\Agentic_AI\.venv
+Sesión 6: C:\IA_Local\scripts\Agentic_AI\Session6</pre>
+            <div class="sep"></div>
+            <b>Puerto estándar del ejercicio:</b> <code>8100</code> (evita conflictos típicos con 8000).
+          </div>
+
+          <div class="checklist" id="checks-contexto"></div>
+
+          <details>
+            <summary>Reglas de oro (para no complicarte)</summary>
+            <ul>
+              
+              <li>Transporte del ejercicio: <b>HTTP</b> (UI web + Inspector sobre el mismo server).</li><li>No crear un venv nuevo por sesión. Todo vive en <span class="mono">.venv</span>.</li>
+              <li>Todo servicio HTTP local del ejercicio usa <code>8100</code>.</li>
+              <li>Si algo falla: primero Inspector + logs, luego cambios.</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+
+      <!-- 3) Arquitectura -->
+      <section class="card" id="arquitectura">
+        <div class="hd">
+          <div>
+            <h2>3) Arquitectura MCP (lo que debes entender)</h2>
+            <p>Tu foco es ver claramente Host/Client/Server y el contrato “herramientas” que conectan el razonamiento con capacidades reales.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note">
+              <b>Componentes (mental model):</b>
+              <ul>
+                <li><b>MCP Server</b>: expone <b>Tools</b> (acciones), <b>Resources</b> (datos) y <b>Prompts</b> (plantillas).</li>
+                <li><b>MCP Client/Host</b>: consume esas herramientas (puede ser un IDE, inspector o tu orquestador).</li>
+                <li><b>Inspector</b>: “laboratorio” para probar tools sin depender de un chat/host externo.</li>
+              </ul>
+            </div>
+            <div class="note good">
+              <b>Diseño del ejercicio (Trading Desk):</b>
+              <ul>
+                <li><b>MarketData Toolset</b>: OHLC/quote de XAUUSD desde MT5.</li>
+                <li><b>Analysis Toolset</b>: indicadores básicos y evaluación de escenario.</li>
+                <li><b>Risk Toolset</b>: validación coherencia SL/TP y riesgo (paper/demo).</li>
+                <li><b>Logs</b>: todo trazable para iteración futura.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sep"></div>
+          <div class="note good">
+            <b>Decisión de implementación (registrada):</b>
+            <ul>
+              <li>El servidor MCP se expone por <b>HTTP</b> en <code>http://localhost:8100</code>.</li>
+              <li>Habrá una <b>UI mínima web</b> (misma app/puerto) para probar “Traer datos / Evaluar / Ver logs”.</li>
+              <li>El <b>MCP Inspector</b> se usa en paralelo para inspección fina de tool calls (payloads/latencia/errores).</li>
+            </ul>
+          </div>
+
+
+          <details>
+            <summary>Teoría “manual” (solo para criterio, NO se implementa)</summary>
+            <div class="note warn" style="margin-top:10px">
+              MCP puede implementarse “a mano” (transporte + JSON-RPC + manejo de mensajes), pero aquí NO lo hacemos:
+              usamos SDK y herramientas nativas. Esta sección existe solo para que sepas qué hay debajo si un día necesitas un híbrido mínimo.
+            </div>
+          </details>
+
+          <div class="checklist" id="checks-arquitectura"></div>
+        </div>
+      </section>
+
+      <!-- 4) Herramientas -->
+      <section class="card" id="herramientas">
+        <div class="hd">
+          <div>
+            <h2>4) Herramientas nativas (camino recomendado)</h2>
+            <p>“No inventar el agua tibia”: usamos herramientas nativas para ensamblar, correr y depurar con fricción mínima.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note">
+              <b>Python (dentro de tu <span class="mono">.venv</span>):</b>
+              <ul>
+                <li><code>mcp</code> — SDK de MCP para servers/clients.</li>
+                <li><code>MetaTrader5</code> — integración con el terminal MT5 (feed del broker).</li>
+                <li><code>uv</code> — runner/gestor moderno para instalar/ejecutar (recomendado).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <b>Node.js (solo para Inspector):</b>
+              <ul>
+                <li><code>npx -y @modelcontextprotocol/inspector</code> — UI de pruebas y debugging.</li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Links oficiales (para instalar / referencia)</summary>
+            <pre class="mono">MCP Python SDK (GitHub): https://github.com/modelcontextprotocol/python-sdk
+MCP Inspector (docs):   https://modelcontextprotocol.io/docs/tools/inspector
+MCP Inspector (GitHub): https://github.com/modelcontextprotocol/inspector
+MetaTrader 5 (oficial): https://www.metatrader5.com/en/download
+MQL5 Python Integration: https://www.mql5.com/en/docs/python_metatrader5
+MetaTrader5 PyPI:       https://pypi.org/project/MetaTrader5/
+Node.js (oficial):      https://nodejs.org/en/download
+uv (Astral):            https://docs.astral.sh/uv/</pre>
+          </details>
+
+          <div class="checklist" id="checks-herramientas"></div>
+        </div>
+      </section>
+
+      <!-- 5) Instalación -->
+      <section class="card" id="instalacion">
+        <div class="hd">
+          <div>
+            <h2>5) Instalación y prerequisitos (pasos reproducibles)</h2>
+            <p>Sin código largo: aquí solo están los pasos, comandos y validaciones mínimas para estar listo.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note warn">
+              <b>Prerequisitos (una sola vez):</b>
+              <ul>
+                <li><b>MetaTrader 5</b> instalado y con cuenta <b>demo</b> conectada.</li>
+                <li><b>Node.js</b> instalado (para ejecutar MCP Inspector con <code>npx</code>).</li>
+                <li>Acceso a la carpeta base: <span class="mono">C:\IA_Local\scripts\Agentic_AI</span>.</li>
+              </ul>
+            </div>
+            <div class="note good">
+              <b>Recomendación de instalación Python:</b>
+              <ul>
+                <li>Reusar tu <span class="mono">.venv</span> compartido.</li>
+                <li>Instalar solo lo faltante (Sesión 6) y validar con un “smoke test”.</li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Comandos sugeridos (PowerShell) — con uv (recomendado)</summary>
+            <pre class="mono">cd C:\IA_Local\scripts\Agentic_AI
+
+# 1) Activar venv (si tu flujo lo requiere explícitamente)
+.\.venv\Scripts\Activate.ps1
+
+# 2) Instalar dependencias de Sesión 6
+uv pip install mcp MetaTrader5
+
+# 3) (Opcional) instalar/actualizar uv
+# Ver: https://docs.astral.sh/uv/</pre>
+          </details>
+
+          <details>
+            <summary>Comandos alternativos — pip clásico</summary>
+            <pre class="mono">cd C:\IA_Local\scripts\Agentic_AI
+.\.venv\Scripts\Activate.ps1
+
+pip install -U mcp MetaTrader5</pre>
+          </details>
+
+          <details>
+            <summary>Inspector (Node.js) — comando base</summary>
+            <pre class="mono"># En cualquier carpeta (siempre que Node esté instalado)
+npx -y @modelcontextprotocol/inspector</pre>
+          </details>
+
+          <details>
+            <summary>Validación rápida de Node.js (recomendado)</summary>
+            <pre class="mono">node -v
+npx -v</pre>
+            <div class="note" style="margin-top:10px">
+              Si estos comandos fallan, instala Node.js desde <code>https://nodejs.org/en/download</code> y vuelve a probar.
+            </div>
+          </details>
+
+          <div class="checklist" id="checks-instalacion"></div>
+        </div>
+      </section>
+
+      <!-- 6) Ejercicio -->
+      <section class="card" id="ejercicio">
+        <div class="hd">
+          <div>
+            <h2>6) Ejercicio: “Trading Desk” (XAUUSD · H1)</h2>
+            <p>Un solo ejercicio que cubre objetivos MCP: tools, recursos, prompts, debugging, y fuente real de datos (MT5).</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="note">
+            <b>Qué hace el Trading Desk (en términos funcionales):</b>
+            <ul>
+              <li><b>MarketData</b>: obtiene barras H1 y/o último precio de XAUUSD desde MT5.</li>
+              <li><b>Analysis</b>: calcula indicadores básicos (ej. EMA/RSI/ATR) y resume contexto.</li>
+              <li><b>Decision</b>: devuelve una recomendación (Entrar / Esperar / Invalidar) + justificación.</li>
+              <li><b>Risk</b>: valida coherencia SL/TP y riesgo máximo (paper primero).</li>
+              <li><b>Audit</b>: guarda logs estructurados (inputs, outputs, decisión).</li>
+            </ul>
+          </div>
+
+          <details>
+            <summary>Tools esperadas (lista conceptual, no código)</summary>
+            <div class="note" style="margin-top:10px">
+              <ul>
+                <li><code>md_get_latest(symbol)</code></li>
+                <li><code>md_get_ohlc(symbol, timeframe, limit)</code></li>
+                <li><code>ta_compute_indicators(symbol, timeframe, limit)</code></li>
+                <li><code>desk_evaluate(symbol, timeframe)</code> → decisión + porqué</li>
+                <li><code>risk_validate(entry, sl, tp, max_risk_pct)</code></li>
+                <li>(Opcional) <code>paper_place_order(...)</code> y <code>paper_manage_position(...)</code></li>
+              </ul>
+              <div class="sep"></div>
+              La lista final de tools exactas se implementa en el código dentro de <span class="mono">Session6</span> (no se pega aquí).
+            </div>
+          </details>
+
+          <details>
+            <summary>Plan A / Plan B (fuente de datos)</summary>
+            <div class="two" style="margin-top:10px">
+              <div class="note good">
+                <b>Plan A (principal):</b> MT5 conectado a broker (demo). Es la ruta “real”.
+              </div>
+              <div class="note warn">
+                <b>Plan B (fallback):</b> CSV/local cache para probar MCP si MT5 da problemas. Solo para bootstrap.
+              </div>
+            </div>
+          </details>
+
+          <div class="checklist" id="checks-ejercicio"></div>
+        </div>
+      </section>
+
+      <!-- 7) Inspector -->
+      <section class="card" id="inspector">
+        <div class="hd">
+          <div>
+            <h2>7) Debug con MCP Inspector (ver “este por este”)</h2>
+            <p>El Inspector es tu “microscopio”. Aquí validas la sesión: tools expuestas, inputs, outputs y errores.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="note">
+            <b>Flujo típico de validación:</b>
+            <ul>
+              
+              <li>Abres la <b>UI web</b> en <code>http://localhost:8100</code> para probar el flujo completo.</li><li>Arrancas el servidor MCP (en <span class="mono">Session6</span>).</li>
+              <li>Abres Inspector y conectas al server (transport configurado).</li>
+              <li>Listas tools → ejecutas <code>md_get_latest</code> → revisas JSON.</li>
+              <li>Ejecutas <code>desk_evaluate</code> → verificas decisión + trazabilidad.</li>
+            </ul>
+          </div>
+
+          <details>
+            <summary>Comando Inspector (recordatorio)</summary>
+            <pre class="mono">npx -y @modelcontextprotocol/inspector</pre>
+          </details>
+
+          <div class="checklist" id="checks-inspector"></div>
+        </div>
+      </section>
+
+      <!-- 8) Observabilidad -->
+      <section class="card" id="observabilidad">
+        <div class="hd">
+          <div>
+            <h2>8) Observabilidad y logs (auditoría)</h2>
+            <p>Tu requisito: poder revisar qué pasó, por qué se decidió y con qué datos. Aquí se define el estándar.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note good">
+              <b>Logs mínimos por tool:</b>
+              <ul>
+                <li><code>timestamp</code>, <code>tool</code>, <code>args</code></li>
+                <li><code>latency_ms</code>, <code>result_summary</code></li>
+                <li>si error: <code>error_type</code>, <code>error_msg</code></li>
+              </ul>
+            </div>
+            <div class="note good">
+              <b>Logs mínimos por decisión:</b>
+              <ul>
+                <li>features clave (multi-TF, indicadores principales)</li>
+                <li>acción elegida (enter/skip/manage)</li>
+                <li>justificación (bullets) + “por qué no”</li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Qué debes poder contestar solo con logs</summary>
+            <ul>
+              <li>¿Qué datos consultó y de qué timeframe?</li>
+              <li>¿Cuál fue el spread/condición de mercado relevante?</li>
+              <li>¿Qué regla/criterio disparó la decisión final?</li>
+              <li>¿Qué alternativa se descartó y por qué?</li>
+            </ul>
+          </details>
+
+          <div class="checklist" id="checks-observabilidad"></div>
+        </div>
+      </section>
+
+      <!-- 9) Checklists -->
+      <section class="card" id="checklists">
+        <div class="hd">
+          <div>
+            <h2>9) Checklists de validación (lo que demuestra que aprendiste)</h2>
+            <p>Esta sección consolida “pasó/no pasó” para la sesión. Si marcas todo, la sesión está completa.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="note">
+            <b>Checklist maestro:</b> usa los checkboxes de cada sección. Exporta tu progreso al final.
+          </div>
+          <div class="checklist" id="checks-master"></div>
+        </div>
+      </section>
+
+      <!-- 10) Troubleshooting -->
+      <section class="card" id="troubleshooting">
+        <div class="hd">
+          <div>
+            <h2>10) Troubleshooting (sin perder horas)</h2>
+            <p>Si algo falla, aquí está el orden de diagnóstico: puertos → venv → MT5 → inspector → logs.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note warn">
+              <b>Puerto ocupado</b>
+              <ul>
+                <li>Todo el ejercicio usa <code>8100</code>.</li>
+                <li>Si falla: revisa qué está usando 8100 y cambia el puerto en config (centralizado).</li>
+              </ul>
+            </div>
+            <div class="note warn">
+              <b>MT5 no responde</b>
+              <ul>
+                <li>¿MT5 está abierto y logueado?</li>
+                <li>¿El símbolo existe en tu broker? (a veces es <code>XAUUSDm</code> o <code>GOLD</code>).</li>
+                <li>¿Tienes historial cargado para H1?</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="two" style="margin-top:14px">
+            <div class="note warn">
+              <b>Inspector no ve tools</b>
+              <ul>
+                <li>¿El server está corriendo?</li>
+                <li>En esta sesión el transporte es <b>HTTP</b>: verifica que el server esté escuchando en <code>http://localhost:8100</code>.</li>
+                <li>Revisa logs del server primero.</li>
+              </ul>
+            </div>
+            <div class="note bad">
+              <b>Errores de entorno (.venv)</b>
+              <ul>
+                <li>Asegúrate de activar <span class="mono">Agentic_AI\.venv</span> y no otro.</li>
+                <li>Valida <code>python -V</code> y <code>pip show mcp</code> / <code>pip show MetaTrader5</code>.</li>
+              </ul>
+            </div>
+          </div>
+
+          <details>
+            <summary>Regla de diagnóstico (la más eficiente)</summary>
+            <div class="note" style="margin-top:10px">
+              1) ¿El server imprime logs al arrancar? → 2) ¿Inspector conecta? → 3) ¿Tool simple responde? → 4) recién ahí evalúas decisiones/estrategia.
+            </div>
+          </details>
+
+          <div class="checklist" id="checks-troubleshooting"></div>
+        </div>
+      </section>
+
+      <!-- 11) Roadmap -->
+      <section class="card" id="roadmap">
+        <div class="hd">
+          <div>
+            <h2>11) Extensiones futuras (roadmap, no parte del ejercicio)</h2>
+            <p>Se deja trazado el camino a proyectos reales: VPS, backtest, forward testing, y LLM por API si decides.</p>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="two">
+            <div class="note">
+              <b>Hacia VPS (sin GPU):</b>
+              <ul>
+                <li>MT5 en VPS + servidores MCP allí.</li>
+                <li>“Cerebro” por API (OpenAI/Gemini) si quieres 24/7 sin GPU.</li>
+                <li>MCP mantiene el contrato: cambias backend, no reescribes todo.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <b>Backtest (QuantPro / históricos):</b>
+              <ul>
+                <li>Reemplazar <b>MarketData</b> por un proveedor histórico.</li>
+                <li>Mismos tools, distinta fuente: pruebas masivas y reproducibles.</li>
+                <li>Luego forward demo para validar latencia y spread real.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="checklist" id="checks-roadmap"></div>
+        </div>
+      </section>
+
+      <footer>
+        Session6 · MCP Trading Desk — checklist guardado en tu navegador (localStorage). Usa “Exportar progreso” para guardar un backup.
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = "session6_checklist_state_v2";
+  const UI = {
+    search: document.getElementById("search"),
+    nav: document.getElementById("nav"),
+    exportBtn: document.getElementById("exportBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    kDone: document.getElementById("kDone"),
+    kTotal: document.getElementById("kTotal"),
+    bar: document.getElementById("bar"),
+    containers: {
+      contexto: document.getElementById("checks-contexto"),
+      arquitectura: document.getElementById("checks-arquitectura"),
+      herramientas: document.getElementById("checks-herramientas"),
+      instalacion: document.getElementById("checks-instalacion"),
+      ejercicio: document.getElementById("checks-ejercicio"),
+      inspector: document.getElementById("checks-inspector"),
+      observabilidad: document.getElementById("checks-observabilidad"),
+      troubleshooting: document.getElementById("checks-troubleshooting"),
+      roadmap: document.getElementById("checks-roadmap"),
+      master: document.getElementById("checks-master"),
+    }
+  };
+
+  const CHECKS = [
+    // Contexto
+    {id:"ctx_paths", group:"contexto", title:"Confirmé rutas y estructura (Base / .venv / Session6)", meta:"No crear venv nuevo. Todo dentro de C:\\IA_Local\\scripts\\Agentic_AI."},
+    {id:"ctx_port", group:"contexto", title:"Puerto estándar fijado en 8100 para este ejercicio", meta:"Evita conflicto típico con 8000; documentado en esta sesión."},
+    {id:"ctx_http", group:"contexto", title:"Transporte decidido: HTTP (server MCP en localhost:8100)", meta:"Decisión registrada para soportar UI web + Inspector."},
+    {id:"ctx_uiweb", group:"contexto", title:"UI mínima en navegador es parte obligatoria del ejercicio", meta:"Panel simple para probar Traer datos / Evaluar / Logs."},
+    {id:"ctx_scope", group:"contexto", title:"Entiendo que el HTML guía pasos; el código vive en Session6", meta:"No pegamos código largo en el HTML."},
+
+    // Arquitectura
+    {id:"arch_model", group:"arquitectura", title:"Puedo explicar Host/Client/Server en MCP con mis palabras", meta:"Qué corre dónde y cómo se conectan."},
+    {id:"arch_primitives", group:"arquitectura", title:"Distingo Tools vs Resources vs Prompts y cuándo usar cada uno", meta:"Tools=acciones; Resources=datos; Prompts=plantillas."},
+    {id:"arch_manual_theory", group:"arquitectura", title:"Manual MCP queda entendido como teoría (no se implementa)", meta:"Solo criterio; usamos SDK + herramientas nativas."},
+
+    // Herramientas
+    {id:"tools_uv", group:"herramientas", title:"Usaré uv como camino recomendado (productividad)", meta:"Runner/installer moderno; alternativa pip/venv solo si hace falta."},
+    {id:"tools_mcp", group:"herramientas", title:"Instalaré/validaré mcp (Python SDK) en .venv", meta:"Servidor MCP y contratos de tools."},
+    {id:"tools_mt5_py", group:"herramientas", title:"Instalaré/validaré MetaTrader5 (Python) en .venv", meta:"Bridge Python ↔ terminal MT5."},
+    {id:"tools_inspector", group:"herramientas", title:"Tengo Node.js listo para ejecutar MCP Inspector con npx", meta:"Inspector es clave para ver cada llamada."},
+
+    // Instalación
+    {id:"inst_mt5", group:"instalacion", title:"MetaTrader 5 instalado y logueado en demo", meta:"Descarga oficial: metatrader5.com/en/download"},
+    {id:"inst_symbol", group:"instalacion", title:"Confirmé el símbolo del broker (XAUUSD / XAUUSDm / GOLD) y TF H1", meta:"El nombre puede variar según broker."},
+    {id:"inst_deps", group:"instalacion", title:"Dependencias Sesión 6 instaladas en .venv (mcp, MetaTrader5, uv si aplica)", meta:"Validar con pip show / import tests."},
+    {id:"inst_inspector_run", group:"instalacion", title:"Puedo lanzar MCP Inspector (npx) sin errores", meta:"Inspector abre UI para conectar al server."},
+    {id:"inst_node_check", group:"instalacion", title:"Validé Node.js (node -v) y npx (npx -v)", meta:"Si falla, instalar desde nodejs.org/en/download."},
+
+    // Ejercicio
+    {id:"ex_server", group:"ejercicio", title:"Servidor MCP Trading Desk puede arrancar localmente desde Session6", meta:"Debe imprimir logs al inicio."},
+    {id:"ex_ui", group:"ejercicio", title:"UI web mínima abre en http://localhost:8100 y permite probar el flujo", meta:"Traer datos → Evaluar → ver respuesta/logs."},
+    {id:"ex_md", group:"ejercicio", title:"Tool de MarketData devuelve JSON válido para XAUUSD H1 (OHLC o quote)", meta:"Fuente ideal: MT5; fallback: CSV solo si falla."},
+    {id:"ex_eval", group:"ejercicio", title:"Tool de evaluación devuelve decisión + justificación", meta:"Entrar/Esperar/Invalidar con razones claras."},
+    {id:"ex_risk", group:"ejercicio", title:"Validación de riesgo/coherencia SL/TP funciona (paper primero)", meta:"Guardrails antes de cualquier ejecución real."},
+
+    // Inspector
+    {id:"insp_connect", group:"inspector", title:"Inspector conecta al servidor MCP y lista tools", meta:"Puedo ver inputs/outputs de cada tool."},
+    {id:"insp_call", group:"inspector", title:"Ejecuto un tool simple desde Inspector y reviso respuesta", meta:"Esto valida todo el cableado."},
+
+    // Observabilidad
+    {id:"obs_tool_logs", group:"observabilidad", title:"Cada tool genera logs mínimos (tool/args/latency/result)", meta:"Sin logs, no hay auditoría ni iteración."},
+    {id:"obs_decision_logs", group:"observabilidad", title:"Cada decisión queda registrada con ‘por qué’ y ‘por qué no’", meta:"Base para iteración futura (backtest/forward)."},
+    {id:"obs_export", group:"observabilidad", title:"Puedo exportar progreso y/o logs para revisión", meta:"Exportar progreso aquí; logs en el proyecto."},
+
+    // Troubleshooting
+    {id:"ts_order", group:"troubleshooting", title:"Sigo el orden de diagnóstico (server logs → inspector → tools)", meta:"Evita perder horas antes de tiempo."},
+    {id:"ts_port", group:"troubleshooting", title:"Sé cómo detectar conflicto de puerto (8100) y corregirlo", meta:"Centralizar configuración."},
+    {id:"ts_env", group:"troubleshooting", title:"Sé verificar que estoy en el .venv correcto", meta:"python -V, where python, pip show mcp."},
+
+    // Roadmap
+    {id:"rm_vps", group:"roadmap", title:"Entiendo el camino a VPS (MT5+services) manteniendo MCP", meta:"Cambias backend, mantienes contratos."},
+    {id:"rm_backtest", group:"roadmap", title:"Entiendo el camino a backtest (QuantPro/históricos) reemplazando MarketData", meta:"Mismos tools; otra fuente."},
+    {id:"rm_api_llm", group:"roadmap", title:"Entiendo opción futura: LLM por API para 24/7 sin GPU", meta:"Roadmap, no parte del ejercicio."},
+  ];
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }catch(e){ return {}; }
+  }
+  function saveState(state){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function el(tag, attrs={}, children=[]){
+    const n=document.createElement(tag);
+    for(const [k,v] of Object.entries(attrs)){
+      if(k==="class") n.className=v;
+      else if(k==="html") n.innerHTML=v;
+      else n.setAttribute(k,v);
+    }
+    children.forEach(c=> n.appendChild(typeof c==="string"?document.createTextNode(c):c));
+    return n;
+  }
+
+  function render(){
+    // clear containers
+    Object.values(UI.containers).forEach(c=>{ if(c) c.innerHTML=""; });
+
+    const state = loadState();
+    for(const c of CHECKS){
+      const checked = !!state[c.id];
+      const cb = el("input",{type:"checkbox","data-id":c.id});
+      cb.checked = checked;
+      cb.addEventListener("change", ()=>{
+        const st = loadState();
+        st[c.id]=cb.checked;
+        saveState(st);
+        updateKPI();
+        updateMaster();
+      });
+
+      const node = el("div",{class:"item"},
+        [cb,
+         el("div",{class:"txt"},[
+           el("div",{class:"t"},[c.title]),
+           c.meta ? el("div",{class:"m"},[c.meta]) : el("div",{class:"m"},[])
+         ])
+        ]
+      );
+
+      const container = UI.containers[c.group];
+      if(container) container.appendChild(node);
+    }
+
+    updateKPI();
+    updateMaster();
+  }
+
+  function updateKPI(){
+    const state=loadState();
+    const total=CHECKS.length;
+    const done=CHECKS.reduce((acc,c)=> acc + (state[c.id]?1:0), 0);
+    UI.kTotal.textContent = total;
+    UI.kDone.textContent = done;
+    UI.bar.style.width = total? Math.round(done/total*100)+"%":"0%";
+  }
+
+  function updateMaster(){
+    // Master checklist shows a condensed view: remaining + key milestones
+    const state=loadState();
+    const master = UI.containers.master;
+    if(!master) return;
+    master.innerHTML = "";
+
+    const remaining = CHECKS.filter(c=>!state[c.id]);
+    const key = [
+      "inst_mt5","inst_deps","inst_node_check","inst_inspector_run","insp_connect","ex_ui","ex_md","ex_eval","obs_decision_logs"
+    ];
+
+    master.appendChild(el("div",{class:"note"},[
+      el("b",{},["Estado rápido: "]),
+      `${CHECKS.length-remaining.length}/${CHECKS.length} completados. `,
+      remaining.length ? `Pendientes: ${remaining.length}.` : "¡Todo completo!"
+    ]));
+
+    master.appendChild(el("div",{class:"sep"}));
+
+    master.appendChild(el("div",{class:"note good"},[
+      el("b",{},["Hitos clave (mínimo para aprobar sesión):"]),
+      el("ul",{}, key.map(id=>{
+        const c=CHECKS.find(x=>x.id===id);
+        const ok=!!state[id];
+        const label = (ok?"✅ ":"⬜ ") + (c?c.title:id);
+        return el("li",{},[label]);
+      }))
+    ]));
+
+    if(remaining.length){
+      master.appendChild(el("details",{},[
+        el("summary",{},["Ver pendientes (todos)"]),
+        el("div",{class:"note", style:"margin-top:10px"},[
+          el("ul",{}, remaining.slice(0,60).map(c=> el("li",{},[c.title])))
+        ])
+      ]));
+    }
+  }
+
+  function exportProgress(){
+    const state = loadState();
+    const done = CHECKS.filter(c=>state[c.id]).length;
+    const payload = {
+      session: "Session6",
+      storageKey: STORAGE_KEY,
+      done,
+      total: CHECKS.length,
+      timestamp: new Date().toISOString(),
+      checkedIds: Object.keys(state).filter(k=>state[k])
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`session6_progress_${new Date().toISOString().replace(/[:.]/g,"-")}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetAll(){
+    if(!confirm("¿Resetear todos los checkboxes de Session6?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+
+  function applySearch(q){
+    q = (q||"").trim().toLowerCase();
+    const sections = document.querySelectorAll("main section.card");
+    const navItems = UI.nav.querySelectorAll(".navitem");
+    if(!q){
+      sections.forEach(s=> s.style.display="");
+      navItems.forEach(a=> a.style.display="");
+      return;
+    }
+    const hits = new Set();
+    CHECKS.forEach(c=>{
+      const hay=(c.title+" "+(c.meta||"")+" "+c.group).toLowerCase();
+      if(hay.includes(q)) hits.add(c.group);
+    });
+    // Also search in section text
+    sections.forEach(s=>{
+      const txt = s.innerText.toLowerCase();
+      const id = (s.getAttribute("id")||"");
+      const ok = txt.includes(q) || hits.has(id);
+      s.style.display = ok ? "" : "none";
+    });
+    navItems.forEach(a=>{
+      const href=(a.getAttribute("href")||"");
+      const id=href.startsWith("#")?href.slice(1):href;
+      const ok = document.getElementById(id) && document.getElementById(id).style.display !== "none";
+      a.style.display = ok ? "" : "none";
+    });
+  }
+
+  UI.exportBtn.addEventListener("click", exportProgress);
+  UI.resetBtn.addEventListener("click", resetAll);
+  UI.search.addEventListener("input", (e)=> applySearch(e.target.value));
+
+  render();
+</script>
+</body>
+</html>
