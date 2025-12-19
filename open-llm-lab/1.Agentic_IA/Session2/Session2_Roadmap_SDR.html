@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sesión 2 · Runtime Local de Agentes SDR + Chat UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --bg-alt: #0b1220;
+      --card: #020617;
+      --card-alt: #020617;
+      --border: #1e293b;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.12);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --code-bg: #020617;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #111827 0, #020617 50%, #020617 100%);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .sidebar {
+      width: 260px;
+      background: #020617;
+      border-right: 1px solid var(--border);
+      padding: 1rem 0.75rem 1.5rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .logo {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-right: 0.25rem;
+    }
+
+    .pill span.dot {
+      width: 0.35rem;
+      height: 0.35rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    nav {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    nav a {
+      display: block;
+      padding: 0.3rem 0.5rem;
+      border-radius: 0.4rem;
+      color: var(--muted);
+      text-decoration: none;
+      margin-bottom: 0.15rem;
+    }
+
+    nav a:hover {
+      background: #020617;
+      color: var(--text);
+    }
+
+    nav a.active {
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--accent);
+    }
+
+    .nav-section-title {
+      margin-top: 0.7rem;
+      margin-bottom: 0.2rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6b7280;
+    }
+
+    .main {
+      flex: 1;
+      padding: 1.25rem 1.5rem 2.5rem;
+      overflow-y: auto;
+    }
+
+    .section {
+      max-width: 980px;
+      margin: 0 auto 1.25rem auto;
+    }
+
+    .section h2 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1.25rem;
+    }
+
+    .section > p {
+      margin: 0.25rem 0 0.6rem 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-radius: 999px;
+      padding: 0.12rem 0.55rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .badge.green {
+      border-color: rgba(34, 197, 94, 0.4);
+      color: var(--accent);
+      background: rgba(34, 197, 94, 0.08);
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 0.9rem;
+      border: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.6rem;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.8);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .pill-mini {
+      font-size: 0.7rem;
+      border-radius: 999px;
+      padding: 0.08rem 0.45rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.6rem;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        padding: 1rem 0.8rem 2.2rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .grid, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+    }
+
+    .check-item input[type="checkbox"] {
+      margin-top: 0.15rem;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .check-item label {
+      cursor: pointer;
+    }
+
+    code, pre {
+      font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: var(--code-bg);
+      border-radius: 0.4rem;
+      border: 1px solid #1f2937;
+      font-size: 0.8rem;
+    }
+
+    code {
+      padding: 0.12rem 0.28rem;
+    }
+
+    pre {
+      padding: 0.6rem 0.7rem;
+      overflow-x: auto;
+      white-space: pre;
+      margin: 0.4rem 0;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.25rem;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0.1rem 0.45rem;
+      color: var(--muted);
+    }
+
+    .tag.green {
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    details {
+      background: #020617;
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      margin-bottom: 0.55rem;
+      padding: 0.55rem 0.7rem;
+    }
+
+    details[open] {
+      border-color: rgba(34, 197, 94, 0.4);
+      background: radial-gradient(circle at top left, #020617 0, #020617 60%, #020617 100%);
+    }
+
+    details summary {
+      list-style: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary span.chevron {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    details .details-body {
+      margin-top: 0.45rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-left: 2px solid var(--border);
+      padding-left: 0.6rem;
+      margin-top: 0.3rem;
+    }
+
+    .highlight {
+      background: var(--accent-soft);
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.55rem;
+      font-size: 0.85rem;
+      border: 1px dashed rgba(34, 197, 94, 0.35);
+    }
+
+    .pill-status {
+      font-size: 0.7rem;
+      padding: 0.12rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .pill-status.ok {
+      color: var(--accent);
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.06);
+    }
+
+    .prompt-example {
+      background: #020617;
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.7rem;
+      font-size: 0.86rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .prompt-example strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .pill-small {
+      font-size: 0.72rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0.08rem 0.4rem;
+      color: var(--muted);
+      margin-left: 0.3rem;
+    }
+
+    .kbd {
+      display: inline-block;
+      border-radius: 0.35rem;
+      border: 1px solid #4b5563;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.75rem;
+      font-family: inherit;
+      background: #020617;
+      color: #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">Sesión 2 · Runtime de Agentes</div>
+  <div class="subtitle">Agente SDR local + herramientas + UI de chat</div>
+  <div>
+    <span class="pill"><span class="dot"></span> Modo: Local-first</span>
+    <span class="pill">Modelo: qwen2.5:7b (Ollama)</span>
+  </div>
+
+  <nav>
+    <div class="nav-section-title">Navegación</div>
+    <a href="#overview" class="active">1. Visión general</a>
+    <a href="#arquitectura">2. Arquitectura del agente</a>
+    <a href="#prompt">3. Prompt Engineering (SDR_ROLE)</a>
+    <a href="#tools-session">4. Herramientas de esta sesión</a>
+    <a href="#tools-catalogo">5. Catálogo de herramientas típicas</a>
+    <a href="#api-ui">6. API & UI del chat</a>
+    <a href="#ejercicios">7. Ejercicios guiados</a>
+    <a href="#recursos">8. Recursos externos</a>
+  </nav>
+</aside>
+
+<main class="main">
+  <!-- 1. Overview -->
+  <section class="section" id="overview">
+    <div class="badge-row">
+      <span class="badge green">Sesión 2 completada en código</span>
+      <span class="badge">Agente + Herramientas + UI</span>
+    </div>
+    <h2>Sesión 2 · Agente SDR local con runtime de herramientas</h2>
+    <p>
+      En la Sesión&nbsp;2 pasaste de tener un <strong>endpoint de chat suelto</strong> a un
+      <strong>runtime de agentes local</strong> completo, capaz de usar herramientas y
+      exponerse tanto vía API como con una interfaz de chat en el navegador.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Objetivo de la sesión</div>
+          <span class="pill-mini">Meta principal</span>
+        </div>
+        <div class="card-body">
+          Construir un <strong>Agente SDR local</strong> que:
+          <ul>
+            <li>Use un modelo de Ollama (<code>qwen2.5:7b</code>).</li>
+            <li>Disponga de un conjunto de herramientas (URL, fecha/hora, etc.).</li>
+            <li>Tenga un <em>rol</em> bien definido (prompt de sistema <code>SDR_ROLE</code>).</li>
+            <li>Exponga endpoints <code>/sdr/email</code> y <code>/sdr/chat</code>.</li>
+            <li>Tenga una UI simple de chat en <code>/sdr/chat-ui</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Qué te llevas de esta sesión</div>
+          <span class="pill-mini">Resultado práctico</span>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li>Un runtime con <strong>Agent + Runner + ToolRouter</strong> para modelos locales.</li>
+            <li>Un <strong>Agente SDR</strong> capaz de analizar webs (cuando se puede) y redactar correos.</li>
+            <li>Una UI de chat local para hablar con el agente y ver cómo usa sus herramientas.</li>
+            <li>Una plantilla de <strong>prompt engineering</strong> reutilizable para futuros agentes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Checklist rápido de progreso</div>
+        <span class="pill-status ok" id="progress-pill">En curso</span>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <div class="check-item">
+            <input type="checkbox" id="s2-check-1" />
+            <label for="s2-check-1">
+              Entiendo la diferencia entre un <strong>chat simple</strong> y un <strong>agente con herramientas</strong>.
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-check-2" />
+            <label for="s2-check-2">
+              Puedo explicar qué hace cada pieza: <code>Agent</code>, <code>AgentRunner</code>,
+              <code>ToolRouter</code> y <code>Tool</code>.
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-check-3" />
+            <label for="s2-check-3">
+              He levantado el servidor en el puerto <code>8100</code> y probado la UI de chat en
+              <code>/sdr/chat-ui</code>.
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-check-4" />
+            <label for="s2-check-4">
+              He visto al agente usar sus herramientas (<code>fetch_html</code> y
+              <code>get_current_datetime</code>) dentro de una conversación.
+            </label>
+          </div>
+        </div>
+        <div class="note">
+          Los checks se guardan en <strong>localStorage</strong> para esta sesión en este navegador.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Arquitectura -->
+  <section class="section" id="arquitectura">
+    <h2>Arquitectura del runtime de agentes</h2>
+    <p>
+      Esta sesión introduce la mentalidad de <strong>“Agente + Herramientas”</strong> funcionando en tu PC,
+      encima de modelos locales servidos por Ollama.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Piezas principales</div>
+          <span class="pill-mini">Agent / Runner / Router</span>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li><strong>Agent</strong>:
+              <ul>
+                <li>Tiene <em>name</em>, <em>role</em> (prompt de sistema), <em>model_name</em> y <em>tools</em>.</li>
+                <li>Conserva su <strong>memoria</strong> (historial de mensajes).</li>
+                <li>Usa un cliente LLM local (<code>call_llm_local</code>) para hablar con Ollama.</li>
+              </ul>
+            </li>
+            <li><strong>AgentRunner</strong>:
+              <ul>
+                <li>Implementa el bucle percepción → pensamiento → acción → reflexión.</li>
+                <li>Interpreta las tool-calls devueltas por el modelo.</li>
+                <li>Decide cuándo parar (respuesta final al usuario).</li>
+              </ul>
+            </li>
+            <li><strong>ToolRouter</strong>:
+              <ul>
+                <li>Registra cada <code>Tool</code> por nombre.</li>
+                <li>Cuando el modelo pide <code>{"tool": "fetch_html", "args": {...}}</code>,
+                    el router invoca la función Python correspondiente.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Flujo alto nivel de una petición</div>
+          <span class="pill-mini">Ciclo de acción</span>
+        </div>
+        <div class="card-body">
+          <ol>
+            <li>El usuario escribe un mensaje (en Swagger o en la UI de chat).</li>
+            <li><code>AgentRunner.run(...)</code> construye el contexto:
+              <ul>
+                <li>Prompt de sistema (<code>SDR_ROLE</code>).</li>
+                <li>Historial de la conversación.</li>
+                <li>Mensaje de usuario actual.</li>
+              </ul>
+            </li>
+            <li>El modelo responde con texto normal o con un JSON que indica una <strong>tool-call</strong>.</li>
+            <li>El <strong>ToolRouter</strong> ejecuta la herramienta Python pedida.</li>
+            <li>El resultado se añade al contexto y se vuelve a llamar al modelo si hace falta.</li>
+            <li>Cuando el modelo deja de llamar herramientas, se devuelve la respuesta final.</li>
+          </ol>
+          <div class="highlight">
+            Este mismo patrón servirá después para agentes de RAG, SQL, automatización, etc.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Prompt Engineering -->
+  <section class="section" id="prompt">
+    <h2>Prompt Engineering del agente SDR (<code>SDR_ROLE</code>)</h2>
+    <p>
+      El rol define <strong>cómo piensa</strong> el agente. En esta sesión se construyó un prompt estructurado
+      que separa claramente el modo <em>chat normal</em> del modo <em>SDR</em>.
+    </p>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Esqueleto lógico del rol</div>
+        <span class="pill-mini">Componentes del prompt</span>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li><strong>1) Comportamiento general</strong>
+            <ul>
+              <li>Sólo actúa como SDR cuando el usuario lo pide explícitamente.</li>
+              <li>Para preguntas normales (ej. “¿Qué día es hoy?”) responde de forma simple y directa.</li>
+            </ul>
+          </li>
+          <li><strong>2) Uso de herramientas</strong>
+            <ul>
+              <li>Reglas claras para cuándo usar <code>get_current_datetime</code>, <code>fetch_html</code>, etc.</li>
+              <li>Prohibido inventar fechas: debe llamar a <code>get_current_datetime</code>.</li>
+            </ul>
+          </li>
+          <li><strong>3) Activación del modo SDR</strong>
+            <ul>
+              <li>Se activa sólo si el usuario pide analizar empresas, investigar URLs o redactar correos.</li>
+              <li>En ese modo sí puede usar todas las herramientas y redactar mensajes de prospección.</li>
+            </ul>
+          </li>
+          <li><strong>4) Manejo de errores <code>[WEB_ERROR]</code></strong>
+            <ul>
+              <li>Cuando <code>fetch_html</code> no puede leer la web (403/404, etc.), el rol le ordena:</li>
+              <li>mencionar brevemente el problema,</li>
+              <li>seguir con un correo genérico basado en la información disponible,</li>
+              <li>hacer preguntas para ajustar (otra URL, contacto específico, etc.).</li>
+            </ul>
+          </li>
+          <li><strong>5) Estilo</strong>
+            <ul>
+              <li>Profesional, breve, orientado a acción en modo SDR.</li>
+              <li>Conversacional y directo en modo chat normal.</li>
+              <li>Nunca devolver JSON al usuario final: siempre lenguaje natural.</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <details>
+      <summary>
+        Ver mini-plantilla de rol reutilizable
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="details-body">
+        <p>
+          Esta es una mini-plantilla textual que puedes adaptar para futuros agentes:
+        </p>
+        <pre>
+[Identidad / Rol]
+Eres un &lt;tipo de agente&gt; especializado en &lt;dominio&gt;. Solo debes activar ese rol especializado
+cuando el usuario lo pida explícitamente.
+
+[Comportamiento general]
+- Para preguntas normales, responde de forma corta, clara y directa.
+- No asumas tareas avanzadas ni prospección si el usuario no las solicita.
+
+[Uso de herramientas]
+- Usa herramientas solo cuando aporten valor.
+- Define reglas claras para herramientas críticas (fechas, SQL, RAG, etc.).
+- Nunca inventes información que deba provenir de una herramienta (fechas, consultas, etc.).
+
+[Modo especializado ON]
+Actívalo cuando el usuario:
+- mencione &lt;acciones clave&gt; (ej. "analiza esta empresa", "haz un correo de prospección").
+En este modo:
+- usa la lista completa de herramientas,
+- sigue el estilo correspondiente (profesional, técnico, etc.).
+
+[Manejo de errores]
+- Si alguna herramienta devuelve un error o datos incompletos:
+  * menciona brevemente el problema,
+  * ofrece una alternativa o una versión genérica,
+  * formula preguntas para recopilar más contexto.
+
+[Estilo]
+- Resume, prioriza y orienta a acción.
+- No devuelvas JSON al usuario final; solo texto legible.
+        </pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- 4. Herramientas de esta sesión -->
+  <section class="section" id="tools-session">
+    <h2>Herramientas usadas en esta sesión</h2>
+    <p>
+      El agente SDR trabaja con un conjunto concreto de herramientas implementadas en Python.
+      Aquí se resumen a nivel conceptual, con ejemplos de uso desde el chat.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><code>fetch_html(url)</code></div>
+          <span class="pill-mini">Web → HTML / [WEB_ERROR]</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Descarga el HTML de una página web usando la conexión de tu PC.
+            Si la respuesta no es 200 (403, 404, etc.) devuelve un mensaje
+            que empieza por <code>[WEB_ERROR]</code> para que el agente sepa que hubo problema.
+          </p>
+          <div class="prompt-example">
+            <strong>Ejemplo de prompt:</strong><br />
+            «Analiza <code>https://openai.com</code> y dime cuál es su propuesta de valor.»
+          </div>
+          <div class="note">
+            En webs protegidas (como OpenAI) verás el comportamiento de degradación:
+            menciona el error y genera una propuesta de valor genérica.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><code>summarize_text(text, max_chars)</code></div>
+          <span class="pill-mini">Recorte de texto</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Recorta textos muy largos para no saturar al modelo. No es un resumen inteligente;
+            sólo una reducción de tamaño para que el LLM haga el resto del trabajo.
+          </p>
+          <div class="prompt-example">
+            <strong>Uso típico:</strong><br />
+            Internamente, el agente puede llamar a esta tool después de
+            <code>fetch_html</code> si la web devuelve demasiado texto.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><code>extract_value_proposition(raw_html)</code></div>
+          <span class="pill-mini">HTML → contexto limpio</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Limpia un poco el HTML (espacios, saltos) y lo recorta, produciendo un texto más manejable
+            que el LLM puede usar para inferir la propuesta de valor de la empresa.
+          </p>
+          <div class="prompt-example">
+            <strong>Uso típico:</strong><br />
+            Secuencia lógica: <code>fetch_html</code> → <code>extract_value_proposition</code> → análisis SDR.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><code>generate_email_draft(...)</code></div>
+          <span class="pill-mini">Plantilla de correo</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Construye un prompt de alto nivel para que el modelo redacte un correo de prospección,
+            incluyendo contexto de la empresa, persona objetivo, tono e idioma.
+          </p>
+          <div class="prompt-example">
+            <strong>Ejemplo de uso desde el chat:</strong><br />
+            «Con lo que ya sabes de <code>https://ejemplo.com</code>, redacta un correo de
+            prospección para el CTO, en tono profesional y en español.»
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><code>get_current_datetime()</code></div>
+          <span class="pill-mini">Fecha y hora reales</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Devuelve la fecha y hora actuales en formato ISO 8601 y humano (UTC).
+            El rol obliga a usarla cuando se preguntan cosas como «¿qué día es hoy?».
+          </p>
+          <div class="prompt-example">
+            <strong>Ejemplos de prompts:</strong><br />
+            «¿Qué día es hoy?»<br />
+            «Usa tu herramienta interna de fecha y hora y dime la fecha actual.»
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Catálogo de herramientas típicas -->
+  <section class="section" id="tools-catalogo">
+    <h2>Catálogo de herramientas típicas para agentes</h2>
+    <p>
+      Más allá de las tools de esta sesión, los agentes modernos suelen usar una
+      colección recurrente de herramientas. Esta lista sirve como mapa mental para
+      futuras sesiones y proyectos profesionales.
+    </p>
+
+    <details open>
+      <summary>
+        Herramientas de datos, búsqueda y RAG
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="details-body">
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Búsqueda web</div>
+              <span class="pill-mini">Web search</span>
+            </div>
+            <div class="card-body">
+              Consultas a buscadores (Google/Bing) o APIs como SerpAPI/Tavily para obtener
+              información fresca (noticias, precios, documentación reciente).
+              <div class="tag-row">
+                <span class="tag">SerpAPI</span>
+                <span class="tag">Tavily</span>
+                <span class="tag">Exa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Vector stores y RAG</div>
+              <span class="pill-mini">Vector search</span>
+            </div>
+            <div class="card-body">
+              Conectan al agente con índices semánticos (Chroma, Pinecone, File Search, etc.)
+              para implementar RAG: preguntas sobre documentos, bases de conocimiento, etc.
+              <div class="tag-row">
+                <span class="tag">Chroma</span>
+                <span class="tag">Pinecone</span>
+                <span class="tag">OpenAI File Search</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Carga y búsqueda de archivos</div>
+              <span class="pill-mini">Document loaders</span>
+            </div>
+            <div class="card-body">
+              Abren y parsean PDFs, Word, Excel, CSV, Markdown, etc. muy usados para
+              sistemas de «hazme preguntas sobre este archivo».
+              <div class="tag-row">
+                <span class="tag">PDF</span>
+                <span class="tag">DOCX</span>
+                <span class="tag">CSV</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">SQL y bases de datos</div>
+              <span class="pill-mini">SQL tools</span>
+            </div>
+            <div class="card-body">
+              Herramientas tipo <em>SQLDatabaseToolkit</em> permiten al agente inspeccionar el esquema
+              de una BD, generar consultas y ejecutarlas de forma controlada.
+              <div class="tag-row">
+                <span class="tag">PostgreSQL</span>
+                <span class="tag">MySQL</span>
+                <span class="tag">SQLite</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        Herramientas de APIs, automatización y oficina
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="details-body">
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">HTTP / REST</div>
+              <span class="pill-mini">Requests / OpenAPI</span>
+            </div>
+            <div class="card-body">
+              Permiten hacer <code>GET</code>/<code>POST</code> a APIs de terceros (clima, finanzas, CRM...),
+              o generar clientes basados en especificaciones OpenAPI.
+              <div class="tag-row">
+                <span class="tag">RequestsToolkit</span>
+                <span class="tag">OpenAPIToolkit</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Automatización SaaS</div>
+              <span class="pill-mini">Zapier / Slack / Jira</span>
+            </div>
+            <div class="card-body">
+              Conectan el agente con servicios como Slack, Jira, Notion o Zapier, para crear
+              tareas, enviar mensajes, abrir tickets, etc.
+              <div class="tag-row">
+                <span class="tag">Zapier</span>
+                <span class="tag">Slack</span>
+                <span class="tag">Jira</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Correo y calendario</div>
+              <span class="pill-mini">Gmail / O365</span>
+            </div>
+            <div class="card-body">
+              Tools para leer/enviar correos y gestionar eventos de calendario. Útiles para
+              agentes SDR avanzados, asistentes personales, etc.
+              <div class="tag-row">
+                <span class="tag">Gmail API</span>
+                <span class="tag">Office365</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Hojas de cálculo y BI</div>
+              <span class="pill-mini">Spreadsheets / BI</span>
+            </div>
+            <div class="card-body">
+              Integraciones con Excel, Google Sheets o datasets de Power BI para análisis de datos
+              controlado por lenguaje natural.
+              <div class="tag-row">
+                <span class="tag">Excel</span>
+                <span class="tag">Google Sheets</span>
+                <span class="tag">Power BI</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        Herramientas de cómputo, análisis y multimedia
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="details-body">
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Ejecución de código</div>
+              <span class="pill-mini">Python / REPL</span>
+            </div>
+            <div class="card-body">
+              Entornos controlados donde el agente puede ejecutar Python u otros lenguajes para
+              cálculos, gráficos, análisis de datos, etc.
+              <div class="tag-row">
+                <span class="tag">Code Interpreter</span>
+                <span class="tag">PythonREPL</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">DataFrames y tablas</div>
+              <span class="pill-mini">Pandas / análisis tabular</span>
+            </div>
+            <div class="card-body">
+              Tools que permiten filtrar, agrupar y analizar DataFrames (por ejemplo, con pandas)
+              sin que tengas que escribir tú todo el código.
+              <div class="tag-row">
+                <span class="tag">Pandas</span>
+                <span class="tag">polars</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Cálculo matemático</div>
+              <span class="pill-mini">Calculator / Wolfram</span>
+            </div>
+            <div class="card-body">
+              Para operaciones numéricas exactas, estadística y fórmulas complejas sin depender
+              de la “intuición” del modelo.
+              <div class="tag-row">
+                <span class="tag">Calculator</span>
+                <span class="tag">WolframAlpha</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Audio, visión e imágenes</div>
+              <span class="pill-mini">Multimodal</span>
+            </div>
+            <div class="card-body">
+              Generación de imágenes, análisis de imágenes, transcripción de audio, TTS, etc.
+              Se usan para asistentes multimodales y flujos creativos.
+              <div class="tag-row">
+                <span class="tag">ImageGeneration</span>
+                <span class="tag">Speech-to-Text</span>
+                <span class="tag">Vision</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>
+        Herramientas de navegación de navegador y sistema
+        <span class="chevron">▼</span>
+      </summary>
+      <div class="details-body">
+        <div class="grid">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Navegador controlado</div>
+              <span class="pill-mini">Browser automation</span>
+            </div>
+            <div class="card-body">
+              Uso de navegadores headless (Playwright, Puppeteer) para permitir que el agente
+              “navegue” páginas complejas, rellene formularios, etc.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Uso de computadora</div>
+              <span class="pill-mini">Computer use</span>
+            </div>
+            <div class="card-body">
+              Herramientas que dan al agente la posibilidad de interactuar con ventanas del sistema,
+              archivos locales, menús, etc., siempre bajo fuerte control.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">JSON & configuración</div>
+              <span class="pill-mini">JsonToolkit</span>
+            </div>
+            <div class="card-body">
+              Manejo de estructuras JSON para leer, editar o navegar configuraciones complejas,
+              respuestas de APIs o especificaciones.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Tool retrieval</div>
+              <span class="pill-mini">Selección de tools</span>
+            </div>
+            <div class="card-body">
+              En entornos con muchas herramientas, se usan modelos o índices para elegir sólo
+              las 3–5 tools relevantes a cada petición, en lugar de exponer todas a la vez.
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="note">
+      Este catálogo no se limita a ningún framework concreto; casi todas estas categorías
+      existen en <strong>LangChain</strong>, <strong>OpenAI Agents SDK</strong>, y plataformas como
+      <strong>AnythingLLM</strong> o <strong>Flowise</strong>.
+    </div>
+  </section>
+
+  <!-- 6. API & UI -->
+  <section class="section" id="api-ui">
+    <h2>API & UI del chat local</h2>
+    <p>
+      Además del runtime interno, la sesión 2 añade la capa de exposición:
+      endpoints HTTP y una UI minimalista de chat.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Endpoints principales</div>
+          <span class="pill-mini">FastAPI @ 8100</span>
+        </div>
+        <div class="card-body">
+          <ul>
+            <li><code>GET /</code> – health sencillo.</li>
+            <li><code>POST /sdr/email</code> – flujo “clásico” SDR (sin chat, petición única).</li>
+            <li><code>POST /sdr/chat</code> – chat con memoria por <code>session_id</code>.</li>
+            <li><code>GET /sdr/chat-ui</code> – devuelve la página HTML del chat.</li>
+          </ul>
+          <p class="note">
+            Puedes seguir usando <code>/docs</code> para probar JSON a bajo nivel:
+            <code>http://localhost:8100/docs</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Cómo levantar el servidor</div>
+          <span class="pill-mini">Comandos básicos</span>
+        </div>
+        <div class="card-body">
+          <p>Desde la carpeta de la Sesión 2:</p>
+          <pre>
+cd C:\IA_Local\scripts\Agentic_AI\Session2
+call ..\.venv\Scripts\activate.bat
+uvicorn main:app --host 0.0.0.0 --port 8100 --reload
+          </pre>
+          <p>
+            Luego abre en el navegador:
+          </p>
+          <ul>
+            <li><code>http://localhost:8100/sdr/chat-ui</code> → chat con el agente.</li>
+            <li><code>http://localhost:8100/docs</code> → documentación Swagger.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">UI de chat (<code>sdr_chat.html</code>)</div>
+        <span class="pill-mini">Experiencia de usuario</span>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Interfaz de burbujas (usuario a la derecha, agente a la izquierda).</li>
+          <li>El <code>session_id</code> se guarda en <code>localStorage</code>, lo que mantiene la memoria
+              del agente mientras uses la misma pestaña/navegador.</li>
+          <li>Se usa <code>fetch</code> contra <code>/sdr/chat</code> con JSON:
+            <code>{"session_id": "...", "message": "..."}</code>.</li>
+          <li>La barra inferior permite:
+            <ul>
+              <li>Enviar con clic en <strong>Enviar</strong>.</li>
+              <li>Enviar con <span class="kbd">Enter</span> o nueva línea con
+                  <span class="kbd">Shift</span>+<span class="kbd">Enter</span>.</li>
+            </ul>
+          </li>
+        </ul>
+        <div class="highlight">
+          Desde esta pantalla puedes “ver” el runtime en acción:
+          uso de <code>get_current_datetime</code>, manejo de <code>[WEB_ERROR]</code>, cambios tras ajustar
+          el rol, etc., sin tener que mirar logs.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Ejercicios guiados -->
+  <section class="section" id="ejercicios">
+    <h2>Ejercicios guiados de la sesión 2</h2>
+    <p>
+      Estos ejercicios te ayudan a comprobar que entiendes la arquitectura y el comportamiento
+      del agente. Márcalos al completarlos.
+    </p>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">A. Herramienta de fecha y hora</div>
+        <span class="pill-mini">get_current_datetime</span>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-a1" />
+            <label for="s2-ex-a1">
+              En el chat, pregunta: «¿Qué día es hoy?» y verifica que el agente use su
+              herramienta de fecha y hora (al menos la mayoría de las veces).
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-a2" />
+            <label for="s2-ex-a2">
+              Pregunta: «Usa tu herramienta de fecha y hora y dime la fecha y hora actuales.»
+              y comprueba que responde con un valor coherente.
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">B. Análisis de URLs y manejo de errores</div>
+        <span class="pill-mini">fetch_html / [WEB_ERROR]</span>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-b1" />
+            <label for="s2-ex-b1">
+              Pídele: «Analiza <code>https://ejemplo.com</code> y dime cuál es su propuesta de valor.»
+              usando una web que responda 200. Anota cómo resume la empresa.
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-b2" />
+            <label for="s2-ex-b2">
+              Pídele: «Analiza <code>https://openai.com</code> y dime cuál es su propuesta de valor.»
+              y observa cómo maneja el error 403/404 (mensaje breve + correo genérico + preguntas).
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">C. Redacción de correos SDR</div>
+        <span class="pill-mini">Modo SDR ON</span>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-c1" />
+            <label for="s2-ex-c1">
+              Tras analizar una web, pide: «Redacta un correo de prospección en español
+              para el CTO, en tono profesional, usando lo que has aprendido de la empresa.»
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-c2" />
+            <label for="s2-ex-c2">
+              Pide una segunda versión más breve y directa del correo, y compara estilos.
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">D. Entender el impacto del rol (<code>SDR_ROLE</code>)</div>
+        <span class="pill-mini">Prompt engineering</span>
+      </div>
+      <div class="card-body">
+        <div class="checklist">
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-d1" />
+            <label for="s2-ex-d1">
+              Modifica temporalmente el rol para hacerlo más agresivo (por ejemplo, que siempre intente vender)
+              y observa cómo cambia el tono del agente.
+            </label>
+          </div>
+          <div class="check-item">
+            <input type="checkbox" id="s2-ex-d2" />
+            <label for="s2-ex-d2">
+              Restaura el rol actual y confirma que el agente sólo entra a modo SDR cuando se lo pides explícitamente.
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Recursos -->
+  <section class="section" id="recursos">
+    <h2>Recursos externos recomendados</h2>
+    <p>
+      Para profundizar en el diseño de herramientas y agentes, estas lecturas pueden acompañar
+      lo que ya hiciste en la sesión 2.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Herramientas en el Agents SDK de OpenAI</div>
+          <span class="pill-mini">Docs oficiales</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Guía sobre cómo definir herramientas, usar la llamada de funciones y diseñar sistemas
+            que combinan LLMs con código y APIs.
+          </p>
+          <ul>
+            <li><a href="https://platform.openai.com/docs/agents" target="_blank" rel="noopener noreferrer">
+              OpenAI · Overview of Agents & tools
+            </a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Toolkits típicos en LangChain</div>
+          <span class="pill-mini">SQL, Web, RAG, etc.</span>
+        </div>
+        <div class="card-body">
+          <p>
+            LangChain agrupa muchas de las categorías de herramientas que viste en esta página
+            (SQL, web search, RAG, hojas de cálculo, etc.) dentro de “toolkits”.
+          </p>
+          <ul>
+            <li><a href="https://python.langchain.com/docs/integrations/toolkits" target="_blank" rel="noopener noreferrer">
+              LangChain · Toolkits
+            </a></li>
+            <li><a href="https://python.langchain.com/docs/integrations/tools" target="_blank" rel="noopener noreferrer">
+              LangChain · Tools overview
+            </a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">RAG y búsqueda semántica</div>
+          <span class="pill-mini">Vector stores</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Introducciones prácticas a RAG (Retrieval-Augmented Generation), vector stores y
+            patrones para conectar agentes con índices de documentos.
+          </p>
+          <ul>
+            <li><a href="https://python.langchain.com/docs/use_cases/query_and_answer/" target="_blank" rel="noopener noreferrer">
+              LangChain · Query & Answer docs
+            </a></li>
+            <li><a href="https://platform.openai.com/docs/guides/retrieval" target="_blank" rel="noopener noreferrer">
+              OpenAI · Retrieval guide
+            </a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Búsqueda web para agentes</div>
+          <span class="pill-mini">Tavily / SerpAPI</span>
+        </div>
+        <div class="card-body">
+          <p>
+            Ejemplos de cómo integrar búsqueda web en flujos de agentes, similar a lo que
+            podrías hacer en sesiones futuras con tu runtime local.
+          </p>
+          <ul>
+            <li><a href="https://docs.tavily.com/docs" target="_blank" rel="noopener noreferrer">
+              Tavily · Documentation
+            </a></li>
+            <li><a href="https://serpapi.com/blog/langchain-serpapi-google-search/" target="_blank" rel="noopener noreferrer">
+              SerpAPI · Ejemplos con LangChain
+            </a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      Cuando avances a sesiones de <strong>crew de agentes</strong> y flujos más complejos,
+      este catálogo te servirá como referencia rápida para decidir qué tools añadir
+      a tu runtime local.
+    </div>
+  </section>
+</main>
+
+<script>
+  // --- Navegación activa simple ---
+  const navLinks = document.querySelectorAll("nav a[href^='#']");
+  const sections = Array.from(document.querySelectorAll("section[id]"));
+
+  function setActiveNav() {
+    const scrollPos = window.scrollY + 100;
+    let currentId = null;
+    for (const sec of sections) {
+      if (scrollPos >= sec.offsetTop && scrollPos < sec.offsetTop + sec.offsetHeight) {
+        currentId = sec.id;
+        break;
+      }
+    }
+    navLinks.forEach(link => {
+      if (link.getAttribute("href") === "#" + currentId) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+  }
+
+  window.addEventListener("scroll", setActiveNav);
+  window.addEventListener("load", setActiveNav);
+
+  // --- Persistencia de checklists en localStorage ---
+  const STORAGE_KEY_PREFIX = "sesion2_check_";
+
+  function initChecklist() {
+    const checkboxes = document.querySelectorAll("input[type='checkbox'][id^='s2-']");
+    checkboxes.forEach(cb => {
+      const key = STORAGE_KEY_PREFIX + cb.id;
+      const saved = localStorage.getItem(key);
+      if (saved === "true") cb.checked = true;
+
+      cb.addEventListener("change", () => {
+        localStorage.setItem(key, cb.checked ? "true" : "false");
+        updateProgressPill();
+      });
+    });
+    updateProgressPill();
+  }
+
+  function updateProgressPill() {
+    const pill = document.getElementById("progress-pill");
+    if (!pill) return;
+    const all = Array.from(document.querySelectorAll("#overview .checklist input[type='checkbox']"));
+    const completed = all.filter(cb => cb.checked).length;
+
+    if (completed === all.length && completed > 0) {
+      pill.textContent = "Checklist inicial completa";
+      pill.classList.add("ok");
+    } else if (completed > 0) {
+      pill.textContent = "En curso (" + completed + "/" + all.length + ")";
+      pill.classList.add("ok");
+    } else {
+      pill.textContent = "Por iniciar";
+      pill.classList.remove("ok");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initChecklist();
+  });
+</script>
+
+</body>
+</html>

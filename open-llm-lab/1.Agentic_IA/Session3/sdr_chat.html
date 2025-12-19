@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agentic Chat - Sesión 3 (SDR + Crew Stocks)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 0.75rem 1rem;
+      background: #020617;
+      border-bottom: 1px solid #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-size: 1rem;
+      margin: 0;
+    }
+    header .subtitle {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    header span.badge {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid #22c55e;
+      color: #22c55e;
+      white-space: nowrap;
+    }
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+    .messages {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .bubble {
+      padding: 0.6rem 0.8rem;
+      border-radius: 0.75rem;
+      max-width: 80%;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 0.9rem;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: #22c55e;
+      color: #022c22;
+      border-bottom-right-radius: 0.2rem;
+    }
+    .bubble.agent {
+      align-self: flex-start;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-bottom-left-radius: 0.2rem;
+    }
+    footer {
+      border-top: 1px solid #1f2937;
+      padding: 0.6rem 0.8rem;
+      background: #020617;
+    }
+    .input-row {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    textarea {
+      flex: 1 1 0;
+      min-height: 3rem;
+      max-height: 8rem;
+      resize: vertical;
+      background: #020617;
+      color: #e5e7eb;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      align-items: flex-start;
+    }
+    .debug-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .debug-toggle input {
+      accent-color: #22c55e;
+    }
+    button {
+      padding: 0.4rem 0.9rem;
+      border-radius: 0.5rem;
+      border: none;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .status {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .status strong {
+      color: #22c55e;
+    }
+    .small {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .small code {
+      background: #020617;
+      padding: 0.05rem 0.25rem;
+      border-radius: 0.25rem;
+      border: 1px solid #1f2937;
+      font-size: 0.7rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Agentic Chat · Sesión 3</h1>
+    <div class="subtitle">SDR + Crew de análisis de acciones con modelos locales</div>
+  </div>
+  <span class="badge">local · multi-modelo (Qwen · DeepSeek · Llama)</span>
+</header>
+<main>
+  <div class="messages" id="messages">
+    <div class="bubble agent">
+      Hola, soy tu agente local.
+      
+      • En modo normal, actúo como SDR: puedo analizar webs (cuando me dejan)
+        y ayudarte a redactar correos de prospección.
+      
+      • En modo Crew de acciones, puedes lanzar un análisis escribiendo:
+        <code>/stocks AAPL, NVDA, TSLA</code>
+        Si activas el modo debug, verás también la interacción de los diferentes agentes
+        (Researcher, Analyst, Writer, Judge).
+      
+      ¿Por dónde empezamos?
+    </div>
+  </div>
+</main>
+<footer>
+  <div class="input-row">
+    <textarea id="input" placeholder="Escribe tu mensaje... Ejemplos: '¿Qué día es hoy?' o '/stocks AAPL, NVDA, TSLA'"></textarea>
+    <div class="controls">
+      <button id="sendBtn">Enviar</button>
+      <label class="debug-toggle" title="Si está activo y envías un comando /stocks, el back-end verá 'debug' y mostrará el detalle de cada agente.">
+        <input type="checkbox" id="debugToggle" />
+        <span>Ver detalle de agentes (debug para <code>/stocks</code>)</span>
+      </label>
+    </div>
+  </div>
+  <div class="status" id="status">Sesión inicializada.</div>
+  <div class="small">
+    La memoria se mantiene por <code>session_id</code> en tu navegador. Si cierras la pestaña, se puede perder el contexto.<br />
+    Para el Crew de acciones, prueba: <code>/stocks AAPL, NVDA, TSLA</code>.  
+    Si la casilla de debug está activa, el comando se enviará como <code>/stocks AAPL, NVDA, TSLA debug</code>.
+  </div>
+</footer>
+
+<script>
+  // ----- Gestión de session_id (se guarda en localStorage) -----
+  const SESSION_KEY = "agentic_session_id_v3";
+
+  function getSessionId() {
+    let sid = localStorage.getItem(SESSION_KEY);
+    if (!sid) {
+      // Generamos un id simple
+      sid = "session-" + Math.random().toString(36).slice(2);
+      localStorage.setItem(SESSION_KEY, sid);
+    }
+    return sid;
+  }
+
+  const sessionId = getSessionId();
+
+  // ----- Referencias DOM -----
+  const messagesEl = document.getElementById("messages");
+  const inputEl = document.getElementById("input");
+  const sendBtn = document.getElementById("sendBtn");
+  const statusEl = document.getElementById("status");
+  const debugToggleEl = document.getElementById("debugToggle");
+
+  function appendBubble(text, role) {
+    const div = document.createElement("div");
+    div.className = "bubble " + role;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  async function sendMessage() {
+    let text = inputEl.value.trim();
+    if (!text) return;
+
+    // Si es un comando /stocks y el debug está activado, añadimos 'debug' al mensaje
+    const lower = text.toLowerCase();
+    if (lower.startsWith("/stocks") && debugToggleEl.checked && !lower.includes("debug")) {
+      text = text + " debug";
+    }
+
+    appendBubble(text, "user");
+    inputEl.value = "";
+    inputEl.focus();
+    sendBtn.disabled = true;
+    statusEl.innerHTML = "Enviando mensaje al <strong>agente local</strong>…";
+
+    try {
+      const resp = await fetch("/sdr/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: text,
+        }),
+      });
+
+      if (!resp.ok) {
+        const body = await resp.text();
+        appendBubble("Error HTTP " + resp.status + ": " + body, "agent");
+      } else {
+        const data = await resp.json();
+        appendBubble(data.reply, "agent");
+      }
+    } catch (err) {
+      appendBubble("Error de red: " + err, "agent");
+    } finally {
+      sendBtn.disabled = false;
+      statusEl.innerHTML = "Sesión: <strong>" + sessionId + "</strong>";
+    }
+  }
+
+  // Click en botón
+  sendBtn.addEventListener("click", sendMessage);
+
+  // Enter para enviar, Shift+Enter para salto de línea
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Estado inicial
+  statusEl.innerHTML = "Sesión: <strong>" + sessionId + "</strong>";
+</script>
+</body>
+</html>

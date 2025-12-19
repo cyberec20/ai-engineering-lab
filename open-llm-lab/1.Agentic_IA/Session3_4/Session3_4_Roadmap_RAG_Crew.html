@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Sesión 3 - Crew Financiero con LLM Local + RAG + Scraping</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0f0f0f;
+        color: #eee;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1, h2, h3 {
+        color: #4ec9b0;
+    }
+
+    .container {
+        width: 90%;
+        margin: auto;
+        padding: 20px;
+    }
+
+    .section {
+        background: #1b1b1b;
+        border: 1px solid #333;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .collapsible {
+        background-color: #2d2d2d;
+        color: #4ec9b0;
+        cursor: pointer;
+        padding: 12px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 17px;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .active, .collapsible:hover {
+        background-color: #3b3b3b;
+    }
+
+    .content {
+        padding: 0 15px;
+        display: none;
+        overflow: hidden;
+        background-color: #1e1e1e;
+        border-left: 3px solid #4ec9b0;
+        margin-top: 8px;
+    }
+
+    .checklist input {
+        margin-right: 10px;
+    }
+
+    a {
+        color: #00b7ff;
+    }
+
+    pre {
+        background: #111;
+        border: 1px solid #333;
+        padding: 12px;
+        overflow-x: auto;
+        border-radius: 5px;
+        color: #9cdcfe;
+    }
+
+    .roadmap-step {
+        margin-bottom: 16px;
+        padding: 10px;
+        background: #222;
+        border-left: 5px solid #4ec9b0;
+        border-radius: 5px;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>Sesión 3 - análisis Financiero con LLMs Locales, Crew Multi-Agente & RAG (3.1 + 3.2 + 3.4)</h1>
+<p>En esta Sesión evolucionamos desde un agente SDR a un <b>ecosistema financiero avanzado</b> con:</p>
+<ul>
+    <li>Un <b>crew de agentes especializados</b> (Researcher, Analyst, Writer, Judge)</li>
+    <li><b>APIs Numéricas serias</b> (Alpha Vantage, FMP, Finnhub)</li>
+    <li><b>RAG volátil</b> + Scraping para análisis profundo</li>
+    <li>Integración con el chat UI existente</li>
+</ul>
+
+<hr>
+
+<button class="collapsible">1. Arquitectura General del Crew</button>
+<div class="content">
+    <h3>Flujo General</h3>
+<pre>
+Usuario -> /stocks o /stocks-rag -> Crew Engine ->
+    Researcher -> Analyst -> Writer -> Judge -> Informe final
+</pre>
+
+    <h3>Modelos Usados</h3>
+    <table border="1" cellpadding="6" style="border-color:#555;">
+        <tr><th>Rol</th><th>Modelo</th><th>Responsabilidad</th></tr>
+        <tr><td>Researcher</td><td>deepseek-r1:8b</td><td>APIs Numéricas, Finnhub básico, scraping, RAG</td></tr>
+        <tr><td>Analyst</td><td>llama3.1:8b</td><td>análisis basado en texto y contexto</td></tr>
+        <tr><td>Writer</td><td>qwen3:8b</td><td>Generación del informe profesional</td></tr>
+        <tr><td>Judge</td><td>qwen2.5:7b</td><td>Verificacin de coherencia e informe final</td></tr>
+    </table>
+</div>
+
+
+<button class="collapsible">2. Sesión 3.1 - Capa Numérica Seria</button>
+<div class="content">
+
+<h3>APIs Numéricas Utilizadas</h3>
+<ul>
+    <li><b>Alpha Vantage</b> - Precios diarios, series temporales.  
+        <a href="https://www.alphavantage.co/documentation/">Documentación</a></li>
+    <li><b>Financial Modeling Prep (FMP)</b> - Fundamentals, ratios financieros.  
+        <a href="https://site.financialmodelingprep.com/developer/docs">Documentación</a></li>
+    <li><b>Finnhub (básico en 3.2)</b> - Noticias ligeras, earnings, snapshots.  
+        <a href="https://finnhub.io/docs/api">Documentación</a></li>
+</ul>
+
+<h3>Checklist de la Sesión 3.1</h3>
+<div class="checklist">
+    <label><input type="checkbox"> Configurado api_keys.yaml</label><br>
+    <label><input type="checkbox"> Probado /stocks AAPL, NVDA, TSLA</label><br>
+    <label><input type="checkbox"> Vista traza con debug activado</label><br>
+</div>
+
+<h3>Flujo 3.1</h3>
+<pre>
+Researcher:
+    - Llama Alpha Vantage (precios)
+    - Llama FMP (ratios)
+    - Prepara snapshot numérico consolidado
+
+Analyst:
+    - Analiza riesgos, pros, estabilidad
+
+Writer:
+    - Redacta informe estructurado
+
+Judge:
+    - Depura y valida el informe
+</pre>
+
+</div>
+
+
+
+
+<button class="collapsible">3. Sesión 3.2 - RAG volátil + Scraping + Finnhub</button>
+<div class="content">
+
+<h3>¿Qué cambia en 3.2?</h3>
+<ul>
+    <li>Se mantiene <b>la capa Numérica</b> (Alpha, FMP).</li>
+    <li>Se añade <b>Finnhub básico</b> (earnings próximos, noticias claves).</li>
+    <li>Se introduce un <b>RAG volátil</b> enriquecido que vive solo en RAM.</li>
+    <li>Se scrapean páginas relevantes y se resumen.</li>
+</ul>
+
+<h3>Cómo funciona el RAG volátil</h3>
+<pre>
+1. Researcher scrapea:
+    - Yahoo Finance Profile
+    - Yahoo News
+    - Investor Relations
+2. Se limpia el HTML -> texto
+3. Se trocea y se generan embeddings temporales
+4. Se seleccionan los fragmentos más relevantes para:
+    - Analyst
+    - Writer
+    - Judge
+</pre>
+
+<h3>Comportamiento desde el chat</h3>
+<pre>
+/stocks AAPL NVDA -> análisis numérico rápido
+/stocks-rag AAPL NVDA debug -> análisis profundo con RAG
+</pre>
+
+<h3>Checklist 3.2</h3>
+<div class="checklist">
+    <label><input type="checkbox"> Probado /stocks-rag con 2+ tickers</label><br>
+    <label><input type="checkbox"> Revisado debug del RAG</label><br>
+</div>
+
+</div>
+
+
+
+
+<button class="collapsible">4. Libreras y Herramientas que se Usan (y Futuras)</button>
+<div class="content">
+
+<h3>Scraping</h3>
+<ul>
+    <li><b>requests</b> - Obtener HTML</li>
+    <li><b>BeautifulSoup</b> - Limpieza del HTML  
+        <a href="https://www.crummy.com/software/BeautifulSoup/bs4/doc/">Documentación</a>
+    </li>
+</ul>
+
+<h3>Embeddings</h3>
+<ul>
+    <li>mxbai-embed-large (local, vía Ollama)</li>
+    <li>nomic-embed-text</li>
+</ul>
+
+<h3>Finhub Python Library (para sesiónes futuras)</h3>
+<p>Aunque NO la instalamos, es útil para:</p>
+<ul>
+    <li>earnings calendar</li>
+    <li>news sentiment</li>
+    <li>company filings API</li>
+    <li>upgrades/downgrades</li>
+</ul>
+
+<p>Enlaces:</p>
+<ul>
+    <li><a href="https://finnhub.io/docs/api">API Docs</a></li>
+    <li><a href="https://github.com/Finnhub-Stock-API/finnhub-python">Python SDK</a></li>
+</ul>
+
+</div>
+
+
+
+
+<button class="collapsible">5. Roadmap Completo hacia Sesión 3.3 - RAG Persistente</button>
+<div class="content">
+
+<h3>Objetivo</h3>
+<p>Dejar de usar RAG volátil y pasar a un RAG serio, persistente, propio de sistemas de análisis financiero 
+reales.</p>
+
+<h3>Requerimientos</h3>
+<ul>
+    <li>Base de datos local:
+        <ul>
+            <li>Postgres + pgvector</li>
+            <li>o ChromaDB local</li>
+        </ul>
+    </li>
+    <li>Hashes por documento</li>
+    <li>Detección de duplicados</li>
+    <li>Actualización incremental</li>
+</ul>
+
+<div class="roadmap-step">
+<b>Pipeline 3.3:</b><br>
+1. Scraping -> texto  
+2. Hash SHA256 por documento  
+3. Si hash existe -> no re-scrapear  
+4. Embedding -> guardar en vector store  
+5. Recuperación semántica mucho más precisa  
+</div>
+
+</div>
+
+
+
+
+<button class="collapsible">6. Roadmap Profesional (Sesión 3.4) - Asesor Cuant Multimodal</button>
+<div class="content">
+
+<h3>Objetivo</h3>
+<p>Construir un pipeline profesional que combine:</p>
+<ul>
+    <li>time series forecasting</li>
+    <li>gráficos cuantitativos</li>
+    <li>modelos multimodales</li>
+    <li>informe PDF final</li>
+</ul>
+
+<h3>Reemplazo del Analyst</h3>
+<p>El Analyst debe ahora ser multimodal para ver los gráficos que el Researcher o el Code Assistant generen.</p>
+
+<h3>Modelos recomendados para análisis multimodal local</h3>
+<ul>
+    <li><b>Qwen2-VL</b> - excelente balance de velocidad y capacidad</li>
+    <li><b>LLaVA 1.6 13B</b> - muy buena interpretando gráficos</li>
+    <li><b>LLaVA-Qwen2</b> - versión moderna y eficiente</li>
+</ul>
+
+<h3>Integración de Statsmodels</h3>
+<ul>
+    <li>SARIMAX</li>
+    <li>ARIMA</li>
+    <li>ACF/PACF</li>
+    <li>Forecasts con bandas de confianza</li>
+</ul>
+
+<h3>Generación de gráficos para análisis</h3>
+<ul>
+    <li>matplotlib</li>
+    <li>plotly</li>
+    <li>seaborn (opcional)</li>
+</ul>
+
+<h3>Informe Final Profesional</h3>
+<ul>
+    <li>Writer produce el borrador</li>
+    <li>Code-Interpreter genera gráficos y tablas</li>
+    <li>Judge multimodal integra todo en un PDF profesional</li>
+</ul>
+
+</div>
+
+<button class="collapsible">7. Sesión 3.4 - Lo implementado (estado actual)</button>
+<div class="content">
+
+<h3>Objetivo alcanzado</h3>
+<ul>
+    <li>RAG persistente con Postgres + pgvector.</li>
+    <li>Capa cuantitativa con yfinance + ARIMA/Prophet/GARCH.</li>
+    <li>gráficos por ticker y limpieza automatica.</li>
+    <li>PDF final generado con reportlab y limpieza de texto previa.</li>
+    <li>Pipeline multi-agente: Researcher, Analyst, Writer, Judge.</li>
+</ul>
+
+<h3>Componentes clave (Session 3.4)</h3>
+<ul>
+    <li><b>RAG persistente</b>: ingesta y consulta en pgvector.</li>
+    <li><b>Coder cuant</b>: OHLCV, forecasting y gráficos en <code>crew/charts/</code>.</li>
+    <li><b>PDF final</b>: informe en <code>crew/reports/</code> via reportlab.</li>
+    <li><b>Endpoints</b>: <code>/crew/stock-picker</code> y <code>/crew/stock-picker-rag</code>.</li>
+</ul>
+
+<h3>Checklist real 3.4 (lo que ya existe)</h3>
+<div class="checklist">
+    <label><input type="checkbox"> RAG persistente habilitado (pgvector)</label><br>
+    <label><input type="checkbox"> Capa cuant con forecasts y gráficos</label><br>
+    <label><input type="checkbox"> PDF final generado por ticker</label><br>
+    <label><input type="checkbox"> Limpieza y dedupe antes de PDF</label><br>
+</div>
+
+<h3>Validaciones pendientes (ejecucion real)</h3>
+<div class="checklist">
+    <label><input type="checkbox"> Smoke tests pasan en entorno local</label><br>
+    <label><input type="checkbox"> PDF sin errores con texto largo/URLs</label><br>
+    <label><input type="checkbox"> gráficos con dimensiones correctas</label><br>
+</div>
+
+<p>Notas: la configuración se gestiona via <code>.env</code> con <code>PG_CONN</code> y claves de APIs externas.</p>
+
+</div>
+
+<hr>
+<h2>Fin de Sesión 3 - Excelente trabajo!</h2>
+<p>Este documento resume todo lo logrado hasta ahora y deja registrado un roadmap profesional de alto nivel para 
+convertir este proyecto en un verdadero sistema de análisis financiero avanzado con LLMs locales.</p>
+
+</div>
+
+<script>
+// Collapsible sections
+var coll = document.getElementsByClassName("collapsible");
+for (let i = 0; i < coll.length; i++) {
+    coll[i].addEventListener("click", function () {
+        this.classList.toggle("active");
+        var content = this.nextElementSibling;
+        if (content.style.display === "block") {
+            content.style.display = "none";
+        } else {
+            content.style.display = "block";
+        }
+    });
+}
+</script>
+
+</body>
+</html>

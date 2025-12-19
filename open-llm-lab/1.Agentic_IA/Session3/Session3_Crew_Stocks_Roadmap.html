@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sesión 3 · Agentes + Crew de Análisis de Acciones</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020617;
+      --bg-alt: #020617;
+      --bg-panel: #020617;
+      --bg-panel-alt: #020617;
+      --bg-card: #020617;
+      --bg-elevated: #020617;
+      --border-subtle: #1e293b;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --accent-strong: #16a34a;
+      --text-main: #e5e7eb;
+      --text-soft: #9ca3af;
+      --text-muted: #6b7280;
+      --danger: #f97373;
+      --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.5);
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #0b1120, #020617 52%);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* LAYOUT ----------------------------------------------------- */
+
+    .sidebar {
+      width: 270px;
+      max-width: 60vw;
+      border-right: 1px solid var(--border-subtle);
+      background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.98),
+        rgba(15, 23, 42, 0.96)
+      );
+      padding: 1rem 0.75rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .main {
+      flex: 1;
+      max-width: 100%;
+      padding: 1.25rem 1.5rem 1.5rem;
+      overflow-y: auto;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        border-right: none;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+      .main {
+        padding: 1rem;
+      }
+    }
+
+    /* SIDEBAR ---------------------------------------------------- */
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0 0.25rem;
+    }
+
+    .brand-title {
+      font-size: 0.95rem;
+      font-weight: 650;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.25rem;
+    }
+
+    .badge {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.7rem;
+      padding: 0.12rem 0.5rem;
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.8);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .badge.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .nav-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin: 0.75rem 0 0.25rem;
+      padding: 0 0.25rem;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .nav-item a {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text-soft);
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.55rem;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.08s ease;
+    }
+
+    .nav-item a:hover {
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      transform: translateX(2px);
+    }
+
+    .nav-item a span.nav-pill {
+      font-size: 0.7rem;
+      padding: 0 0.4rem;
+      border-radius: 0.5rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 0.5rem 0.25rem 0;
+      border-top: 1px dashed rgba(55, 65, 81, 0.7);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    /* MAIN CONTENT ---------------------------------------------- */
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .page-kicker {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent);
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 680;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      max-width: 760px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2.3fr) minmax(0, 1.7fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #020617, #020617);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-subtle);
+      padding: 0.95rem 1rem;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card-kicker {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .pill-label {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-size: 0.7rem;
+      padding: 0.1rem 0.55rem;
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    p {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin: 0.3rem 0;
+    }
+
+    ul {
+      padding-left: 1.1rem;
+      margin: 0.25rem 0 0.4rem;
+    }
+
+    li {
+      font-size: 0.84rem;
+      line-height: 1.45;
+      color: var(--text-main);
+      margin: 0.12rem 0;
+    }
+
+    code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.75rem;
+      padding: 0.05rem 0.25rem;
+      border-radius: 0.3rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(30, 64, 175, 0.5);
+      color: #bfdbfe;
+    }
+
+    pre {
+      background: #020617;
+      border-radius: 0.6rem;
+      padding: 0.6rem 0.7rem;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      overflow-x: auto;
+      margin: 0.35rem 0 0.4rem;
+    }
+
+    pre code {
+      border: none;
+      background: none;
+      padding: 0;
+    }
+
+    a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.2rem;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      padding: 0.08rem 0.45rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text-soft);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .tag.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    /* CHECKLISTS ------------------------------------------------- */
+
+    .checklist {
+      list-style: none;
+      padding: 0;
+      margin: 0.1rem 0 0.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .check-item {
+      display: flex;
+      gap: 0.45rem;
+      align-items: flex-start;
+      font-size: 0.82rem;
+      color: var(--text-main);
+    }
+
+    .check-item input[type="checkbox"] {
+      margin-top: 0.1rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .check-item label {
+      cursor: pointer;
+    }
+
+    .section-anchor {
+      scroll-margin-top: 80px;
+    }
+
+    /* TABLE ------------------------------------------------------ */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.35rem;
+    }
+
+    th,
+    td {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.4rem;
+      text-align: left;
+    }
+
+    th {
+      color: var(--text-soft);
+      border-bottom: 1px solid var(--border-subtle);
+      font-weight: 500;
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(15, 23, 42, 0.7);
+    }
+
+    tr:nth-child(odd) td {
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .pill-small {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.02rem 0.35rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text-soft);
+    }
+
+    .pill-small.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR ---------------------------------------------------->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-title">Pensum IA · Sesión 3</div>
+      <div class="brand-subtitle">
+        Arquitectura de agentes + crew de análisis de acciones con LLM locales.
+      </div>
+      <div class="badge-row">
+        <span class="badge accent">Modo: Local-First</span>
+        <span class="badge">Ollama: Qwen · DeepSeek · Llama</span>
+        <span class="badge">FastAPI · HTML UI</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Navegación</div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#s3-resumen">
+            1. Resumen de la sesión
+            <span class="nav-pill">3.0</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-arquitectura">
+            2. Arquitectura: SDR + Crew
+            <span class="nav-pill">Agentes</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-tools">
+            3. Herramientas de la sesión
+            <span class="nav-pill">Tools</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-tools-pro">
+            4. Catálogo de tools pro
+            <span class="nav-pill">Referencia</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-ejecucion">
+            5. Ejecución práctica
+            <span class="nav-pill">Paso a paso</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-roadmap">
+            6. Roadmap 3.1 · 3.2 · 3.3
+            <span class="nav-pill">Evolución</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#s3-recursos">
+            7. Recursos externos
+            <span class="nav-pill">Links</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="nav-section-title">Checklist global</div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#check-resumen">
+            Conceptos clave entendidos
+            <span class="nav-pill">Teoría</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#check-backend">
+            Backend + crew corriendo
+            <span class="nav-pill">Server</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#check-ui">
+            UI de chat probada
+            <span class="nav-pill">UI</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#check-stocks">
+            /stocks usado con y sin debug
+            <span class="nav-pill">Crew</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-footer">
+      Sesión 3.0 cierra:
+      <strong>prototipo de crew financiero local</strong> montado sobre el
+      agente SDR de la Sesión 2. A partir de aquí, 3.1+ se centran en
+      enriquecer datos y lógica financiera (APIs externas, RAG, debates, etc.).
+    </div>
+  </aside>
+
+  <!-- MAIN ------------------------------------------------------->
+  <main class="main">
+    <header class="page-header section-anchor" id="s3-resumen">
+      <div class="page-kicker">Sesión 3 · Versión 3.0</div>
+      <div class="page-title">
+        De un solo agente a un crew multi-modelo para análisis de acciones
+      </div>
+      <p class="page-subtitle">
+        En esta sesión se evoluciona desde un agente SDR único
+        (Sales Development Representative) a una arquitectura
+        <strong>multi-agente</strong> que combina varios LLM locales
+        (Qwen, DeepSeek, Llama, Qwen2.5) para analizar acciones bursátiles.
+        El objetivo no es aún hacer research financiero profesional, sino
+        entender la <em>arquitectura de crew</em> y ver a los modelos
+        colaborar en una tarea concreta.
+      </p>
+    </header>
+
+    <section class="grid">
+      <!-- RESUMEN + CHECKLIST ----------------------------------->
+      <article class="card" id="check-resumen">
+        <div class="card-header">
+          <div>
+            <div class="card-kicker">1 · Objetivo pedagógico</div>
+            <div class="card-title">
+              Qué debes llevarte de la Sesión 3 (3.0)
+            </div>
+          </div>
+          <span class="pill-label">Modo: understanding over coding</span>
+        </div>
+        <p>
+          Esta sesión se centra más en <strong>arquitectura y flujo mental</strong>
+          que en los detalles de código. El código ya está implementado en tu
+          carpeta; aquí documentamos qué hace, por qué y cómo se usa.
+        </p>
+        <ul class="checklist">
+          <li class="check-item">
+            <input type="checkbox" id="chk-s3-1" />
+            <label for="chk-s3-1">
+              Entiendo que el endpoint <code>/sdr/chat</code> decide entre
+              <strong>modo SDR</strong> y <strong>modo Crew de acciones</strong>
+              según si el mensaje empieza con <code>/stocks</code>.
+            </label>
+          </li>
+          <li class="check-item">
+            <input type="checkbox" id="chk-s3-2" />
+            <label for="chk-s3-2">
+              Puedo explicar con mis palabras qué es un
+              <strong>Agent</strong> (rol, objetivo, tools, memoria) y qué es
+              un <strong>Crew</strong> (equipo de agentes cooperando).
+            </label>
+          </li>
+          <li class="check-item">
+            <input type="checkbox" id="chk-s3-3" />
+            <label for="chk-s3-3">
+              Sé qué rol cumplen los modelos
+              <code>qwen3:8b</code>, <code>deepseek-r1:8b</code>,
+              <code>llama3.1:8b</code> y <code>qwen2.5:7b</code>
+              dentro del análisis de acciones.
+            </label>
+          </li>
+          <li class="check-item">
+            <input type="checkbox" id="chk-s3-4" />
+            <label for="chk-s3-4">
+              Entiendo que el checkbox de <strong>debug</strong> de la UI
+              controla si veo o no la <em>traza de agentes</em> al final del
+              informe de <code>/stocks</code>.
+            </label>
+          </li>
+        </ul>
+        <p class="hint">
+          Sugerencia: si no puedes explicar estos puntos sin mirar el código,
+          vale la pena releer esta página o repetir algunos experimentos en la
+          UI de chat.
+        </p>
+      </article>
+
+      <!-- ARQUITECTURA ------------------------------------------>
+      <article class="card section-anchor" id="s3-arquitectura">
+        <div class="card-header">
+          <div>
+            <div class="card-kicker">2 · Arquitectura mental</div>
+            <div class="card-title">
+              De un agente SDR a un Crew financiero local
+            </div>
+          </div>
+          <span class="pill-label">SDR + Crew stock picker</span>
+        </div>
+        <p>
+          El backend conserva el <strong>Agente SDR</strong> de la Sesión 2
+          (que sabe analizar webs, redactar correos B2B y manejar tiempo
+          real con <code>get_current_datetime</code>), pero ahora añade un
+          <strong>Crew de análisis de acciones</strong> que se activa
+          explícitamente con el comando <code>/stocks</code>.
+        </p>
+        <p>
+          Alto nivel del endpoint <code>POST /sdr/chat</code>:
+        </p>
+        <pre><code>if message.startswith("/stocks"):
+    usar Crew de acciones (Sesión 3)
+else:
+    usar Agente SDR normal (Sesión 2)</code></pre>
+        <p>
+          Dentro del Crew, la lógica sigue un patrón de
+          <strong>pipeline secuencial</strong> muy usado en frameworks
+          de agentes como CrewAI o LangGraph:
+        </p>
+        <ul>
+          <li>
+            <strong>Researcher</strong> (Qwen3:8b) recopila contexto de cada
+            ticker (sector, negocio, datos básicos) usando
+            <code>yfinance</code>.
+          </li>
+          <li>
+            <strong>Analyst</strong> (DeepSeek-r1:8b) traduce ese contexto en
+            puntos fuertes, riesgos y oportunidades.
+          </li>
+          <li>
+            <strong>Writer</strong> (Llama3.1 8B) redacta un informe legible
+            para humanos (introducción, análisis por ticker).
+          </li>
+          <li>
+            <strong>Judge</strong> (Qwen2.5:7b) revisa coherencia y estilo,
+            ajustando el informe final al perfil de riesgo y horizonte
+            indicados.
+          </li>
+        </ul>
+        <p class="hint">
+          Piensa en esto como un equipo de analistas colaborando sobre la
+          misma tarea, cada uno especializado, pero todos corriendo en tu
+          propia máquina con modelos locales.
+        </p>
+      </article>
+    </section>
+
+    <!-- TABLA DE AGENTES ---------------------------------------->
+    <section class="card section-anchor" id="s3-agents" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">2.1 · Roles del crew</div>
+          <div class="card-title">Mapa de agentes y modelos</div>
+        </div>
+        <span class="pill-label">Stock Picker Crew</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Agente</th>
+            <th>Modelo (Ollama)</th>
+            <th>Responsabilidad principal</th>
+            <th>Tipo de salida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Researcher</td>
+            <td><span class="pill-small accent">qwen3:8b</span></td>
+            <td>
+              Buscar y sintetizar información general de cada empresa
+              (sector, negocio, posición de mercado) a partir de datos de
+              <code>yfinance</code> u otras fuentes básicas.
+            </td>
+            <td>Resumen por ticker + puntos clave.</td>
+          </tr>
+          <tr>
+            <td>Analyst</td>
+            <td><span class="pill-small accent">deepseek-r1:8b</span></td>
+            <td>
+              Evaluar fortalezas, riesgos y oportunidades a partir de los
+              resúmenes del Researcher; estructurar el análisis por
+              categorías (negocio, tecnología, entorno competitivo).
+            </td>
+            <td>Lista estructurada de pros, contras y riesgos.</td>
+          </tr>
+          <tr>
+            <td>Writer</td>
+            <td><span class="pill-small accent">llama3.1:8b</span></td>
+            <td>
+              Convertir el análisis previo en un informe fluido, legible y
+              coherente en español, adaptado al perfil de riesgo (moderado)
+              y horizonte (mediano plazo).
+            </td>
+            <td>Informe en formato Markdown / texto corrido.</td>
+          </tr>
+          <tr>
+            <td>Judge</td>
+            <td><span class="pill-small accent">qwen2.5:7b</span></td>
+            <td>
+              Revisar el informe final, detectar inconsistencias,
+              equilibrar el tono, y asegurarse de que la conclusión sea
+              razonable dado el perfil del lector (inversor particular).
+            </td>
+            <td>Informe ajustado + conclusión general.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="hint">
+        En futuras sub-sesiones (3.1, 3.2, 3.3) estos mismos roles pueden
+        enriquecerse con datos más profundos (APIs financieras, RAG,
+        debates bull vs bear, etc.) sin cambiar la estructura básica del
+        crew.
+      </p>
+    </section>
+
+    <!-- HERRAMIENTAS SESIÓN 3 ----------------------------------->
+    <section class="card section-anchor" id="s3-tools" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">3 · Tools concretas de esta sesión</div>
+          <div class="card-title">Herramientas disponibles para el Agente SDR y el Crew</div>
+        </div>
+        <span class="pill-label">Tool-calling local</span>
+      </div>
+      <p>
+        Las herramientas son funciones de Python expuestas al agente de
+        forma estructurada (como “tool-calls”), de modo que el modelo puede
+        decidir cuándo usarlas. En esta sesión se combinan tools ya vistas
+        en la Sesión 2 con nuevas tools orientadas a acciones.
+      </p>
+
+      <h4 class="section-anchor" id="s3-tools-sdr" style="font-size:0.85rem;margin-top:0.5rem;">
+        3.1 · Tools del Agente SDR (heredadas de la Sesión 2)
+      </h4>
+      <ul>
+        <li>
+          <code>fetch_html(url)</code> — Descarga el HTML básico de una web
+          para extraer contenido. Útil para analizar páginas de empresas
+          (cuando no hay errores 403/404).
+        </li>
+        <li>
+          <code>summarize_text(text)</code> — Resume textos largos (por
+          ejemplo, una landing page) en pocos párrafos relevantes.
+        </li>
+        <li>
+          <code>extract_value_proposition(text)</code> — Intenta extraer la
+          propuesta de valor central de una empresa o producto a partir del
+          texto de su web.
+        </li>
+        <li>
+          <code>generate_email_draft(context)</code> — Construye una
+          estructura de prompt interno para redactar un correo de
+          prospección B2B alineado a la web analizada, el rol objetivo y el
+          tono deseado.
+        </li>
+        <li>
+          <code>get_current_datetime()</code> — Devuelve fecha y hora
+          actuales (desde el servidor). El sistema prompt del SDR deja
+          claro que para preguntas como “¿Qué día es hoy?” debe usarse
+          <em>siempre</em> esta tool en lugar de inventar fechas.
+        </li>
+      </ul>
+
+      <h4 style="font-size:0.85rem;margin-top:0.6rem;">
+        3.2 · Tools para el Crew de acciones
+      </h4>
+      <ul>
+        <li>
+          <code>yfinance_fetch(ticker)</code> — En la práctica se implementa
+          usando <code>yfinance.Ticker(ticker).info</code>, lo que permite
+          obtener nombre de la empresa, sector, industria, capitalización y
+          algunos ratios básicos. No es una API institucional, pero sirve
+          como “combustible mínimo” para el Researcher.
+        </li>
+        <li>
+          <code>compose_stock_report(research, analysis)</code> — Función
+          que combina resúmenes del Researcher y el Analyst para que el
+          Writer genere un informe legible en Markdown.
+        </li>
+        <li>
+          <code>judge_stock_report(report, profile)</code> — Tool lógico
+          que pasa el informe al Judge para validar tono, coherencia y
+          adecuación al perfil de riesgo (cauteloso, moderado, dinámico).
+        </li>
+      </ul>
+
+      <p class="hint">
+        Estas tools son deliberadamente sencillas. La prioridad es
+        entender el patrón de “un LLM decide cuándo usar tools” más que la
+        sofisticación financiera. La mejora de datos vendrá en 3.1+.
+      </p>
+    </section>
+
+    <!-- CATÁLOGO TOOLS PRO -------------------------------------->
+    <section class="card section-anchor" id="s3-tools-pro" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">4 · Herramientas para agentes profesionales</div>
+          <div class="card-title">
+            Catálogo orientativo de tools que valen la pena aprender
+          </div>
+        </div>
+        <span class="pill-label">Referencia para futuro</span>
+      </div>
+      <p>
+        Más allá del ejercicio de esta sesión, un arquitecto de agentes
+        profesional suele trabajar con un catálogo de herramientas amplio.
+        Aquí se listan tipos de tools que se usan mucho en la práctica,
+        para que tengas un mapa mental de hacia dónde puedes crecer.
+      </p>
+
+      <h4 style="font-size:0.85rem;margin-top:0.5rem;">4.1 · Web · búsqueda · RAG</h4>
+      <ul>
+        <li>
+          <strong>Buscadores web / news</strong>:
+          tools que llaman a APIs de búsqueda (por ejemplo, Bing, Brave,
+          Google Custom Search) para encontrar páginas relevantes y luego
+          pasan links a otras tools de scraping.
+        </li>
+        <li>
+          <strong>Scrapers de HTML</strong>:
+          herramientas que limpian páginas, quitan menús y anuncios, y
+          devuelven solo el contenido central de la web.
+        </li>
+        <li>
+          <strong>Embeddings + vectores</strong>:
+          tools que generan embeddings (ej. <code>nomic-embed-text</code> o
+          <code>mxbai-embed-large</code>) e indexan documentos en un
+          vector-store (pgvector, Chroma, Qdrant, etc.) para hacer RAG
+          (búsqueda semántica con contexto).
+        </li>
+      </ul>
+
+      <h4 style="font-size:0.85rem;margin-top:0.5rem;">4.2 · Datos financieros y de mercado</h4>
+      <ul>
+        <li>
+          <strong>Yahoo / yfinance</strong> —
+          ideal para prototipos rápidos y datos básicos de acciones
+          (precios históricos, info general), sabiendo que no es oficial.
+          <a href="https://github.com/ranaroussi/yfinance" target="_blank"
+            >GitHub de yfinance</a
+          >.
+        </li>
+        <li>
+          <strong>Alpha Vantage</strong> —
+          API gratuita con clave personal para precios históricos, FX y
+          algunos indicadores técnicos.
+          <a href="https://www.alphavantage.co/documentation/" target="_blank"
+            >Documentación oficial</a
+          >.
+        </li>
+        <li>
+          <strong>Finnhub.io</strong> —
+          API más completa (news, earnings, ratings de analistas, etc.),
+          con plan gratuito limitado.
+          <a href="https://finnhub.io/docs/api" target="_blank"
+            >Docs de Finnhub</a
+          >.
+        </li>
+        <li>
+          <strong>Financial Modeling Prep (FMP)</strong> —
+          muy útil para estados financieros (Income Statement, Balance
+          Sheet, Cash Flow) y ratios fundamentales.
+          <a href="https://financialmodelingprep.com/developer/docs/" target="_blank"
+            >Docs de FMP</a
+          >.
+        </li>
+      </ul>
+
+      <h4 style="font-size:0.85rem;margin-top:0.5rem;">4.3 · Bases de datos y SQL</h4>
+      <ul>
+        <li>
+          Conectores a <strong>PostgreSQL</strong>, <strong>MySQL</strong>,
+          <strong>SQLite</strong> o <strong>Snowflake</strong> permiten que
+          un agente lance consultas SQL parametrizadas sobre datos
+          empresariales internos.
+        </li>
+        <li>
+          Muchos frameworks de agentes (incluyendo CrewAI y LangGraph) usan
+          un patrón donde un “SQL Agent” traduce preguntas de lenguaje
+          natural a SQL y devuelve respuestas/tablas.
+        </li>
+      </ul>
+
+      <h4 style="font-size:0.85rem;margin-top:0.5rem;">4.4 · Automatización y APIs</h4>
+      <ul>
+        <li>
+          Tools para llamar <strong>APIs REST</strong> externas (por
+          ejemplo, CRM, ERP, servicios de envío de emails, Slack, etc.).
+        </li>
+        <li>
+          Envío de <strong>correos</strong>,
+          creación de tickets en herramientas como Jira,
+          integración con calendarios (Google Calendar / Outlook),
+          etc., todo orquestado por un agente.
+        </li>
+      </ul>
+
+      <h4 style="font-size:0.85rem;margin-top:0.5rem;">4.5 · Documentos largos y PDFs</h4>
+      <ul>
+        <li>
+          Tools para leer y trocear PDFs, presentaciones y documentos
+          escaneados (a menudo combinando OCR), muy útiles para agentes
+          legales, financieros o técnicos.
+        </li>
+        <li>
+          Combinados con embeddings y RAG, permiten que un agente responda
+          preguntas sobre manuales, normas técnicas, reportes de earnings,
+          etc.
+        </li>
+      </ul>
+
+      <p class="hint">
+        No necesitas dominar todas estas categorías hoy. Esta lista sirve
+        como brújula: cualquier stack de agentes serio terminará usando
+        varias de estas familias de herramientas.
+      </p>
+    </section>
+
+    <!-- EJECUCIÓN PRÁCTICA -------------------------------------->
+    <section class="card section-anchor" id="s3-ejecucion" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">5 · Puesta en marcha</div>
+          <div class="card-title">
+            Cómo ejecutar el servidor y usar la UI de chat (Sesión 3)
+          </div>
+        </div>
+        <span class="pill-label">FastAPI + HTML local</span>
+      </div>
+      <p>
+        La ejecución práctica de esta sesión reutiliza la misma estructura
+        de proyecto que la Sesión 2, pero añade el módulo
+        <code>crew/stock_picker.py</code> y el comando especial
+        <code>/stocks</code>.
+      </p>
+
+      <h4 id="check-backend" style="font-size:0.85rem;margin-top:0.5rem;">
+        5.1 · Arrancar el backend (FastAPI)
+      </h4>
+      <ul class="checklist">
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-back-1" />
+          <label for="chk-s3-back-1">
+            Activé el <strong>venv</strong> correcto de esta sesión y
+            ejecuté <code>pip install -r requirements.txt</code> (o usé el
+            <code>.bat</code> de setup correspondiente).
+          </label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-back-2" />
+          <label for="chk-s3-back-2">
+            Verifiqué que los modelos de Ollama que usa el crew
+            (<code>qwen3:8b</code>, <code>deepseek-r1:8b</code>,
+            <code>llama3.1:8b</code>, <code>qwen2.5:7b</code>) están
+            descargados y disponibles con <code>ollama list</code>.
+          </label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-back-3" />
+          <label for="chk-s3-back-3">
+            Arranqué el servidor con algo como:
+            <code>uvicorn main:app --reload --host 0.0.0.0 --port 8100</code>
+            y comprobé que <code>/docs</code> carga correctamente.
+          </label>
+        </li>
+      </ul>
+
+      <h4 id="check-ui" style="font-size:0.85rem;margin-top:0.5rem;">
+        5.2 · Probar la UI de chat
+      </h4>
+      <ul class="checklist">
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-ui-1" />
+          <label for="chk-s3-ui-1">
+            Abrí <code>http://localhost:8100/sdr/chat-ui</code> y vi la UI
+            con el título “Agentic Chat · Sesión 3”.
+          </label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-ui-2" />
+          <label for="chk-s3-ui-2">
+            Probé el agente en <strong>modo SDR normal</strong> con
+            preguntas como “¿Qué día es hoy?” o “Analiza esta URL y dame su
+            propuesta de valor”.
+          </label>
+        </li>
+      </ul>
+
+      <h4 id="check-stocks" style="font-size:0.85rem;margin-top:0.5rem;">
+        5.3 · Probar el Crew de acciones (/stocks)
+      </h4>
+      <ul class="checklist">
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-stk-1" />
+          <label for="chk-s3-stk-1">
+            Envié un mensaje como
+            <code>/stocks AAPL, NVDA, TSLA</code> con el checkbox de
+            debug <strong>desactivado</strong> y recibí un informe resumido
+            sin traza interna.
+          </label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-stk-2" />
+          <label for="chk-s3-stk-2">
+            Activé el checkbox de
+            <em>“Ver detalle de agentes (debug para /stocks)”</em> y
+            volví a enviar <code>/stocks ...</code>. Esta vez, al final del
+            informe se mostró el bloque
+            <strong>“DETALLE DE AGENTES (debug)”</strong> con los pasos
+            de Researcher, Analyst, Writer y Judge.
+          </label>
+        </li>
+        <li class="check-item">
+          <input type="checkbox" id="chk-s3-stk-3" />
+          <label for="chk-s3-stk-3">
+            Entendí cómo el checkbox modifica el payload: la UI añade la
+            palabra <code>debug</code> al comando
+            (<code>/stocks AAPL, NVDA, TSLA debug</code>) para que el
+            backend active la traza.
+          </label>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ROADMAP -------------------------------------------------->
+    <section class="card section-anchor" id="s3-roadmap" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">6 · Próximos pasos</div>
+          <div class="card-title">
+            Roadmap de esta familia de sesiones: 3.0 → 3.1 → 3.2 → 3.3
+          </div>
+        </div>
+        <span class="pill-label">Visión de evolución</span>
+      </div>
+      <p>
+        La Sesión 3.0 te deja con un prototipo funcional de
+        <strong>Crew financiero local</strong>, pero todavía con datos
+        básicos vía <code>yfinance</code>. Las siguientes sub-sesiones
+        están pensadas para profundizar en datos y en patrones de
+        colaboración entre agentes.
+      </p>
+      <ul>
+        <li>
+          <strong>Sesión 3.1 · Crew + APIs financieras dedicadas</strong><br />
+          Sustituir o complementar <code>yfinance</code> con APIs como
+          Alpha Vantage, Finnhub o FMP para obtener:
+          series históricas, estados financieros y ratios más confiables.
+        </li>
+        <li>
+          <strong>Sesión 3.2 · Análisis cuantitativo y scoring</strong><br />
+          Añadir lógica para calcular tendencias de ingresos, márgenes,
+          crecimiento y un pequeño sistema de scoring por ticker (por
+          ejemplo, 0–100), usando a los agentes para interpretar esos
+          números.
+        </li>
+        <li>
+          <strong>Sesión 3.3 · RAG financiero y/o debate bull vs bear</strong><br />
+          Introducir un agente Bull y un agente Bear con acceso a corpus
+          documental (earnings transcripts, reportes PDF, noticias) vía
+          RAG, y un Judge que arbitra el debate para producir una
+          recomendación resumida.
+        </li>
+      </ul>
+      <p class="muted">
+        La ventaja de la arquitectura actual es que todo esto se puede
+        añadir sin romper lo que ya funciona: el Agente SDR, el endpoint
+        <code>/sdr/chat</code> y la UI seguirán siendo los mismos; sólo
+        cambiarán las tools y la lógica interna del crew.
+      </p>
+    </section>
+
+    <!-- RECURSOS EXTERNOS --------------------------------------->
+    <section class="card section-anchor" id="s3-recursos" style="margin-top: 1rem;">
+      <div class="card-header">
+        <div>
+          <div class="card-kicker">7 · Para estudiar más</div>
+          <div class="card-title">
+            Recursos recomendados sobre agentes y multi-agente
+          </div>
+        </div>
+        <span class="pill-label">Enlaces externos</span>
+      </div>
+      <p>
+        Algunos recursos útiles para seguir profundizando en agentes,
+        crews y análisis financiero asistido por IA:
+      </p>
+      <ul>
+        <li>
+          <strong>CrewAI</strong> (framework de agentes multi-rol en
+          Python):<br />
+          <a href="https://docs.crewai.com/" target="_blank"
+            >https://docs.crewai.com/</a
+          >
+        </li>
+        <li>
+          <strong>Guía práctica de agentes y tool-calling (OpenAI)</strong>:<br />
+          <a href="https://platform.openai.com/docs/guides/function-calling"
+            target="_blank"
+            >Function calling &amp; agents (OpenAI docs)</a
+          >
+        </li>
+        <li>
+          <strong>LangGraph · workflows de agentes</strong>:<br />
+          <a href="https://langchain-ai.github.io/langgraph/" target="_blank"
+            >https://langchain-ai.github.io/langgraph/</a
+          >
+        </li>
+        <li>
+          <strong>yfinance</strong> (wrapper de Yahoo Finance):<br />
+          <a href="https://github.com/ranaroussi/yfinance" target="_blank"
+            >https://github.com/ranaroussi/yfinance</a
+          >
+        </li>
+        <li>
+          <strong>Alpha Vantage API</strong>:<br />
+          <a href="https://www.alphavantage.co/documentation/" target="_blank"
+            >https://www.alphavantage.co/documentation/</a
+          >
+        </li>
+        <li>
+          <strong>Finnhub.io API</strong>:<br />
+          <a href="https://finnhub.io/docs/api" target="_blank"
+            >https://finnhub.io/docs/api</a
+          >
+        </li>
+        <li>
+          <strong>Financial Modeling Prep</strong> (FMP API):<br />
+          <a
+            href="https://financialmodelingprep.com/developer/docs/"
+            target="_blank"
+            >https://financialmodelingprep.com/developer/docs/</a
+          >
+        </li>
+      </ul>
+      <p class="hint">
+        Puedes usar esta sección como “hub de estudio”: cuando tengas
+        dudas sobre cómo expandir tu crew o añadir nuevas tools, vuelve a
+        estos enlaces para inspirarte.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    // Persistencia simple de checkboxes por ID usando localStorage
+    (function () {
+      const STORAGE_KEY = "pensum_sesion3_checks_v1";
+      let state = {};
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) state = JSON.parse(raw) || {};
+      } catch (e) {
+        state = {};
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {}
+      }
+
+      const inputs = document.querySelectorAll(
+        'input[type="checkbox"][id^="chk-"]'
+      );
+      inputs.forEach((input) => {
+        const id = input.id;
+        if (state[id]) {
+          input.checked = true;
+        }
+        input.addEventListener("change", () => {
+          state[id] = input.checked;
+          save();
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
